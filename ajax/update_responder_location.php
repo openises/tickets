@@ -7,9 +7,9 @@ require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
-	exit();
-	}
-$istest = FALSE;
+    exit();
+    }
+$istest = false;
 
 $fac_id = sanitize_int($_GET['fac_id']);
 $resp_id = sanitize_int($_GET['resp_id']);
@@ -22,56 +22,56 @@ $response = array();
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
 $result = db_query($query, [$fac_id]);
 if($result->num_rows >= 1) {
-	while ($row = $result->fetch_assoc()) {
-		$lat = $row['lat'];
-		$lng = $row['lng'];
-		}
-	}
+    while ($row = $result->fetch_assoc()) {
+        $lat = $row['lat'];
+        $lng = $row['lng'];
+        }
+    }
 
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 if($new_status == $existing_status) {
-	$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
-		`lat`= ?,
-		`lng`= ?,
-		`at_facility`= ?,
-		`user_id`= ?,
-		`updated`= ?
-		WHERE `id`= ?";
-	$params = [
-		$lat,
-		$lng,
-		$fac_id,
-		$_SESSION['user_id'],
-		$now,
-		$resp_id
-	];
-	} else {
-	$query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
-		`lat`= ?,
-		`lng`= ?,
-		`un_status_id`= ?,
-		`at_facility`= ?,
-		`user_id`= ?,
-		`updated`= ?,
-		`status_updated`= ?
-		WHERE `id`= ?";
-	$params = [
-		$lat,
-		$lng,
-		$new_status,
-		$fac_id,
-		$_SESSION['user_id'],
-		$now,
-		$now,
-		$resp_id
-	];
-	}
+    $query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
+        `lat`= ?,
+        `lng`= ?,
+        `at_facility`= ?,
+        `user_id`= ?,
+        `updated`= ?
+        WHERE `id`= ?";
+    $params = [
+        $lat,
+        $lng,
+        $fac_id,
+        $_SESSION['user_id'],
+        $now,
+        $resp_id
+    ];
+    } else {
+    $query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
+        `lat`= ?,
+        `lng`= ?,
+        `un_status_id`= ?,
+        `at_facility`= ?,
+        `user_id`= ?,
+        `updated`= ?,
+        `status_updated`= ?
+        WHERE `id`= ?";
+    $params = [
+        $lat,
+        $lng,
+        $new_status,
+        $fac_id,
+        $_SESSION['user_id'],
+        $now,
+        $now,
+        $resp_id
+    ];
+    }
 $result = db_query($query, $params);
 if(db_affected_rows() == 1) {
-	$response[0] = 1;
-	} else {
-	$response[0] = 0;
-	}
+    $response[0] = 1;
+    } else {
+    $response[0] = 0;
+    }
 
 print json_encode($response);
 exit();

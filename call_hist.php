@@ -20,8 +20,8 @@ DISPOSITION
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');		//7/28/10
-require_once($_SESSION['fmp']);					// 9/30/10
+require_once('./incs/functions.inc.php');        //7/28/10
+require_once($_SESSION['fmp']);                    // 9/30/10
 
 $the_phone = sanitize_string($_GET['frm_phone']);
 $the_width = '100%';
@@ -34,7 +34,7 @@ $the_width = '100%';
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<META HTTP-EQUIV="Content-Script-Type"    CONTENT="application/x-javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
@@ -47,15 +47,15 @@ var outerheight;
 var colwidth;
 var colheight;
 if (typeof window.innerWidth != 'undefined') {
-	viewportwidth = window.innerWidth,
-	viewportheight = window.innerHeight
-	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-	viewportwidth = document.documentElement.clientWidth,
-	viewportheight = document.documentElement.clientHeight
-	} else {
-	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-	viewportheight = document.getElementsByTagName('body')[0].clientHeight
-	}
+    viewportwidth = window.innerWidth,
+    viewportheight = window.innerHeight
+    } else if (typeof document.documentElement != 'undefined'    && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+    viewportwidth = document.documentElement.clientWidth,
+    viewportheight = document.documentElement.clientHeight
+    } else {
+    viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+    viewportheight = document.getElementsByTagName('body')[0].clientHeight
+    }
 set_fontsizes(viewportwidth, "popup");
 outerwidth = viewportwidth * .99;
 outerheight = viewportheight * .45;
@@ -64,63 +64,63 @@ colheight = outerheight;
 </SCRIPT>
 </HEAD>
 <BODY>
-	<DIV ID='outer'>
-<?php				// 7/16/2013
-		$query = "SELECT *,
-			`{$GLOBALS['mysql_prefix']}ticket`.`description` AS `tick_descr`, 
-			`{$GLOBALS['mysql_prefix']}ticket`.`lat` AS `lat`, 
-			`{$GLOBALS['mysql_prefix']}ticket`.`lng` AS `lng`,
-			`{$GLOBALS['mysql_prefix']}ticket`.`_by` AS `call_taker`,
-			`{$GLOBALS['mysql_prefix']}ticket`.`street` AS `tick_street`,
-			`{$GLOBALS['mysql_prefix']}ticket`.`city` AS `tick_city`,
-			`{$GLOBALS['mysql_prefix']}ticket`.`state` AS `tick_state`,		
-			`{$GLOBALS['mysql_prefix']}facilities`.`name` AS `fac_name`,
-			`rf`.`name` AS `rec_fac_name`, `rf`.`lat` AS `rf_lat`,
-			`rf`.`lng` AS `rf_lng`, 
-			`{$GLOBALS['mysql_prefix']}facilities`.`lat` AS `fac_lat`, 
-			`{$GLOBALS['mysql_prefix']}facilities`.`lng` AS `fac_lng`
-			FROM `{$GLOBALS['mysql_prefix']}ticket`  
-			LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)		
-			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` ON (`{$GLOBALS['mysql_prefix']}facilities`.`id` = `{$GLOBALS['mysql_prefix']}ticket`.`facility`)
-			LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `rf` ON (`rf`.`id` = `{$GLOBALS['mysql_prefix']}ticket`.`rec_facility`) 
-			WHERE `{$GLOBALS['mysql_prefix']}ticket`.`phone`=?
-			ORDER BY `{$GLOBALS['mysql_prefix']}ticket`.`problemstart` ASC";			// 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
+    <DIV ID='outer'>
+<?php                // 7/16/2013
+        $query = "SELECT *,
+            `{$GLOBALS['mysql_prefix']}ticket`.`description` AS `tick_descr`,
+            `{$GLOBALS['mysql_prefix']}ticket`.`lat` AS `lat`,
+            `{$GLOBALS['mysql_prefix']}ticket`.`lng` AS `lng`,
+            `{$GLOBALS['mysql_prefix']}ticket`.`_by` AS `call_taker`,
+            `{$GLOBALS['mysql_prefix']}ticket`.`street` AS `tick_street`,
+            `{$GLOBALS['mysql_prefix']}ticket`.`city` AS `tick_city`,
+            `{$GLOBALS['mysql_prefix']}ticket`.`state` AS `tick_state`,
+            `{$GLOBALS['mysql_prefix']}facilities`.`name` AS `fac_name`,
+            `rf`.`name` AS `rec_fac_name`, `rf`.`lat` AS `rf_lat`,
+            `rf`.`lng` AS `rf_lng`,
+            `{$GLOBALS['mysql_prefix']}facilities`.`lat` AS `fac_lat`,
+            `{$GLOBALS['mysql_prefix']}facilities`.`lng` AS `fac_lng`
+            FROM `{$GLOBALS['mysql_prefix']}ticket`
+            LEFT JOIN `{$GLOBALS['mysql_prefix']}in_types` `ty` ON (`{$GLOBALS['mysql_prefix']}ticket`.`in_types_id` = `ty`.`id`)
+            LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` ON (`{$GLOBALS['mysql_prefix']}facilities`.`id` = `{$GLOBALS['mysql_prefix']}ticket`.`facility`)
+            LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `rf` ON (`rf`.`id` = `{$GLOBALS['mysql_prefix']}ticket`.`rec_facility`)
+            WHERE `{$GLOBALS['mysql_prefix']}ticket`.`phone`=?
+            ORDER BY `{$GLOBALS['mysql_prefix']}ticket`.`problemstart` ASC";            // 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
 
 //dump ($query);
-		$result = db_query($query, [$the_phone]);
-		$count = ($result->num_rows==0)? "": " <I>(" .$result->num_rows . ")</I>";
+        $result = db_query($query, [$the_phone]);
+        $count = ($result->num_rows==0)? "": " <I>(" .$result->num_rows . ")</I>";
 ?>
-		<DIV id='button_bar' class='but_container'>
-			<SPAN CLASS='heading' STYLE='text-align: center; display: inline; font-size: 1.5em;'>Calls for Phone <?php print format_phone ($the_phone) . $count; ?>
-			<SPAN ID='fin_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
-		</DIV>
-		<DIV ID='inner' STYLE="position: relative; top: 70px;">
-			<TABLE ID='theTable' ALIGN='center' ID = 'outer'>
+        <DIV id='button_bar' class='but_container'>
+            <SPAN CLASS='heading' STYLE='text-align: center; display: inline; font-size: 1.5em;'>Calls for Phone <?php print format_phone ($the_phone) . $count; ?>
+            <SPAN ID='fin_but' class='plain text' style='float: right; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
+        </DIV>
+        <DIV ID='inner' STYLE="position: relative; top: 70px;">
+            <TABLE ID='theTable' ALIGN='center' ID = 'outer'>
 <?php
-					if ($result->num_rows==0) {						// 7/16/2013
+                    if ($result->num_rows==0) {                        // 7/16/2013
 ?>
-						<TR CLASS='even' STYLE='width: 100%;'><TH ALIGN='center'>None</TH></TR>
+                        <TR CLASS='even' STYLE='width: 100%;'><TH ALIGN='center'>None</TH></TR>
 
 <?php
-						} else {
+                        } else {
 ?>
-						<TR CLASS='even' STYLE='width: 100%;'>
-							<TD>
-							<CENTER>
+                        <TR CLASS='even' STYLE='width: 100%;'>
+                            <TD>
+                            <CENTER>
 <?php
-								while ($row_ticket = stripslashes_deep($result->fetch_array())) {
-									print do_ticket($row_ticket, $the_width, FALSE, FALSE); 
-									}
+                                while ($row_ticket = stripslashes_deep($result->fetch_array())) {
+                                    print do_ticket($row_ticket, $the_width, false, false);
+                                    }
 ?>
-							</CENTER>
-							</TD>
-						</TR>
+                            </CENTER>
+                            </TD>
+                        </TR>
 <?php
-						} 
+                        }
 ?>
-			</TABLE>
-		</DIV>
-	</DIV>
+            </TABLE>
+        </DIV>
+    </DIV>
 </BODY>
 <SCRIPT>
 if($('outer')) {$('outer').style.width = outerwidth + "px";}

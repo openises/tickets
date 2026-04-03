@@ -7,16 +7,16 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
-									// housekeep old invites
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
+                                    // housekeep old invites
 $query = "DELETE from `{$GLOBALS['mysql_prefix']}chat_invites` WHERE `_on` < DATE_SUB(NOW(),INTERVAL 1 DAY )";
-$result	= db_query($query);
+$result    = db_query($query);
 
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
-									// note: 'to' is a comma sep'd string of id's, with 0 = all
+                                    // note: 'to' is a comma sep'd string of id's, with 0 = all
 $frm_to = sanitize_string($_GET['frm_to']);
 $frm_user = sanitize_int($_GET['frm_user']);
 $query  = "INSERT INTO `{$GLOBALS['mysql_prefix']}chat_invites` (`to`, `_by`, `_from`, `_on`) VALUES (?, ?, ?, ?);";
-$result	= db_query($query, [$frm_to, $frm_user, $_SERVER['REMOTE_ADDR'], $now]);
+$result    = db_query($query, [$frm_to, $frm_user, $_SERVER['REMOTE_ADDR'], $now]);
 print "";
 ?>

@@ -3,12 +3,12 @@ require_once('./incs/functions.inc.php');
 @session_start();
 session_write_close();
 function get_day() {
-	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-	if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
-	return date('l',$timestamp);
-	}
+    $timestamp = (time() - (intval(get_variable('delta_mins'))*60));
+    if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
+    return date('l',$timestamp);
+    }
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';
-$alt_day_night = ($day_night=="Day") ? "Night" : "Day"; 
+$alt_day_night = ($day_night=="Day") ? "Night" : "Day";
 $label1 = "";
 $label2 = "";
 $label3 = "";
@@ -27,46 +27,46 @@ $text7 = "";
 $text8 = "";
 
 $id = sanitize_int($_GET['id']);
-$status_vals = array();											// build array of $status_vals
+$status_vals = array();                                            // build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `id`";
 $result_st = db_query($query);
 while ($row_st = stripslashes_deep($result_st->fetch_array())) {
-	$temp = $row_st['id'];
-	$status_vals[$temp] = $row_st['status_val'];
-	$status_hide[$temp] = $row_st['hide'];
-	}
+    $temp = $row_st['id'];
+    $status_vals[$temp] = $row_st['status_val'];
+    $status_hide[$temp] = $row_st['hide'];
+    }
 
 unset($result_st);
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
-	LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` t ON ({$GLOBALS['mysql_prefix']}assigns.ticket_id = t.id)
-	WHERE `responder_id` = ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
+    LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` t ON ({$GLOBALS['mysql_prefix']}assigns.ticket_id = t.id)
+    WHERE `responder_id` = ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
 
 $result_as = db_query($query, [$id]);
 $units_assigned = $result_as->num_rows;
 
-switch ($units_assigned) {		
-	case 0:
-		$ass_td = "";
-		break;			
-	case 1:
-		$row_assign = stripslashes_deep($result_as->fetch_assoc());
-		$the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
-		$tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
-		switch($row_assign['severity'])		{		//color tickets by severity
-			case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
-			case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
-			default: 							$severityclass='severity_normal'; break;
-			}		// end switch()
-		$ass_td = shorten($row_assign['scope'], 20);
-		break;
-	default:							// multiples
-		$ass_td = $units_assigned;
-		break;
-	}						// end switch(($units_assigned))
+switch ($units_assigned) {
+    case 0:
+        $ass_td = "";
+        break;
+    case 1:
+        $row_assign = stripslashes_deep($result_as->fetch_assoc());
+        $the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
+        $tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
+        switch($row_assign['severity'])        {        //color tickets by severity
+            case $GLOBALS['SEVERITY_MEDIUM']:     $severityclass='severity_medium'; break;
+            case $GLOBALS['SEVERITY_HIGH']:     $severityclass='severity_high'; break;
+            default:                             $severityclass='severity_normal'; break;
+            }        // end switch()
+        $ass_td = shorten($row_assign['scope'], 20);
+        break;
+    default:                            // multiples
+        $ass_td = $units_assigned;
+        break;
+    }                        // end switch(($units_assigned))
 
 $label1 = get_text('Name');
 $label2 = get_text('Handle');
@@ -98,7 +98,7 @@ $thetabs .= "<TR class=\"even\"><TD class=\"td_label\">" . get_text('City') . "<
 $thetabs .= "<TR class=\"odd\"><TD class=\"td_label\">" . get_text('Updated') . "</TD><TD class=\"td_data\">" . format_date_2($updated) . "</TD></TR>";
 $thetabs .= "</TABLE>";
 $lat = $row['lat'];
-$lng = $row['lng'];	
+$lng = $row['lng'];
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -108,33 +108,33 @@ $lng = $row['lng'];
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 <!--[if lte IE 8]>
-	 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+     <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
 <![endif]-->
 <link rel="stylesheet" href="./js/Control.Geocoder.css" />
 <STYLE>
-	.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-	#regions_control { font-family: verdana, arial, helvetica, sans-serif; font-size: 5px; background-color: #FEFEFE; font-weight: bold;}
-	table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
-	table.cruises td {overflow: hidden; }
-	div.scrollableContainer { position: relative; padding-top: 1.3em; border: 1px solid #999; }
-	div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
-	div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-	div.scrollingArea2 { max-height: 460px; overflow: auto; overflow-x: hidden; }
-	table.scrollable thead tr { position: absolute; left: -1px; top: 0px; }
-	table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
-	div.tabBox {}
-	div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
-	span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
-			padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
-	span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
-			border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
-	span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
-	div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
-			position: relative;	z-index: 101; cursor: normal; height: 250px;}
-	div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
-	.text-labels {font-size: 2em; font-weight: 700;}
+    .disp_stat    { FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
+    #regions_control { font-family: verdana, arial, helvetica, sans-serif; font-size: 5px; background-color: #FEFEFE; font-weight: bold;}
+    table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
+    table.cruises td {overflow: hidden; }
+    div.scrollableContainer { position: relative; padding-top: 1.3em; border: 1px solid #999; }
+    div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
+    div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
+    div.scrollingArea2 { max-height: 460px; overflow: auto; overflow-x: hidden; }
+    table.scrollable thead tr { position: absolute; left: -1px; top: 0px; }
+    table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
+    div.tabBox {}
+    div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
+    span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;    border-radius-topleft: .75em; border-radius-topright: .75em;
+            padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
+    span.tabinuse {    background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;    border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
+            border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;    z-index: 100;}
+    span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
+    div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;    border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
+            position: relative;    z-index: 101; cursor: normal; height: 250px;}
+    div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
+    .text-labels {font-size: 2em; font-weight: 700;}
 </STYLE>
-<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>	<!-- 5/3/11 -->	
+<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>    <!-- 5/3/11 -->
 <SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
 <SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT><!-- 10/23/12-->
 <script src="./js/proj4js.js"></script>
@@ -148,23 +148,23 @@ $lng = $row['lng'];
 <script src="./js/osopenspace.js"></script>
 <script src="./js/Control.Geocoder.js"></script>
 <?php
-	if ($_SESSION['internet']) {
-		$api_key = get_variable('gmaps_api_key');
-		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
-		if($key_str) {
-			if($https) {
+    if ($_SESSION['internet']) {
+        $api_key = get_variable('gmaps_api_key');
+        $key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
+        if($key_str) {
+            if($https) {
 ?>
-				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-				<script src="./js/Google.js"></script>
+                <script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+                <script src="./js/Google.js"></script>
 <?php
-				} else {
+                } else {
 ?>
-				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-				<script src="./js/Google.js"></script>
-<?php				
-				}
-			}
-		}
+                <script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+                <script src="./js/Google.js"></script>
+<?php
+                }
+            }
+        }
 ?>
 <script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
 <script type="application/x-javascript" src="./js/L.Graticule.js"></script>
@@ -179,75 +179,75 @@ $header = "Responder Assistance Request for Responder " . $handle;
 ?>
 <BODY <?php print $styleStr;?>>
 <DIV id='outer' style='width: 100%;'>
-	<DIV id='theTop'>
-		<DIV id='header' style='text-align: center;'>
-			<SPAN class='heading'><?php print $header;?>: </SPAN><SPAN class='heading' id='osgrid'></SPAN>
-		</DIV>
-		<DIV style='width: 100%;'>
-			<TABLE style='width: 100%; table-layout: fixed; word-wrap: break-all;'>
-				<TR class='even'>
-					<TD style='width: 100%; border: 1px outset #707070;'>
-						<TABLE style='table-layout: fixed; width: 100%; word-wrap: break-all;'>
-							<TR class='even' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label1;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text1;?></TD>
-							</TR>
-							<TR class='odd' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label2;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text2;?></TD>
-							</TR>
-							<TR class='even' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label3;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text3;?></TD>
-							</TR>
-							<TR class='odd' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label4;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text4;?></TD>
-							</TR>
-							<TR class='even' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label5;?></TD>
-								<TD class='td_data_wrap' style='width: 60%; height: auto;'><?php print $text5;?></TD>
-							</TR>
-							<TR class='odd' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label6;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text6;?></TD>
-							</TR>
-							<TR class='even' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label7;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text7;?></TD>
-							</TR>
-							<TR class='odd' style='width: 100%;'>
-								<TD class='td_label' style='width: 40%;'><?php print $label8;?></TD>
-								<TD class='td_data_wrap' style='width: 60%;'><?php print $text8;?></TD>
-							</TR>
-						</TABLE>
-					</TD>
+    <DIV id='theTop'>
+        <DIV id='header' style='text-align: center;'>
+            <SPAN class='heading'><?php print $header;?>: </SPAN><SPAN class='heading' id='osgrid'></SPAN>
+        </DIV>
+        <DIV style='width: 100%;'>
+            <TABLE style='width: 100%; table-layout: fixed; word-wrap: break-all;'>
+                <TR class='even'>
+                    <TD style='width: 100%; border: 1px outset #707070;'>
+                        <TABLE style='table-layout: fixed; width: 100%; word-wrap: break-all;'>
+                            <TR class='even' style='width: 100%;'>
+                                <TD class='td_label' style='width: 40%;'><?php print $label1;?></TD>
+                                <TD class='td_data_wrap' style='width: 60%;'><?php print $text1;?></TD>
+                            </TR>
+                            <TR class='odd' style='width: 100%;'>
+                                <TD class='td_label' style='width: 40%;'><?php print $label2;?></TD>
+                                <TD class='td_data_wrap' style='width: 60%;'><?php print $text2;?></TD>
+                            </TR>
+                            <TR class='even' style='width: 100%;'>
+                                <TD class='td_label' style='width: 40%;'><?php print $label3;?></TD>
+                                <TD class='td_data_wrap' style='width: 60%;'><?php print $text3;?></TD>
+                            </TR>
+                            <TR class='odd' style='width: 100%;'>
+                                <TD class='td_label' style='width: 40%;'><?php print $label4;?></TD>
+                                <TD class='td_data_wrap' style='width: 60%;'><?php print $text4;?></TD>
+                            </TR>
+                            <TR class='even' style='width: 100%;'>
+                                <TD class='td_label' style='width: 40%;'><?php print $label5;?></TD>
+                                <TD class='td_data_wrap' style='width: 60%; height: auto;'><?php print $text5;?></TD>
+                            </TR>
+                            <TR class='odd' style='width: 100%;'>
+                                <TD class='td_label' style='width: 40%;'><?php print $label6;?></TD>
+                                <TD class='td_data_wrap' style='width: 60%;'><?php print $text6;?></TD>
+                            </TR>
+                            <TR class='even' style='width: 100%;'>
+                                <TD class='td_label' style='width: 40%;'><?php print $label7;?></TD>
+                                <TD class='td_data_wrap' style='width: 60%;'><?php print $text7;?></TD>
+                            </TR>
+                            <TR class='odd' style='width: 100%;'>
+                                <TD class='td_label' style='width: 40%;'><?php print $label8;?></TD>
+                                <TD class='td_data_wrap' style='width: 60%;'><?php print $text8;?></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
 
-				</TR>
-			</TABLE>
-		</DIV>
-	</DIV>
-	<DIV id='thebottom' style='width: 100%; text-align: center;'><CENTER>
-		<DIV id='map_canvas' style='border: 1px outset #707070;'></DIV></CENTER><BR />
-		<SPAN id="close-but" class='plain' style="float: none; text-align: center;" onMouseover="do_hover(this.id);" onMouseout="do_plain(this.id);" onClick="window.close();">Close</SPAN>
-	</DIV>
+                </TR>
+            </TABLE>
+        </DIV>
+    </DIV>
+    <DIV id='thebottom' style='width: 100%; text-align: center;'><CENTER>
+        <DIV id='map_canvas' style='border: 1px outset #707070;'></DIV></CENTER><BR />
+        <SPAN id="close-but" class='plain' style="float: none; text-align: center;" onMouseover="do_hover(this.id);" onMouseout="do_plain(this.id);" onClick="window.close();">Close</SPAN>
+    </DIV>
 </DIV>
 <SCRIPT>
 var map;
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var thelevel = '<?php print $the_level;?>';
-var rmarkers = [];			//	Responder Markers array
-var cmarkers = [];			//	Responder Markers array
-var boundary = [];			//	exclusion zones array
+var rmarkers = [];            //    Responder Markers array
+var cmarkers = [];            //    Responder Markers array
+var boundary = [];            //    exclusion zones array
 var bound_names = [];
 var latLng;
 var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
-	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [0, 0],	shadowAnchor: [5, -5], popupAnchor: [6, -5]
-	}
-	});
+    iconSize: [20, 32],    shadowSize: [37, 34], iconAnchor: [0, 0],    shadowAnchor: [5, -5], popupAnchor: [6, -5]
+    }
+    });
 var baseFacIcon = L.Icon.extend({options: {iconSize: [28, 28], iconAnchor: [0, 0], popupAnchor: [6, -5]
-	}
-	});
+    }
+    });
 var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [0, 0], popupAnchor: [6, -5]
 }
 });
@@ -256,13 +256,13 @@ var mapWidth = <?php print get_variable('map_width');?>-20;
 var mapHeight = <?php print get_variable('map_height');?>-20;;
 $('map_canvas').style.width = mapWidth + "px";
 $('map_canvas').style.height = mapHeight + "px";
-var boundary = [];			//	exclusion zones array
+var boundary = [];            //    exclusion zones array
 var bound_names = [];
 var theLocale = <?php print get_variable('locale');?>;
 var useOSMAP = <?php print get_variable('use_osmap');?>;
 init_map(3, <?php print $lat;?>, <?php print $lng;?>, "", 13, theLocale, useOSMAP, "tr");
 map.setView([<?php print $lat;?>, <?php print $lng;?>], 13);
-var bounds = map.getBounds();	
+var bounds = map.getBounds();
 var zoom = map.getZoom();
 <?php
 do_kml();

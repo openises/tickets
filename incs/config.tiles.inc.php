@@ -20,7 +20,7 @@ if (array_key_exists('update', $_GET)) {
 
     // Check if tile_mode setting exists; if not, INSERT it (first upgrade)
     $existing = get_variable('tile_mode');
-    if ($existing === FALSE) {
+    if ($existing === false) {
         $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}settings` (`name`, `value`) VALUES ('tile_mode', ?)";
         db_query($query, [$new_mode]);
     } else {
@@ -29,7 +29,7 @@ if (array_key_exists('update', $_GET)) {
     }
 
     $existing_url = get_variable('tile_server_url');
-    if ($existing_url === FALSE) {
+    if ($existing_url === false) {
         $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}settings` (`name`, `value`) VALUES ('tile_server_url', ?)";
         db_query($query, [$new_url]);
     } else {
@@ -40,7 +40,7 @@ if (array_key_exists('update', $_GET)) {
     $new_cache_days = isset($_POST['frm_tile_cache_days']) ? intval($_POST['frm_tile_cache_days']) : 60;
     if ($new_cache_days < 0) { $new_cache_days = 0; }
     $existing_cache = get_variable('tile_cache_days');
-    if ($existing_cache === FALSE) {
+    if ($existing_cache === false) {
         $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}settings` (`name`, `value`) VALUES ('tile_cache_days', ?)";
         db_query($query, [strval($new_cache_days)]);
     } else {
@@ -62,12 +62,12 @@ if (array_key_exists('update', $_GET)) {
 // Read current values
 $current_mode = get_tile_mode();
 $current_url = get_variable('tile_server_url');
-if ($current_url === FALSE || trim($current_url) === '') {
+if ($current_url === false || trim($current_url) === '') {
     $current_url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 }
 $is_osm_url = (stripos($current_url, 'openstreetmap.org') !== false);
 $current_cache_days = get_variable('tile_cache_days');
-if ($current_cache_days === FALSE || trim($current_cache_days) === '') {
+if ($current_cache_days === false || trim($current_cache_days) === '') {
     $current_cache_days = '60';
 }
 ?>

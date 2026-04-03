@@ -13,8 +13,8 @@
  */
 /*
 5/28/08 - revised map center to allow icon drag
-6/4/08 - added do_log($GLOBALS['LOG_INCIDENT_DELETE']				
-6/4/08 - added submit()			
+6/4/08 - added do_log($GLOBALS['LOG_INCIDENT_DELETE']
+6/4/08 - added submit()
 6/4/08 - corrected table names
 6/9/08 - added user type 'super'
 9/13/08 - refresh upper frame
@@ -22,8 +22,8 @@
 9/16/08 draggable false, pending getting it to work
 9/21/08 revised 'top load' via body tag
 9/24/08 permissions revised per suggestion JB
-10/8/08	'User' revised to 'Operator'
-10/8/08	hide 'Unit types'
+10/8/08    'User' revised to 'Operator'
+10/8/08    hide 'Unit types'
 10/19/08 added trim()
 10/23/08 revised notify validation and for severity handling
 10/23/08 profile validation added
@@ -38,12 +38,12 @@
 4/5/09 default map zoom added
 5/4/09 handle usng as input
 6/4/09 added Constituents and City tables
-6/27/09	added function do_glat() - hidden 7/23/09
+6/27/09    added function do_glat() - hidden 7/23/09
 6/30/09 added do_mail_win(), renamed to do_all_mail
-7/16/09	floating div for 'settings' buttons
-7/24/09	hide Glat();
-7/28/09	Open Glat()
-7/28/09	Add function do_gtrack and function do_locatea for test scripts plus links
+7/16/09    floating div for 'settings' buttons
+7/24/09    hide Glat();
+7/28/09    Open Glat()
+7/28/09    Add function do_gtrack and function do_locatea for test scripts plus links
 10/6/09 Added links to Facility Status and Facility Types settings
 11/5/09 Changed window caption, per IE complaint
 11/17/09 removed password update from 'edit my profile'
@@ -52,7 +52,7 @@
 1/23/10 table 'session' removed, revised 'settings applied' message and avoid re-load of top frame
 3/11/10 Cities table link removed
 4/10/10 hide 'board' button if setting = 0
-5/30/10	function do_about() added
+5/30/10    function do_about() added
 6/22/10 audio alarm test added
 6/25/10 NULL dob handling
 7/5/10 super only, per KJ email
@@ -79,13 +79,13 @@
 5/23/11 notifies corrected, Cancel button changed to submit can_form;
 5/26/11 added intrusion detection, sql insertion prevention
 6/10/11 added changes required to support regional capability (user region assignment).
-7/5/11 added Open GTS test 
+7/5/11 added Open GTS test
 7/30/11 Map markup and categories replaces landb
 9/27/11 Added Internal Tracker test
 3/11/11 Added link to cleanse regions file.
 12/19/11 courses table tandling, per request T Carswell
 3/4/12 disbled 86-char key check
-3/5/12 obtain key from ... 
+3/5/12 obtain key from ...
 3/22/12 ics 213 link
 4/25/12 audio window correction
 6/20/12 applied get_text() to 'Unit'
@@ -97,7 +97,7 @@
 9/10/13 Added links for road conditions, local maps, personnel table for roster user and Warn locations
 
 */
-$asterisk = FALSE;        // user: change to TRUE  in order to make the Pin Control table accessible.
+$asterisk = false;        // user: change to TRUE  in order to make the Pin Control table accessible.
 if (!defined('E_DEPRECATED')) {
     define('E_DEPRECATED', 8192);
 }        // 11/7/09
@@ -142,7 +142,7 @@ $patient = get_text("Patient");                                                /
 // Replaced extract — only $func is needed for tab routing (Phase 2 cleanup)
 $func = $_REQUEST['func'] ?? 'summ';
 $id = $_REQUEST['id'] ?? '';
-$reload_top = FALSE;
+$reload_top = false;
 
 $query = "SELECT `user` FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` <> ?";        // 12/2/08
 $result = db_query($query, [$_SESSION['user_id']]);
@@ -165,7 +165,7 @@ function get_org_control($the_userid, $currOrg)
     return $org_cntl;
 }
 
-function read_directory($directory, $ext = NULL)
+function read_directory($directory, $ext = null)
 {
     $the_ret = array();
     $dirhandler = opendir($directory);
@@ -210,10 +210,10 @@ function dump_db()
         }
     }
 
-    // for ($i=0;$i<$broj;$i++) {						//dump all tables:
-    // $table_name = $backup->tables[$i]; 			//get table name
-    // $backup->dump_table($table_name); 			//dump it to output (buffer)
-    // $the_db_dump .=htmlspecialchars($backup->output); 	//write output
+    // for ($i=0;$i<$broj;$i++) {                        //dump all tables:
+    // $table_name = $backup->tables[$i];             //get table name
+    // $backup->dump_table($table_name);             //dump it to output (buffer)
+    // $the_db_dump .=htmlspecialchars($backup->output);     //write output
     // }
 
     $the_db_dump .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end \n";
@@ -326,7 +326,7 @@ function dump_db()
             set_fontsizes(viewportwidth, "fullscreen");
         }
 
-        function get_msgs() {	//	10/23/12
+        function get_msgs() {    //    10/23/12
             $('statusBar').innerHTML = "<marquee scrollamount=10 direction='left' style='font-size: 1.5em; font-weight: bold;'>Downloading messages, please wait.</marquee>";
             $('statusBar').style.display = "inline-block";
             var randomnumber = Math.floor(Math.random() * 99999999);
@@ -338,7 +338,7 @@ function dump_db()
             }
         }
 
-        function handleRequestStateChange() {	//	10/23/12
+        function handleRequestStateChange() {    //    10/23/12
             var the_resp;
             var the_val;
             if (xmlHttp.readyState == 4) {
@@ -407,21 +407,21 @@ function dump_db()
             }
         }
 
-        function checkAll() {	//	9/10/13
+        function checkAll() {    //    9/10/13
             var theField = document.user_add_Form.elements["frm_group[]"];
             for (i = 0; i < theField.length; i++) {
                 theField[i].checked = true;
             }
         }
 
-        function uncheckAll() {	//	9/10/13
+        function uncheckAll() {    //    9/10/13
             var theField = document.user_add_Form.elements["frm_group[]"];
             for (i = 0; i < theField.length; i++) {
                 theField[i].checked = false;
             }
         }
 
-        function $() {									// 7/11/10
+        function $() {                                    // 7/11/10
             var elements = new Array();
             for (var i = 0; i < arguments.length; i++) {
                 var element = arguments[i];
@@ -455,38 +455,38 @@ function dump_db()
             if (self.location.href == parent.location.href) {
                 self.location.href = 'index.php';
             } else {
-                parent.upper.show_butts();										// 1/21/09
+                parent.upper.show_butts();                                        // 1/21/09
             }
             <?php
             }
             ?>
-        }		// end function ck_frames()
+        }        // end function ck_frames()
 
-        function get_new_colors() {								// 5/4/11
+        function get_new_colors() {                                // 5/4/11
             window.location.href = '<?php print basename(__FILE__);?>';
         }
 
 
-        function isNull(val) {								// checks var stuff = null;
+        function isNull(val) {                                // checks var stuff = null;
             return val === null;
         }
 
-        String.prototype.trim = function () {				// 10/19/08
+        String.prototype.trim = function () {                // 10/19/08
             return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
         };
 
-        function in_array(ary, val) {						// 12/2/08
+        function in_array(ary, val) {                        // 12/2/08
             for (var i = 0; i < ary.length; i++) {
                 if (ary[i] == val) {
                     return true;
                 }
             }
             return false;
-        }				// end function in array
+        }                // end function in array
 
         starting = false;
 
-        function do_mail_win() {			// 6/13/09, 11/5/09
+        function do_mail_win() {            // 6/13/09, 11/5/09
             if (starting) {
                 return;
             }
@@ -502,7 +502,7 @@ function dump_db()
         }
 
 
-        function do_audio_test() {				// 8/2/08 -	11/5/09 - 4/25/12
+        function do_audio_test() {                // 8/2/08 -    11/5/09 - 4/25/12
             var newwindow_au = window.open("audio.php", "Test_Audio", "titlebar, resizable=1, scrollbars, height=540,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50");
             newwindow_au.focus();
             if (isNull(newwindow_au)) {
@@ -512,7 +512,7 @@ function dump_db()
             newwindow_au.focus();
         }
 
-        function do_ogts() {				// 8/2/08 -	11/5/09
+        function do_ogts() {                // 8/2/08 -    11/5/09
             var newwindow_t = window.open("opengts.php", "Test_OGTS", "titlebar, resizable=1, scrollbars, height=600,width=540,status=0,toolbar=0,menubar=0,location=0, left=150,top=150,screenX=150,screenY=150");
             newwindow_t.focus();
             if (isNull(newwindow_t)) {
@@ -522,7 +522,7 @@ function dump_db()
             newwindow_t.focus();
         }
 
-        function do_t_tracker() {				// 9/27/11
+        function do_t_tracker() {                // 9/27/11
             var newwindow_t = window.open("t_tracker.php", "Test_Internal_Tracker", "titlebar, resizable=1, scrollbars, height=600,width=540,status=0,toolbar=0,menubar=0,location=0, left=150,top=150,screenX=150,screenY=150");
             newwindow_t.focus();
             if (isNull(newwindow_t)) {
@@ -532,7 +532,7 @@ function dump_db()
             newwindow_t.focus();
         }
 
-        function do_test() {				// 8/2/08 -	11/5/09
+        function do_test() {                // 8/2/08 -    11/5/09
             var newwindow_t = window.open("opena.php", "Test_APRS", "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=150,top=150,screenX=150,screenY=150");
             newwindow_t.focus();
             if (isNull(newwindow_t)) {
@@ -542,7 +542,7 @@ function dump_db()
             newwindow_t.focus();
         }
 
-        function do_smtp() {				// 8/2/08 -	11/5/09
+        function do_smtp() {                // 8/2/08 -    11/5/09
             var newwindow_t = window.open("smtp_test.php", "Test_SMTP", "titlebar, resizable=1, scrollbars, height=600,width=900,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50");
             newwindow_t.focus();
             if (isNull(newwindow_t)) {
@@ -552,7 +552,7 @@ function dump_db()
             newwindow_t.focus();
         }
 
-        function file_window() {										// 9/10/13
+        function file_window() {                                        // 9/10/13
             var url = "file_upload.php";
             var nfWindow = window.open(url, 'NewFileWindow', 'resizable=1, scrollbars, height=600, width=600, left=100,top=100,screenX=100,screenY=100');
             setTimeout(function () {
@@ -560,7 +560,7 @@ function dump_db()
             }, 1);
         }
 
-        function do_native() {				// 8/2/08 -	11/5/09
+        function do_native() {                // 8/2/08 -    11/5/09
             var newwindow_t = window.open("native.php", "Test_Native_Email", "titlebar, resizable=1, scrollbars, height=600,width=900,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50");
             newwindow_t.focus();
             if (isNull(newwindow_t)) {
@@ -570,7 +570,7 @@ function dump_db()
             newwindow_t.focus();
         }
 
-        function do_instam() {				// 7/26/09	- 11/5/09
+        function do_instam() {                // 7/26/09    - 11/5/09
             var newwindow_t = window.open("test_instam.php", "Test_InstaMapper", "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50");
             newwindow_t.focus();
             if (isNull(newwindow_t)) {
@@ -580,7 +580,7 @@ function dump_db()
             newwindow_t.focus();
         }
 
-        function do_glat() {				// 7/29/09	- 11/5/09
+        function do_glat() {                // 7/29/09    - 11/5/09
             var newwindow_t = window.open("latitude.php", "Test_Google_Latitude", "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50");
             newwindow_t.focus();
             if (isNull(newwindow_t)) {
@@ -590,7 +590,7 @@ function dump_db()
             newwindow_t.focus();
         }
 
-        function do_locatea() {				// 7/29/09 - 11/5/09
+        function do_locatea() {                // 7/29/09 - 11/5/09
             var newwindow_t = window.open("locatea.php", "Test_Locatea", "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50");
             newwindow_t.focus();
             if (isNull(newwindow_t)) {
@@ -600,7 +600,7 @@ function dump_db()
             newwindow_t.focus();
         }
 
-        function do_gtrack() {				// 7/29/09	- 11/5/09
+        function do_gtrack() {                // 7/29/09    - 11/5/09
             var newwindow_t = window.open("gtrack.php", "Test_Gtrack", "titlebar, resizable=1, scrollbars, height=400,width=600,status=0,toolbar=0,menubar=0,location=0, left=50,top=50,screenX=50,screenY=50");
             newwindow_t.focus();
             if (isNull(newwindow_t)) {
@@ -615,23 +615,23 @@ function dump_db()
             document.tables.submit();
         }
 
-        var type;					// Global variable - identifies browser family
+        var type;                    // Global variable - identifies browser family
         BrowserSniffer();
 
-        function BrowserSniffer() {													//detects the capabilities of the browser
-            if (navigator.userAgent.indexOf("Opera") != -1 && document.getElementById) type = "OP";	//Opera
-            else if (document.all) type = "IE";										//Internet Explorer e.g. IE4 upwards
-            else if (document.layers) type = "NN";									//Netscape Communicator 4
-            else if (!document.all && document.getElementById) type = "MO";			//Mozila e.g. Netscape 6 upwards
-            else type = "IE";														//????????????
+        function BrowserSniffer() {                                                    //detects the capabilities of the browser
+            if (navigator.userAgent.indexOf("Opera") != -1 && document.getElementById) type = "OP";    //Opera
+            else if (document.all) type = "IE";                                        //Internet Explorer e.g. IE4 upwards
+            else if (document.layers) type = "NN";                                    //Netscape Communicator 4
+            else if (!document.all && document.getElementById) type = "MO";            //Mozila e.g. Netscape 6 upwards
+            else type = "IE";                                                        //????????????
         }
 
-        function whatBrows() {					//Displays the generic browser type
+        function whatBrows() {                    //Displays the generic browser type
             window.alert("Browser is : " + type);
         }
 
-        function ShowLayer(id, action) {												// Show and hide a span/layer -- Seems to work with all versions NN4 plus other browsers
-            if (type == "IE") eval("document.all." + id + ".style.display='" + action + "'");  	// id is the span/layer, action is either hidden or visible
+        function ShowLayer(id, action) {                                                // Show and hide a span/layer -- Seems to work with all versions NN4 plus other browsers
+            if (type == "IE") eval("document.all." + id + ".style.display='" + action + "'");      // id is the span/layer, action is either hidden or visible
             if (type == "NN") eval("document." + id + ".display='" + action + "'");
             if (type == "MO" || type == "OP") eval("document.getElementById('" + id + "').style.display='" + action + "'");
         }
@@ -644,7 +644,7 @@ function dump_db()
             ShowLayer(elid, "block");
         }
 
-        function validate_cen(theForm) {			// Map center  validation
+        function validate_cen(theForm) {            // Map center  validation
             var errmsg = "";
             if (theForm.frm_lat.value == "") {
                 errmsg += "\tMap center is required.\n";
@@ -655,19 +655,19 @@ function dump_db()
             if (errmsg != "") {
                 alert("Please correct the following and re-submit:\n\n" + errmsg);
                 return false;
-            } else {										// good to go!
-//			theForm.frm_lat.disabled = false;
-//			theForm.frm_lng.disabled = false;
+            } else {                                        // good to go!
+//            theForm.frm_lat.disabled = false;
+//            theForm.frm_lng.disabled = false;
                 theForm.frm_zoom.disabled = false;
                 return true;
             }
-        }				// end function validate cen(theForm)
+        }                // end function validate cen(theForm)
 
-        var str_users = "<?php print $users;?>";				// 12/2/08
-        var ary_users = str_users.split("\t");				// see usage in function validate_user()
+        var str_users = "<?php print $users;?>";                // 12/2/08
+        var ary_users = str_users.split("\t");                // see usage in function validate_user()
 
-        function validate_user(theForm) {			// user form contents validation
-//		alert("280 " + theForm.frm_responder_id.value);
+        function validate_user(theForm) {            // user form contents validation
+//        alert("280 " + theForm.frm_responder_id.value);
             if (theForm.frm_remove) {
                 if (theForm.frm_remove.checked) {
                     if (confirm("Please confirm this removal.")) {
@@ -701,7 +701,7 @@ function dump_db()
 
             if ((theForm.frm_func.value == "a") && (theForm.frm_passwd.value == "")) {
                 errmsg += "\tPASSWORD is required.\n";
-            }		// only for ADD
+            }        // only for ADD
             if ((theForm.frm_passwd.value.trim().length > 0) && (theForm.frm_passwd.value.trim().length < 5)) {
                 errmsg += "\tPasswd length 5 or more is required.\n";
             }
@@ -714,44 +714,34 @@ function dump_db()
             if (errmsg != "") {
                 alert("Please correct the following and re-submit:\n\n" + errmsg);
                 return false;
-            } else {										// good to go!
+            } else {                                        // good to go!
                 theForm.frm_hash.value = (theForm.frm_passwd.value.trim() == "") ? "" : hex_md5(theForm.frm_passwd.value.trim().toLowerCase());
-                theForm.frm_passwd.value = "";			// hide them
+                theForm.frm_passwd.value = "";            // hide them
                 theForm.frm_passwd_confirm.value = "";
                 theForm.submit();
             }
-        }				// end function validate user()
+        }                // end function validate user()
 
-        function do_set_unit(in_val) {					// selected value to hidden
+        function do_set_unit(in_val) {                    // selected value to hidden
             document.user_add_Form.frm_responder_id.value = in_val;
         }
 
-        function do_set_facility(in_val) {					// selected value to hidden
+        function do_set_facility(in_val) {                    // selected value to hidden
             document.user_add_Form.frm_facility_id.value = in_val;
         }
 
-        function validate_set(theForm) {			// limited form contents validation
+        function validate_set(theForm) {            // limited form contents validation
             var errmsg = "";
-//		if (theForm.gmaps_api_key.value.length!=86)			{errmsg+= "\tInvalid GMaps API key\n";}	// 3/4/12
+//        if (theForm.gmaps_api_key.value.length!=86)            {errmsg+= "\tInvalid GMaps API key\n";}    // 3/4/12
             if (errmsg != "") {
                 alert("Please correct the following and re-submit:\n\n" + errmsg);
                 return false;
-            } else {										// good to go!
+            } else {                                        // good to go!
                 return true;
             }
-        }				// end function validate set(theForm)
+        }                // end function validate set(theForm)
 
-        function validate_css_day(theForm) {			// limited form contents validation css colors day 3/15/11
-            var errmsg = "";
-            if (errmsg != "") {
-                alert("Please correct the following and re-submit:\n\n" + errmsg);
-                return false;
-            } else {
-                return true;
-            }
-        }				// end function validate set(theForm)
-
-        function validate_css_night(theForm) {			// limited form contents validation css night colors 3/15/11
+        function validate_css_day(theForm) {            // limited form contents validation css colors day 3/15/11
             var errmsg = "";
             if (errmsg != "") {
                 alert("Please correct the following and re-submit:\n\n" + errmsg);
@@ -759,23 +749,33 @@ function dump_db()
             } else {
                 return true;
             }
-        }				// end function validate set(theForm)
+        }                // end function validate set(theForm)
 
-        function add_res() {		// turns on add responder form
+        function validate_css_night(theForm) {            // limited form contents validation css night colors 3/15/11
+            var errmsg = "";
+            if (errmsg != "") {
+                alert("Please correct the following and re-submit:\n\n" + errmsg);
+                return false;
+            } else {
+                return true;
+            }
+        }                // end function validate set(theForm)
+
+        function add_res() {        // turns on add responder form
             showit('res_add_form');
             hideit('tbl_responders');
-            hideIcons();			// hides responder icons
+            hideIcons();            // hides responder icons
             map.setCenter(new L.LatLng(<?php echo get_variable('def_lat'); ?>, <?php echo get_variable('def_lng'); ?>), <?php echo get_variable('def_zoom'); ?>);
         }
 
         function hideIcons() {
             map.clearOverlays();
-        }				// end function hideicons()
+        }                // end function hideicons()
 
         function do_lat(lat) {
             var num = new Number(lat)
-            document.cen_Form.frm_lat.value = num.toFixed(6);			// 9/9/08
-            document.cen_Form.show_lat.disabled = false;				// permit read/write
+            document.cen_Form.frm_lat.value = num.toFixed(6);            // 9/9/08
+            document.cen_Form.show_lat.disabled = false;                // permit read/write
             document.cen_Form.show_lat.value = do_lat_fmt(document.cen_Form.frm_lat.value);
             document.cen_Form.show_lat.disabled = true;
         }
@@ -789,8 +789,8 @@ function dump_db()
         }
 
 
-        function do_grids(theForm) {								// 8/23/08, 12/5/10
-            theForm.frm_ngs.value = LLtoUSNG(theForm.frm_lat.value, theForm.frm_lng.value, 5);	// USNG
+        function do_grids(theForm) {                                // 8/23/08, 12/5/10
+            theForm.frm_ngs.value = LLtoUSNG(theForm.frm_lat.value, theForm.frm_lng.value, 5);    // USNG
             do_utm(theForm);
             do_osgb(theForm);
         }
@@ -814,25 +814,25 @@ function dump_db()
             document.cen_Form.frm_zoom.disabled = true;
         }
 
-        function collect() {				// constructs a string of id's for deletion
+        function collect() {                // constructs a string of id's for deletion
             var str = sep = "";
             for (i = 0; i < document.del_Form.elements.length; i++) {
                 if (document.del_Form.elements[i].type == 'checkbox' && (document.del_Form.elements[i].checked == true)) {
-                    str += (sep + document.del_Form.elements[i].name.substring(1));		// drop T
+                    str += (sep + document.del_Form.elements[i].name.substring(1));        // drop T
                     sep = ",";
                 }
             }
             document.del_Form.idstr.value = str;
-            document.del_Form.submit();									// 6/4/08 - added
+            document.del_Form.submit();                                    // 6/4/08 - added
         }
 
-        function all_ticks(bool_val) {									// set checkbox = true/false
+        function all_ticks(bool_val) {                                    // set checkbox = true/false
             for (i = 0; i < document.del_Form.elements.length; i++) {
                 if (document.del_Form.elements[i].type == 'checkbox') {
                     document.del_Form.elements[i].checked = bool_val;
                 }
-            }			// end for (...)
-        }				// end function all_ticks()
+            }            // end for (...)
+        }                // end function all_ticks()
 
         <?php
         print "// file as of " . date("l, dS F, Y @ h:ia", filemtime(basename(__FILE__))) . "\n";
@@ -845,7 +845,7 @@ function dump_db()
             if (starting) {
                 return;
             }
-            parent.upper.do_set_sess_exp();				// session expiration update
+            parent.upper.do_set_sess_exp();                // session expiration update
 
             if (window.focus() && window_about) {
                 window_about.focus()
@@ -865,7 +865,7 @@ function dump_db()
             starting = false;
         }        // end function do full_scr()
 
-        function do_night_color_check() {	//	Load color checker popup from night config screen	3/15/11
+        function do_night_color_check() {    //    Load color checker popup from night config screen    3/15/11
             var bgc = document.css_night_Form.page_background.value;
             var txt = document.css_night_Form.normal_text.value;
             var rl = document.css_night_Form.row_light.value;
@@ -885,7 +885,7 @@ function dump_db()
             var legend = document.css_night_Form.legend.value;
             if (starting) {
                 return;
-            }					// dbl-click catcher
+            }                    // dbl-click catcher
             starting = true;
             var url = "do_color_checker.php?mode=day&func=main&bgc=" + escape(bgc) + "&txt=" + escape(txt) + "&rl=" + escape(rl) + "&rd=" + escape(rd) + "&plain=" + escape(plain) + "&hdgb=" + escape(hdgb) + "&hdgt=" + escape(hdgt) + "&spacer=" + escape(spacer) + "&links=" + escape(links) + "&header=" + escape(headings) + "&inpb=" + escape(inpb) + "&inpt=" + escape(inpt) + "&otxt=" + escape(otxt) + "&smb=" + escape(smb) + "&smt=" + escape(smf) + "&legend=" + escape(legend) + "&titlebar=" + escape(tbt);
 
@@ -896,9 +896,9 @@ function dump_db()
             }
             newwindow_colcheck.focus();
             starting = false;
-        }		// end function do night color_check()
+        }        // end function do night color_check()
 
-        function do_day_color_check() {	//	Load color checker popup from day config screen	3/15/11
+        function do_day_color_check() {    //    Load color checker popup from day config screen    3/15/11
             var bgc = document.css_day_Form.page_background.value;
             var txt = document.css_day_Form.normal_text.value;
             var rl = document.css_day_Form.row_light.value;
@@ -918,7 +918,7 @@ function dump_db()
             var legend = document.css_day_Form.legend.value;
             if (starting) {
                 return;
-            }					// dbl-click catcher
+            }                    // dbl-click catcher
             starting = true;
             var url = "do_color_checker.php?mode=night&func=main&bgc=" + escape(bgc) + "&txt=" + escape(txt) + "&rl=" + escape(rl) + "&rd=" + escape(rd) + "&plain=" + escape(plain) + "&hdgb=" + escape(hdgb) + "&hdgt=" + escape(hdgt) + "&spacer=" + escape(spacer) + "&links=" + escape(links) + "&header=" + escape(headings) + "&inpb=" + escape(inpb) + "&inpt=" + escape(inpt) + "&otxt=" + escape(otxt) + "&smb=" + escape(smb) + "&smt=" + escape(smf) + "&legend=" + escape(legend) + "&titlebar=" + escape(tbt);
 
@@ -929,7 +929,7 @@ function dump_db()
             }
             newwindow_colcheck.focus();
             starting = false;
-        }		// end function do daycolor_check()
+        }        // end function do daycolor_check()
 
     </SCRIPT>
 
@@ -1010,21 +1010,21 @@ function dump_db()
     ?>
     <DIV ID='outer'>
         <DIV id='button_bar' class='but_container'>
-							<SPAN CLASS='heading'
+                            <SPAN CLASS='heading'
                                   STYLE='text-align: center; display: inline; font-size: 1.5em;'><?php echo $heading; ?>
-							<SPAN ID='can_but' class='plain text'
+                            <SPAN ID='can_but' class='plain text'
                                   style='float: right; width: 100px; display: inline-block;'
                                   onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                                   onClick='window.close();'><SPAN
                                     STYLE='float: left;'><?php print get_text("Cancel"); ?></SPAN><IMG
                                     STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
-							<SPAN ID='reset_but' class='plain text'
+                            <SPAN ID='reset_but' class='plain text'
                                   style='float: right; width: 100px; display: inline-block;'
                                   onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                                   onClick='document.notify_form.reset();'><SPAN
                                     STYLE='float: left;'><?php print get_text("Reset"); ?></SPAN><IMG
                                     STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
-							<SPAN ID='sub_but' class='plain text'
+                            <SPAN ID='sub_but' class='plain text'
                                   style='float: right; width: 100px; display: inline-block;'
                                   onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                                   onClick='validate(document.notify_form);'><SPAN
@@ -1138,7 +1138,7 @@ function dump_db()
             </DIV>
             </BODY>
             <SCRIPT>
-                function validate(theForm) {			// notify record validate 10/23/08, 8/28/13
+                function validate(theForm) {            // notify record validate 10/23/08, 8/28/13
                     var errmsg = "";
                     if ((!validate_email(theForm.frm_email.value.trim())) && (theForm.frm_mailgroup == 0)) {
                         errmsg += "\tValid email address or mail list is required.\n";
@@ -1149,18 +1149,18 @@ function dump_db()
                     if (errmsg != "") {
                         alert("Please correct the following and re-submit:\n\n" + errmsg);
                         return false;
-                    } else {										// good to go!
+                    } else {                                        // good to go!
                         theForm.frm_severity[0].disabled = !(theForm.frm_severity[0].checked);
                         theForm.frm_severity[1].disabled = !(theForm.frm_severity[1].checked);
                         theForm.submit();
                     }
-                }				// end function validate(theForm)
+                }                // end function validate(theForm)
 
                 function validate_email(field) {
                     apos = field.indexOf("@");
                     dotpos = field.lastIndexOf(".");
                     return (!(apos < 1 || dotpos - apos < 2));
-                }				// end function validate_email()
+                }                // end function validate_email()
             </SCRIPT>
 
 </HTML>
@@ -1192,16 +1192,16 @@ else if ((array_key_exists('save', ($_GET))) && ($_GET['save'] == 'true')) {
             $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));
             // 1/27/09 - 1/22/11
             $query = "UPDATE `{$GLOBALS['mysql_prefix']}notify` SET
-							`execute_path` = ?,
-							`email_address` = ?,
-							`mailgroup` = ?,
-							`on_action` = ?,
-							`on_patient` = ?,
-							`on_ticket` = ?,
-							`by` = ?,
-							`from` = ?,
-							`on` = ?
-							WHERE `id` = ?";
+                            `execute_path` = ?,
+                            `email_address` = ?,
+                            `mailgroup` = ?,
+                            `on_action` = ?,
+                            `on_patient` = ?,
+                            `on_ticket` = ?,
+                            `by` = ?,
+                            `from` = ?,
+                            `on` = ?
+                            WHERE `id` = ?";
 
             $result = db_query($query, [$_POST['frm_execute'][$i], $_POST['frm_email'][$i], $mailGroup, $on_action_val, $on_patient_val, $on_ticket_val, $_SESSION['user_id'], $_SERVER['REMOTE_ADDR'], $now, $_POST['frm_id'][$i]]);
         }
@@ -1224,18 +1224,18 @@ else if ((array_key_exists('add', ($_GET))) && ($_GET['add'] == 'true')) {    //
     $mailGroup = ($_POST['frm_mailgroup']) ? $_POST['frm_mailgroup'] : 0;
 
     $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}notify` SET
-					`ticket_id` = ?,
-					`user` = ?,
-					`email_address` = ?,
-					`mailgroup` = ?,
-					`execute_path` = ?,
-					`on_action` = ?,
-					`on_patient` = ?,
-					`on_ticket` = ?,
-					`severities` = ?,
-					`by` = ?,
-					`from` = ?,
-					`on` = ?";
+                    `ticket_id` = ?,
+                    `user` = ?,
+                    `email_address` = ?,
+                    `mailgroup` = ?,
+                    `execute_path` = ?,
+                    `on_action` = ?,
+                    `on_patient` = ?,
+                    `on_ticket` = ?,
+                    `severities` = ?,
+                    `by` = ?,
+                    `from` = ?,
+                    `on` = ?";
 
     $result = db_query($query, [$_POST['frm_id'], $_SESSION['user_id'], $_POST['frm_email'], $mailGroup, $_POST['frm_execute'], $on_action, $on_action, $on_ticket, $_POST['frm_severity'], $_SESSION['user_id'], $_SERVER['REMOTE_ADDR'], $now]);
     if (!get_variable('allow_notify')) print "<FONT CLASS='warn'>Warning: Notification is disabled by administrator</FONT><BR /><BR />";
@@ -1285,10 +1285,10 @@ else {
             $i++;
         }
         print "<TR CLASS='" . $colors[$i % 2] . "'><TD COLSPAN=99 ALIGN='center'><BR />
-						<SPAN id='update_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.frm_update.submit();'><SPAN STYLE='float: left;'>" . get_text('Update') . "</SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
-						<SPAN id='send_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.new_notify.submit();'><SPAN STYLE='float: left;'>" . get_text('New Notify') . "</SPAN><IMG STYLE='float: right;' SRC='./images/plus_small.png' BORDER=0></SPAN>
-						<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.frm_update.reset();'><SPAN STYLE='float: left;'>" . get_text('Reset') . "</SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
-						<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'><SPAN STYLE='float: left;'>" . get_text('Cancel') . "</SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>";
+                        <SPAN id='update_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.frm_update.submit();'><SPAN STYLE='float: left;'>" . get_text('Update') . "</SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>
+                        <SPAN id='send_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.new_notify.submit();'><SPAN STYLE='float: left;'>" . get_text('New Notify') . "</SPAN><IMG STYLE='float: right;' SRC='./images/plus_small.png' BORDER=0></SPAN>
+                        <SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.frm_update.reset();'><SPAN STYLE='float: left;'>" . get_text('Reset') . "</SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+                        <SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_Form.submit();'><SPAN STYLE='float: left;'>" . get_text('Cancel') . "</SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>";
         print "</FORM></TABLE><BR />";
         ?>
         <FORM NAME='new_notify' method='GET' ACTION='<?php print basename(__FILE__); ?>'>
@@ -1449,11 +1449,11 @@ case 'profile' :                    //update profile
         </BODY>
         <SCRIPT>
 
-            function validate_prof(theForm) {			// profile form contents validation
+            function validate_prof(theForm) {            // profile form contents validation
                 var errmsg = "";
                 if (theForm.frm_passwd.value != theForm.frm_passwd_confirm.value) {
                     errmsg += "\tPASSWORD and CONFIRM fail to match.\n";
-                } else {				// 8/27/10
+                } else {                // 8/27/10
                     if ((theForm.frm_passwd.value.trim() == "") || (theForm.frm_passwd.value.trim().length < 6)) {
                         errmsg += "\tPasswd length 6 or more is required.\n";
                     }
@@ -1462,17 +1462,17 @@ case 'profile' :                    //update profile
                 if (errmsg != "") {
                     alert("Please correct the following and re-submit:\n\n" + errmsg);
                     return false;
-                } else {										// good to go!
-                    //			if(theForm.frm_passwd.value!="") {
+                } else {                                        // good to go!
+                    //            if(theForm.frm_passwd.value!="") {
                     theForm.frm_hash.value = hex_md5(theForm.frm_passwd.value.trim().toLowerCase());
-                    theForm.frm_passwd.value = theForm.frm_passwd_confirm.value = "";					// hide them
-                    //				}
+                    theForm.frm_passwd.value = theForm.frm_passwd_confirm.value = "";                    // hide them
+                    //                }
                     theForm.submit();
                 }
-            }				// end function validate prof(theForm)
+            }                // end function validate prof(theForm)
 
 
-            function validate(theForm) {						//profile validation	- 10/23/08
+            function validate(theForm) {                        //profile validation    - 10/23/08
                 var errmsg = "";
                 if (theForm.frm_passwd.value.trim().length < 6) {
                     errmsg += "\tPasswd length 6 or more is required.\n";
@@ -1489,11 +1489,11 @@ case 'profile' :                    //update profile
                 if (errmsg != "") {
                     alert("Please correct the following and re-submit:\n\n" + errmsg);
                     return false;
-                } else {										// good to go!
+                } else {                                        // good to go!
                     theForm.submit();
                     return true;
                 }
-            }				// end function validate(theForm)
+            }                // end function validate(theForm)
 
         </SCRIPT>
         </HTML>
@@ -1514,7 +1514,7 @@ case 'reset' :
     if ((isset($_GET['auth'])) && ($_GET['auth'] == 'true') && ($_POST['frm_confirm'] == 'yes')) {
         print "</HEAD>\n<BODY onLoad = 'ck_frames()'>\n";
     include("./incs/links.inc.php");
-        dump_db();    //	for security, dump db to file;
+        dump_db();    //    for security, dump db to file;
         print "Database Backed Up<BR />";
         $ticket = ((isset($_POST['frm_ticket'])) && ($_POST['frm_ticket'] == 1)) ? 1 : 0;
         $responders = ((isset($_POST['frm_responders'])) && ($_POST['frm_responders'] == 1)) ? 1 : 0;
@@ -1635,8 +1635,8 @@ case 'settings' :
 
         <?php
         print "<SPAN STYLE='margin-left:40px'><FONT CLASS='header'>Edit Settings</FONT>  (mouseover caption for help information)</SPAN><BR /><BR />
-				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'set_Form'  
-				onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=settings&go=true'>";
+                <TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'set_Form'
+                onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=settings&go=true'>";
         $counter = 0;
         $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}settings` ORDER BY name");
         while ($row = stripslashes_deep($result->fetch_array())) {
@@ -1700,7 +1700,7 @@ case 'settings' :
     }                // end else
     break;
 
-case 'msg_settings' :    //	10/23/12
+case 'msg_settings' :    //    10/23/12
     if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
         print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
     include("./incs/links.inc.php");        // 1/23/10
@@ -1727,8 +1727,8 @@ case 'msg_settings' :    //	10/23/12
 
         <?php
         print "<SPAN STYLE='margin-left:40px'><FONT CLASS='header'>Edit Messaging Settings</FONT>  (mouseover caption for help information)</SPAN><BR /><BR />
-				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'set_Form'  
-				onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=msg_settings&go=true'>";
+                <TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'set_Form'
+                onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=msg_settings&go=true'>";
         $counter = 0;
         $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}msg_settings` ORDER BY name");
         while ($row = stripslashes_deep($result->fetch_array())) {
@@ -1738,7 +1738,7 @@ case 'msg_settings' :    //	10/23/12
                 print "<TD><INPUT MAXLENGTH='512' SIZE='128' TYPE='text' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
                 $counter++;
             }
-            if (($row['name'][0] <> "_") && ($row['name'] == "email_password")) {        //	hide password characters
+            if (($row['name'][0] <> "_") && ($row['name'] == "email_password")) {        //    hide password characters
                 $capt = str_replace("_", " ", $row['name']);
                 print "<TR CLASS='" . $evenodd[$counter % 2] . "'><TD CLASS='td_label'><A HREF='#' TITLE='" . get_msg_settings_help($row['name']) . "'>$capt</A>: &nbsp;</TD>";
                 print "<TD><INPUT MAXLENGTH='512' SIZE='128' TYPE='password' VALUE='" . $row['value'] . "' NAME='" . $row['name'] . "'></TD></TR>\n";
@@ -1869,8 +1869,8 @@ case 'mdb_settings' :
 
         <?php
         print "<SPAN STYLE='margin-left:40px'><FONT CLASS='header'>Edit Membership Database Settings</FONT>  (mouseover caption for help information)</SPAN><BR /><BR />
-				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'set_Form'  
-				onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=mdb_settings&go=true'>";
+                <TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'set_Form'
+                onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=mdb_settings&go=true'>";
         $counter = 0;
         $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}mdb_settings` ORDER BY name");
         while ($row = stripslashes_deep($result->fetch_array())) {
@@ -2044,16 +2044,16 @@ case 'wizard_settings' :
             }
             foreach ($output_arr as $key => $val) {
                 $query = "UPDATE `{$GLOBALS['mysql_prefix']}wizard_settings` SET
-						`fieldname` = ?,
-						`label` = ?,
-						`screen` = ?,
-						`display_order` = ?,
-						`maxlength` = ?,
-						`fieldtype` = ?,
-						`helptext` = ?,
-						`default_text` = ?,
-						`size` = ?
-						WHERE `id` = ?";
+                        `fieldname` = ?,
+                        `label` = ?,
+                        `screen` = ?,
+                        `display_order` = ?,
+                        `maxlength` = ?,
+                        `fieldtype` = ?,
+                        `helptext` = ?,
+                        `default_text` = ?,
+                        `size` = ?
+                        WHERE `id` = ?";
                 $result = db_query($query, [$val['frm_fieldname'], $val['frm_label'], $val['frm_screen'], $val['frm_display_order'], $val['frm_maxlength'], $val['frm_fieldtype'], $val['frm_helptext'], $val['frm_default_text'], $val['frm_fieldsize'], $key]);
             }
             print '<FONT CLASS="update_conf">Wizard Settings saved.<BR /><BR />';
@@ -2123,8 +2123,8 @@ case 'wizard_settings' :
 
         <?php
         print "<SPAN STYLE='position: relative; top: 30px; margin-left: 40px'><FONT CLASS='header text_biggest'>Edit New Incident Wizard Settings</FONT>&nbsp;&nbsp;&nbsp;(mouseover caption for help information)</SPAN><BR /><BR />
-				<FORM METHOD='POST' NAME= 'set_Form' onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=wizard_settings&go=true'>
-				<TABLE id='settings_table' BORDER='0' STYLE='position: relative; top: 30px; margin-left: 40px; width: auto;'>";
+                <FORM METHOD='POST' NAME= 'set_Form' onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=wizard_settings&go=true'>
+                <TABLE id='settings_table' BORDER='0' STYLE='position: relative; top: 30px; margin-left: 40px; width: auto;'>";
         print "<TR CLASS='header text text_left'><TH CLASS='header text text_left'>Field</TH><TH CLASS='header text text_left'>Label</TH><TH CLASS='header text text_left'>Screen</TH><TH CLASS='header text text_left'>Display Order</TH><TH CLASS='header text text_left'>Default Text</TH><TH CLASS='header text text_left'>Help Text</TH><TH CLASS='header text text_left'>Field Display Length</TH><TH CLASS='header text text_left'>Field Type</TH><TH CLASS='header text text_left'>Field Size</TH><TH CLASS='header text text_left'>&nbsp;&nbsp;&nbsp;</TH></TR>\n";
         $counter = 0;
         $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}wizard_settings` ORDER BY screen, display_order");
@@ -2211,7 +2211,7 @@ case 'wizard_settings' :
         }
 
         print "</TABLE></FORM><BR /><BR /><BR />";
-        $control = get_wizard_field_select(NULL, NULL);
+        $control = get_wizard_field_select(null, null);
         if ($control != "") {
             print "<SPAN STYLE='margin-left:40px'><FONT CLASS='header'>Add New Field</FONT>  (mouseover caption for help information)</SPAN><BR /><BR />";
             print "<FORM METHOD='POST' NAME= 'new_set_Form' ACTION='config.php?func=wizard_settings&go=true'>";
@@ -2319,11 +2319,11 @@ case 'sound_settings' :
         }
         foreach ($output_arr as $key => $val) {
             $query = "UPDATE `{$GLOBALS['mysql_prefix']}sound_settings` SET
-					`name` = ?,
-					`filename` = ?,
-					`mp3_filename` = ?,
-					`ison` = ?
-					WHERE `id` = ?";
+                    `name` = ?,
+                    `filename` = ?,
+                    `mp3_filename` = ?,
+                    `ison` = ?
+                    WHERE `id` = ?";
             $result = db_query($query, [$val['frm_name'], $val['frm_filename'], $val['frm_mp3_filename'], $val['frm_ison'], $key]);
         }
         print '<FONT CLASS="update_conf">Sound Settings saved.<BR /><BR />';
@@ -2353,8 +2353,8 @@ case 'sound_settings' :
         $theMP3Sounds = read_directory($theDirectory, "mp3");
 
         print "<SPAN STYLE='position: relative; top: 30px; margin-left: 40px'><FONT CLASS='header text_biggest'>Edit Sound Settings</FONT>&nbsp;&nbsp;&nbsp;(mouseover caption for help information)</SPAN><BR /><BR />
-				<FORM METHOD='POST' NAME= 'set_Form' onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=sound_settings&go=true'>
-				<TABLE id='settings_table' BORDER='0' STYLE='position: relative; top: 30px; margin-left: 40px; width: auto; padding: 2px;'>";
+                <FORM METHOD='POST' NAME= 'set_Form' onSubmit='return validate_set(document.set_Form);' ACTION='config.php?func=sound_settings&go=true'>
+                <TABLE id='settings_table' BORDER='0' STYLE='position: relative; top: 30px; margin-left: 40px; width: auto; padding: 2px;'>";
         print "<TR CLASS='header text text_left'><TH CLASS='header text text_left'>&nbsp;</TH><TH CLASS='header text text_left'>Name</TH><TH CLASS='header text text_left'>WAV File Name</TH><TH CLASS='header text text_left'>MP3 File Name</TH><TH CLASS='header text text_left'>Sound Used</TH></TR>\n";
         $counter = 0;
         $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}sound_settings` ORDER BY id");
@@ -2454,7 +2454,7 @@ case 'user' :
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE id=? LIMIT 1";
             $result = db_query($query, [$id]);
             $row = $result->fetch_assoc();
-            // ============================						10/28/10
+            // ============================                        10/28/10
             switch ($_SESSION['level']) {
                 case $GLOBALS['LEVEL_SUPER']:
                     $disabled = "";
@@ -2501,9 +2501,9 @@ case 'user' :
 
             $caption = (is_administrator() || is_super()) ? "Edit" : "View";
             $onclick = " onClick = '$(\"frm_responder_sel\").style.display = \"none\";$(\"unit_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true;
-							$(\"frm_facility_sel\").style.display = \"none\"; $(\"fac_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true;'";
+                            $(\"frm_facility_sel\").style.display = \"none\"; $(\"fac_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true;'";
             $adminonclick = " onClick = '$(\"frm_responder_sel\").style.display = \"inline\";$(\"unit_sel\").style.display = \"\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true;
-							$(\"frm_facility_sel\").style.display = \"none\"; $(\"fac_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true;'";
+                            $(\"frm_facility_sel\").style.display = \"none\"; $(\"fac_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true;'";
 
             $on_responder = " onClick = '$(\"frm_responder_sel\").style.display = \"inline\"; $(\"unit_sel\").style.display = \"\"; $(\"frm_facility_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true; $(\"fac_sel\").style.display = \"none\";'";
             $on_facility = " onClick = '$(\"frm_facility_sel\").style.display = \"inline\"; $(\"fac_sel\").style.display = \"\"; $(\"frm_responder_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true; $(\"unit_sel\").style.display = \"none\";'";
@@ -2558,10 +2558,10 @@ case 'user' :
                             // 7/4/16
                             $checked = (intval($row['level']) == intval($GLOBALS['LEVEL_FACILITY'])) ? "checked" : "";                        // 7/4/16
                             print get_text("Facility") . "&raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_FACILITY'] . "' {$checked} {$disabled} {$on_facility}>\n";
-                            //	7/6/11
+                            //    7/6/11
                             $checked = (intval($row['level']) == intval($GLOBALS['LEVEL_STATS'])) ? "checked" : "";                        // 12/15/08
                             print " Statistics &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_STATS'] . "' {$checked} {$disabled} {$onclick}>\n";
-                            //	10/23/12
+                            //    10/23/12
                             $checked = (intval($row['level']) == intval($GLOBALS['LEVEL_SERVICE_USER'])) ? "checked" : "";                        // 12/15/08
                             print " Service User &raquo;<INPUT TYPE='radio' NAME='frm_level' VALUE='" . $GLOBALS['LEVEL_SERVICE_USER'] . "' {$checked} {$disabled} {$onclick}>\n";
                             ?>
@@ -2574,13 +2574,13 @@ case 'user' :
                         print "<TD><SPAN id='expand_gps' onClick=\"$('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
                         print "<SPAN id='collapse_gps' onClick=\"$('groups_sh').style.display = 'none'; $('collapse_gps').style.display = 'none'; $('expand_gps').style.display = 'inline-block';\" style = 'display: none; font-size: 16px; border: 1px solid;'><B>-</B></SPAN>";
                         print "</TD><TD COLSPAN =2 ALIGN='left'>";
-                        $alloc_groups = implode(',', get_allocates(4, $id));    //	6/10/11
-                        print get_all_group_butts(get_allocates(4, $id));    //	6/10/11
+                        $alloc_groups = implode(',', get_allocates(4, $id));    //    6/10/11
+                        print get_all_group_butts(get_allocates(4, $id));    //    6/10/11
                         print "</TD></TR>";
                     } else {
                         print "<DIV style='display: none'>";
-                        $alloc_groups = implode(',', get_allocates(4, $id));    //	6/10/11
-                        print get_all_group_butts(get_allocates(4, $id));    //	6/10/11
+                        $alloc_groups = implode(',', get_allocates(4, $id));    //    6/10/11
+                        print get_all_group_butts(get_allocates(4, $id));    //    6/10/11
                         print "</DIV";
                     }
                     $unit_visibility = (intval($row['level']) == intval($GLOBALS['LEVEL_UNIT']) || intval($row['level']) == intval($GLOBALS['LEVEL_SUPER']) || intval($row['level']) == intval($GLOBALS['LEVEL_ADMINISTRATOR']) || intval($row['level']) == intval($GLOBALS['LEVEL_USER'])) ? "" : "style='display: none;'";
@@ -2821,27 +2821,27 @@ case 'user' :
                 $params[] = sanitize_string($_POST['frm_hash']);
             }
             $query = "UPDATE `{$GLOBALS['mysql_prefix']}user` SET " . $pass_sql . "
-								`addr_city` = ?,
-								`addr_st` = ?,
-								`addr_street` = ?,
-								`callsign` = ?,
-								`dob` = ?,
-								`email` = ?,
-								`email_s` = ?,
-								`ident` = ?,
-								`info` = ?,
-								`level` = ?,
-								`responder_id` = ?,
-								`facility_id` = ?,
-								`name_f` = ?,
-								`name_l` = ?,
-								`name_mi` = ?,
-								`phone_m` = ?,
-								`phone_p` = ?,
-								`phone_s` = ?,
-								`org` = ?,
-								`user` = ?
-								WHERE `id` = ?";
+                                `addr_city` = ?,
+                                `addr_st` = ?,
+                                `addr_street` = ?,
+                                `callsign` = ?,
+                                `dob` = ?,
+                                `email` = ?,
+                                `email_s` = ?,
+                                `ident` = ?,
+                                `info` = ?,
+                                `level` = ?,
+                                `responder_id` = ?,
+                                `facility_id` = ?,
+                                `name_f` = ?,
+                                `name_l` = ?,
+                                `name_mi` = ?,
+                                `phone_m` = ?,
+                                `phone_p` = ?,
+                                `phone_s` = ?,
+                                `org` = ?,
+                                `user` = ?
+                                WHERE `id` = ?";
             $params = array_merge($params, [
                 trim($_POST['frm_addr_city']),
                 trim($_POST['frm_addr_st']),
@@ -2868,21 +2868,21 @@ case 'user' :
 
             $result = db_query($query, $params);
 
-            $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));    //	6/10/11
-            $by = $_SESSION['user_id'];    //	6/10/11
+            $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));    //    6/10/11
+            $by = $_SESSION['user_id'];    //    6/10/11
 
-            $groups = "," . implode(',', $_POST['frm_group']) . ",";    //	6/10/11
-            $curr_groups = implode(',', get_allocates(4, $_POST['frm_id']));    //	6/10/11
-            $ex_grps = explode(',', $curr_groups);    //	6/10/11
-            if ($curr_groups != $groups) {    //	6/10/11
-                foreach ($_POST['frm_group'] as $posted_grp) {    //	6/10/11
+            $groups = "," . implode(',', $_POST['frm_group']) . ",";    //    6/10/11
+            $curr_groups = implode(',', get_allocates(4, $_POST['frm_id']));    //    6/10/11
+            $ex_grps = explode(',', $curr_groups);    //    6/10/11
+            if ($curr_groups != $groups) {    //    6/10/11
+                foreach ($_POST['frm_group'] as $posted_grp) {    //    6/10/11
                     if (!in_array($posted_grp, $ex_grps)) {
                         $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group`, `type`, `al_as_of`, `al_status`, `resource_id`, `sys_comments`, `user_id`) VALUES
-										(?, 4, ?, 0, ?, 'Allocated to Group', ?)";
+                                        (?, 4, ?, 0, ?, 'Allocated to Group', ?)";
                         $result = db_query($query, [sanitize_int($posted_grp), $now, sanitize_int($_POST['frm_id']), $by]);
                     }
                 }
-                foreach ($ex_grps as $existing_grps) {    //	6/10/11
+                foreach ($ex_grps as $existing_grps) {    //    6/10/11
                     if (!in_array($existing_grps, $_POST['frm_group'])) {
                         $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = 4 AND `group` = ? AND `resource_id` = ?";
                         $result = db_query($query, [sanitize_int($existing_grps), sanitize_int($_POST['frm_id'])]);
@@ -2900,7 +2900,7 @@ case 'user' :
                     $dob = empty($_POST['frm_dob']) ? null : trim($_POST['frm_dob']);        // 6/25/10
 
                     $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}user` (`addr_city`,`addr_st`,`addr_street`,`callsign`,`dob`,`email`,`email_s`,`passwd`,`ident`,`info`,`level`,`responder_id`,`facility_id`,`name_f`,`name_l`,`name_mi`,`phone_m`,`phone_p`,`phone_s`,`org`,`user`)
-							 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                     $result = db_query($query, [
                         trim($_POST['frm_addr_city']),
@@ -2925,12 +2925,12 @@ case 'user' :
                         trim($_POST['frm_org_cntl']),
                         trim($_POST['frm_user'])
                     ]);
-                    $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));    //	6/10/11
-                    $by = $_SESSION['user_id'];    //	6/10/11
-                    $new_id = db()->insert_id;    //	6/10/11
+                    $now = mysql_format_date(time() - (get_variable('delta_mins') * 60));    //    6/10/11
+                    $by = $_SESSION['user_id'];    //    6/10/11
+                    $new_id = db()->insert_id;    //    6/10/11
                     foreach ($_POST['frm_group'] as $grp_val) {    // 6/10/11
                         $query_a = "INSERT INTO `{$GLOBALS['mysql_prefix']}allocates` (`group`, `type`, `al_as_of`, `al_status`, `resource_id`, `sys_comments`, `user_id`) VALUES
-									(?, 4, ?, 0, ?, 'Allocated to Group', ?)";
+                                    (?, 4, ?, 0, ?, 'Allocated to Group', ?)";
                         $result_a = db_query($query_a, [sanitize_int($grp_val), $now, $new_id, $by]);
                     }
 
@@ -3049,7 +3049,7 @@ case 'user' :
                 $sel_str2 .= "\n</SELECT>\n";
 
                 $onclick = " onClick = '$(\"frm_responder_sel\").style.display = \"none\";$(\"unit_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true;
-								$(\"frm_facility_sel\").style.display = \"none\"; $(\"fac_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true;'";
+                                $(\"frm_facility_sel\").style.display = \"none\"; $(\"fac_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true;'";
 
                 $on_responder = " onClick = '$(\"frm_responder_sel\").style.display = \"inline\"; $(\"unit_sel\").style.display = \"inline\"; $(\"frm_facility_sel\").style.display = \"none\"; document.user_add_Form.frm_facility_id.value=0; document.user_add_Form.frm_facility_sel.options[0].selected = true; $(\"fac_sel\").style.display = \"none\";'";
                 $on_facility = " onClick = '$(\"frm_facility_sel\").style.display = \"inline\"; $(\"fac_sel\").style.display = \"inline\"; $(\"frm_responder_sel\").style.display = \"none\"; document.user_add_Form.frm_responder_id.value=0; document.user_add_Form.frm_responder_sel.options[0].selected = true; $(\"unit_sel\").style.display = \"none\";'";
@@ -3117,7 +3117,7 @@ case 'user' :
                             </TD>
                         </TR>
                         <?php
-                        if (is_super()) {        //	6/10/11
+                        if (is_super()) {        //    6/10/11
                             print "<TR CLASS='odd' VALIGN='top'>";
                             print "<TD CLASS='td_label'>" . get_text('Group') . "</A>: ";
                             print "<SPAN id='expand_gps' onClick=\"$('checkButts').style.display = 'inline-block'; $('groups_sh').style.display = 'inline-block'; $('expand_gps').style.display = 'none'; $('collapse_gps').style.display = 'inline-block';\" style = 'display: inline-block; font-size: 16px; border: 1px solid;'><B>+</B></SPAN>";
@@ -3127,8 +3127,8 @@ case 'user' :
                             print "<SPAN id='checkbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='checkAll();'>Check All</SPAN>";
                             print "<SPAN id='uncheckbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='uncheckAll();'>Uncheck All</SPAN>";
                             print "</DIV>";
-                            $alloc_groups = implode(',', get_allocates(1, $_SESSION['user_id']));    //	6/10/11
-                            print get_all_group_butts_chkd(get_allocates(4, $_SESSION['user_id']));    //	6/10/11
+                            $alloc_groups = implode(',', get_allocates(1, $_SESSION['user_id']));    //    6/10/11
+                            print get_all_group_butts_chkd(get_allocates(4, $_SESSION['user_id']));    //    6/10/11
                             print "</TD></TR>";
                         } elseif (is_admin()) {
                             print "<TR CLASS='odd' VALIGN='top'>";
@@ -3140,13 +3140,13 @@ case 'user' :
                             print "<SPAN id='checkbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='checkAll();'>Check All</SPAN>";
                             print "<SPAN id='uncheckbut' class='plain' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='uncheckAll();'>Uncheck All</SPAN>";
                             print "</DIV>";
-                            $alloc_groups = implode(',', get_allocates(1, $_SESSION['user_id']));    //	6/10/11
-                            print get_all_group_butts(get_allocates(4, $_SESSION['user_id']));    //	6/10/11
+                            $alloc_groups = implode(',', get_allocates(1, $_SESSION['user_id']));    //    6/10/11
+                            print get_all_group_butts(get_allocates(4, $_SESSION['user_id']));    //    6/10/11
                             print "</TD></TR>";
                         } else {
                             print "<DIV style='display: none'>";
-                            $alloc_groups = implode(',', get_allocates(4, $_SESSION['user_id']));    //	6/10/11
-                            print get_all_group_butts(get_allocates(4, $_SESSION['user_id']));    //	6/10/11
+                            $alloc_groups = implode(',', get_allocates(4, $_SESSION['user_id']));    //    6/10/11
+                            print get_all_group_butts(get_allocates(4, $_SESSION['user_id']));    //    6/10/11
                             print "</DIV";
                         }
                         ?>
@@ -3312,7 +3312,7 @@ case 'api_key' :
                 </TR>
                 <TR CLASS="even">
                     <TD ALIGN='center'>
-							<SPAN id='cancel_but' CLASS='plain text'
+                            <SPAN id='cancel_but' CLASS='plain text'
                                   style='float: none; width: 100px; display: inline-block;'
                                   onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                                   onClick="document.can_Form.submit();"><SPAN
@@ -3337,16 +3337,16 @@ case 'api_key' :
         <FORM NAME='can_Form' METHOD="post" ACTION="<?php print basename(__FILE__); ?>"></FORM>
         </BODY>
         <SCRIPT>
-            function validate_key(theForm) {			// limited form contents validation
+            function validate_key(theForm) {            // limited form contents validation
                 var errmsg = "";
-//			if (theForm.frm_value.value.length!=86)			{errmsg+= "\tEntered GMaps API key is Invalid\n\t - length must be 86 chars.";}
+//            if (theForm.frm_value.value.length!=86)            {errmsg+= "\tEntered GMaps API key is Invalid\n\t - length must be 86 chars.";}
                 if (errmsg != "") {
                     alert("Please correct and re-submit:\n\n" + errmsg);
                     return false;
-                } else {										// good to go!
+                } else {                                        // good to go!
                     return true;
                 }
-            }				// end function validate_key()
+            }                // end function validate_key()
 
         </SCRIPT>
         </HTML>
@@ -3355,7 +3355,7 @@ case 'api_key' :
     }        // end  else
     break;
 
-case 'dump' :                // see mysql.inc.php	for MySQL parameters
+case 'dump' :                // see mysql.inc.php    for MySQL parameters
 require_once('./incs/MySQLDump.class.php');
 $backup = new MySQLDump(); //create new instance of MySQLDump
 
@@ -3369,7 +3369,7 @@ $broj = count($backup->tables);                                        // count 
 //   will be array of table names
 ?>
 <SCRIPT>
-    function copyit() {						// 11/30/09
+    function copyit() {                        // 11/30/09
         var tempval = document.the_form.the_dump;
         tempval.focus();
         tempval.select();
@@ -3578,7 +3578,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
         $result = db_query($query, [$ticket_id]);
         do_log($GLOBALS['LOG_INCIDENT_DELETE'], $ticket_id);                                                                // added 6/4/08
 
-        //				dump ($query);
+        //                dump ($query);
     }
     $plu = ($i > 1) ? "s" : "";
     ?>
@@ -3627,29 +3627,29 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             $in_nums_ary[4] = $frm_do_nature;
             $in_nums_ary[5] = date("y");
             $the_val = base64_encode(serialize($in_nums_ary));
-            $the_field = "_inc_num";    //	3/15/11
-            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value` = ? WHERE `name` = ?";    //	3/15/11
+            $the_field = "_inc_num";    //    3/15/11
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value` = ? WHERE `name` = ?";    //    3/15/11
             $result = db_query($query, [$the_val, $the_field]);
 
             $top_notice = "Incident number update applied";
         } else {                // do edit
-        $in_ary = unserialize(base64_decode(get_variable('_inc_num')));    //	3/15/11
+        $in_ary = unserialize(base64_decode(get_variable('_inc_num')));    //    3/15/11
         $do_nature_n = ((int)$in_ary[4] == 0) ? "CHECKED" : "";
         $do_nature_y = ((int)$in_ary[4] == 1) ? "CHECKED" : "";
         $style_checked = array("", "", "", "", "", "");        // one for each style type
         $style_checked[$in_ary[0]] = "CHECKED";                // set nth style entry checked
         ?>
             <SCRIPT>
-                function validate_inc_num(theForm) {			// form contents validation
+                function validate_inc_num(theForm) {            // form contents validation
 
                     function get_radio_val(my_form) {
                         for (var i = 0; i < my_form.elements.length; i++) {
                             if ((my_form.elements[i].name == 'frm_style') && (my_form.elements[i].checked)) {
                                 return parseInt(my_form.elements[i].value);
                             }
-                        }		// end for ()
+                        }        // end for ()
                         return null;
-                    }		// end function get_radio_val()
+                    }        // end function get_radio_val()
 
                     var errmsg = "";
                     switch (get_radio_val(theForm)) {
@@ -3707,10 +3707,10 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                     if (errmsg != "") {
                         alert("Please correct and re-submit:\n\n" + errmsg);
                         return false;
-                    } else {										// good to go!
+                    } else {                                        // good to go!
                         theForm.submit();
                     }
-                }				// end function validate_inc_num()
+                }                // end function validate_inc_num()
 
             </SCRIPT>
             <FORM NAME="inc_num_Form" METHOD='post' ACTION="<?php print basename(__FILE__); ?>">
@@ -3726,20 +3726,20 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                     <TR VALIGN="baseline" CLASS='even'>
                         <TD CLASS='td_label' ALIGN='right'><B>Style: </B></TD>
                         <TD>
-						<SPAN STYLE='margin-left:20px' onmouseover="Tip('no incident numbers used - the default')"
+                        <SPAN STYLE='margin-left:20px' onmouseover="Tip('no incident numbers used - the default')"
                               onmouseout="UnTip()">
-							 none &raquo; <INPUT TYPE='radio' NAME='frm_style' VALUE=0 <?php print $style_checked[0]; ?> /></SPAN>
+                             none &raquo; <INPUT TYPE='radio' NAME='frm_style' VALUE=0 <?php print $style_checked[0]; ?> /></SPAN>
                             <SPAN STYLE='margin-left:40px' onmouseover="Tip('incident numbers only')"
                                   onmouseout="UnTip()">
-							 12345 &raquo;<INPUT TYPE='radio' NAME='frm_style' VALUE=1 <?php print $style_checked[1]; ?> /></SPAN>
+                             12345 &raquo;<INPUT TYPE='radio' NAME='frm_style' VALUE=1 <?php print $style_checked[1]; ?> /></SPAN>
                             <SPAN STYLE='margin-left:40px'
                                   onmouseover="Tip('your \'Label\' precedes the incident number')" onmouseout="UnTip()">
-							  <U>Label</U>12345 &raquo; 	<INPUT TYPE='radio' NAME='frm_style'
+                              <U>Label</U>12345 &raquo;     <INPUT TYPE='radio' NAME='frm_style'
                                                                   VALUE=2 <?php print $style_checked[2]; ?> /></SPAN>
                             <SPAN STYLE='margin-left:40px'
                                   onmouseover="Tip('the 2-digit year precedes the incident number')"
                                   onmouseout="UnTip()">
-							  <U>YR</U>	12345 &raquo; <INPUT TYPE='radio' NAME='frm_style'
+                              <U>YR</U>    12345 &raquo; <INPUT TYPE='radio' NAME='frm_style'
                                                                 VALUE=3 <?php print $style_checked[3]; ?> /></SPAN>
                         </TD>
                     </TR>
@@ -3847,14 +3847,14 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             $result = db_query($query);
             $i = 1;
             print "\n<FORM NAME='hints' METHOD = 'post' ACTION = '" . basename(__FILE__) . "'>
-					<table border=0 STYLE = 'MARGIN-LEFT:100PX'>\n";
+                    <table border=0 STYLE = 'MARGIN-LEFT:100PX'>\n";
             print "\n<INPUT TYPE='hidden' NAME='func' VALUE='hints_update' />\n";
             print "\n<TR><TH COLSPAN=2>Incident Add/Edit hints - enter revisions</TH></TR>\n";
             $dis = ((is_super()) || (is_super())) ? "" : "DISABLED";                // 3/19/11
 
             while ($row = stripslashes_deep($result->fetch_array())) {
                 print "<TR CLASS = {$colors[$i%2]} VALIGN='middle'><TD><BR />" . substr($row['tag'], 1) . "</TD>
-						<TD><TEXTAREA COLS = 120 ROWS=1 NAME = '{$row['tag']}' {$dis}>" . trim($row['hint']) . "</TEXTAREA></TD></TR>\n";
+                        <TD><TEXTAREA COLS = 120 ROWS=1 NAME = '{$row['tag']}' {$dis}>" . trim($row['hint']) . "</TEXTAREA></TD></TR>\n";
                 $i++;
             }
             print "\n\t\t<FORM></TABLE>";
@@ -3893,7 +3893,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             break;
 
 
-        case 'css_day' :    //	3/15/11
+        case 'css_day' :    //    3/15/11
             if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
     include("./incs/links.inc.php");
@@ -3913,8 +3913,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
 
             <?php
             print "<SPAN STYLE='margin-left:40px'><FONT CLASS='header'>Edit CSS Colors - Day colors</FONT>  (mouseover caption for help information)</SPAN><BR /><BR />
-				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'css_day_Form'  
-				onSubmit='return validate_css_day(document.css_day_Form);' ACTION='config.php?func=css_day&go=true'>";
+                <TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'css_day_Form'
+                onSubmit='return validate_css_day(document.css_day_Form);' ACTION='config.php?func=css_day&go=true'>";
             $counter = 0;
             $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}css_day` ORDER BY id");
             while ($row = stripslashes_deep($result->fetch_array())) {
@@ -3981,7 +3981,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             }                // end else
             break;
 
-        case 'css_night' :    //	3/15/11
+        case 'css_night' :    //    3/15/11
             if ((isset($_GET)) && (isset($_GET['go'])) && ($_GET['go'] == 'true')) {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames(); '>\n";
     include("./incs/links.inc.php");
@@ -4001,8 +4001,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
 
             <?php
             print "<SPAN STYLE='margin-left:40px'><FONT CLASS='header'>Edit CSS Colors - Night colors</FONT>  (mouseover caption for help information)</SPAN><BR /><BR />
-				<TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'css_night_Form'  
-				onSubmit='return validate_css_night(document.css_night_Form);' ACTION='config.php?func=css_night&go=true'>";
+                <TABLE BORDER='0' STYLE='margin-left:40px'><FORM METHOD='POST' NAME= 'css_night_Form'
+                onSubmit='return validate_css_night(document.css_night_Form);' ACTION='config.php?func=css_night&go=true'>";
             $counter = 0;
             $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}css_night` ORDER BY id");
             while ($row = stripslashes_deep($result->fetch_array())) {
@@ -4585,7 +4585,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                 <?php
             }
             $query_update = "SELECT * FROM  `{$GLOBALS['mysql_prefix']}user` WHERE `user`= '_cloud' LIMIT 1;";
-            $result = db_query($query_update);        //	5/4/11
+            $result = db_query($query_update);        //    5/4/11
             if (($result->num_rows > 0) && (is_super())) {
                 ?>
                 <DIV class='config_heading text' id='cloud_cfg'
@@ -4594,7 +4594,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                     <A id='spt_link' class='plain text' style='width: 150px; float: left;'
                        onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'
                        HREF="https://github.com/openises/tickets/issues" target="_blank">Support</A>
-                    <!--				<A id='dbadmin_link' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="http://www.ticketscad.com/dbadmin" target="_blank">DB Admin</A>-->
+                    <!--                <A id='dbadmin_link' class='plain text' style='width: 150px; float: left;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="http://www.ticketscad.com/dbadmin" target="_blank">DB Admin</A>-->
                 </DIV>
                 <?php
             }
@@ -4613,7 +4613,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="delete_module.php">Delete
                             Tickets Module</A>
                         <?php
-                    }    //	end if modules table exists
+                    }    //    end if modules table exists
                     ?>
                     <A id='mods_add' class='plain text' style='width: 150px; float: left;'
                        onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="install_module.php">Add
@@ -4662,7 +4662,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             ?>
 
             <?php
-            //			}		// if (is_administrator() || is_super())
+            //            }        // if (is_administrator() || is_super())
 
             //-
             ?>
@@ -4705,9 +4705,9 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
         $lng = get_variable('def_lng');
         ?>
         <SCRIPT>
-            var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08
+            var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;                // 9/9/08
 
-            function do_coords(inlat, inlng) { 										 //9/14/08
+            function do_coords(inlat, inlng) {                                          //9/14/08
                 if ((inlat.length == 0) || (inlng.length == 0)) {
                     return;
                 }
@@ -4717,33 +4717,33 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                 alert(str);
             }
 
-            function ll2dms(inval) {				// lat/lng to degr, mins, sec's - 9/9/08
+            function ll2dms(inval) {                // lat/lng to degr, mins, sec's - 9/9/08
                 var d = new Number(Math.abs(inval));
                 d = Math.floor(d);
-                var mi = (Math.abs(inval) - d) * 60;	// fraction * 60
-                var m = Math.floor(mi)				// min's as fraction
-                var si = (mi - m) * 60;					// to sec's
+                var mi = (Math.abs(inval) - d) * 60;    // fraction * 60
+                var m = Math.floor(mi)                // min's as fraction
+                var si = (mi - m) * 60;                    // to sec's
                 var s = si.toFixed(1);
                 return d + '\260 ' + Math.abs(m) + "' " + Math.abs(s) + '"';
             }
 
-            function lat2ddm(inlat) {				//  lat to degr, dec.min's - 9/9/089/7/08
+            function lat2ddm(inlat) {                //  lat to degr, dec.min's - 9/9/089/7/08
                 var x = new Number(Math.abs(inlat));
-                var degs = Math.floor(x);				// degrees
+                var degs = Math.floor(x);                // degrees
                 var mins = ((Math.abs(x - degs) * 60).toFixed(1));
                 var nors = (inlat > 0.0) ? " N" : " S";
                 return degs + '\260' + mins + "'" + nors;
             }
 
-            function lng2ddm(inlng) {				//  lng to degr, dec.min's - 9/9/089/7/08
+            function lng2ddm(inlng) {                //  lng to degr, dec.min's - 9/9/089/7/08
                 var x = new Number(Math.abs(inlng));
-                var degs = Math.floor(x);				// degrees
+                var degs = Math.floor(x);                // degrees
                 var mins = ((Math.abs(x - degs) * 60).toFixed(1));
                 var eorw = (inlng > 0.0) ? " E" : " W";
                 return degs + '\260' + mins + "'" + eorw;
             }
 
-            function do_lat_fmt(inlat) {				// 9/9/08
+            function do_lat_fmt(inlat) {                // 9/9/08
                 switch (lat_lng_frmt) {
                     case 0:
                         return inlat;
@@ -4775,7 +4775,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                 }
             }
 
-            function usng_to_map() {			// usng to LL array			- 5/4/09
+            function usng_to_map() {            // usng to LL array            - 5/4/09
                 tolatlng = new Array();
                 USNGtoLL(document.cen_Form.frm_ngs.value, tolatlng);
                 var point = new GLatLng(tolatlng[0].toFixed(6), tolatlng[1].toFixed(6));
@@ -4786,9 +4786,9 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
 
                 do_lat(point.lat());
                 do_lng(point.lng());
-            }				// end function
+            }                // end function
 
-            function addrlkup() {		   // added 8/3 by AS -- getLocations(address,  callback) -- not currently used
+            function addrlkup() {           // added 8/3 by AS -- getLocations(address,  callback) -- not currently used
                 var address = document.forms[0].frm_city.value + " " + document.forms[0].frm_st.value;
                 if (geocoder) {
                     geocoder.getLatLng(
@@ -4801,35 +4801,35 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                                 var marker = new GMarker(point);
                                 do_lat(point.lat());
                                 do_lng(point.lng());
-                                do_grids(document.cen_Form);		// 9/16/08
+                                do_grids(document.cen_Form);        // 9/16/08
                             }
                         }
                     );
                 }
-            }				// end function addrlkup()
+            }                // end function addrlkup()
 
             function writeConsole(content) {
                 top.consoleRef = window.open('', 'myconsole',
                     'width=800,height=250' + ',menubar=0' + ',toolbar=0' + ',status=0' + ',scrollbars=0' + ',resizable=0')
                 top.consoleRef.document.writeln('<html><head><title>Console</title></head>'
                     + '<body bgcolor=white onLoad="self.focus()">' + content + '</body></HTML>'
-                )				// end top.consoleRef.document.writeln()
+                )                // end top.consoleRef.document.writeln()
                 top.consoleRef.document.close();
-            }				// end function writeConsole(content)
+            }                // end function writeConsole(content)
 
-            function map_cen_reset() {				// reset map center icon
+            function map_cen_reset() {                // reset map center icon
                 map.clearOverlays();
             }
 
-            var map;								// note globals
-            //	var map = new GMap2(document.getElementById("div"), {draggableCursor: 'crosshair', draggingCursor: 'pointer'});
+            var map;                                // note globals
+            //    var map = new GMap2(document.getElementById("div"), {draggableCursor: 'crosshair', draggingCursor: 'pointer'});
             var myZoom;
             var geocoder = new GClientGeocoder();
             var cross;
 
             map = new GMap2(document.getElementById('map'));
-            //	map.addControl(new GSmallMapControl());
-            map.setUIToDefault();										// 8/13/10
+            //    map.addControl(new GSmallMapControl());
+            map.setUIToDefault();                                        // 8/13/10
 
             map.addControl(new GMapTypeControl());
             <?php if (get_variable('terrain') == 1) { ?>
@@ -4837,61 +4837,61 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
             <?php } ?>
             map.addControl(new GOverviewMapControl());
 
-            var baseIcon = new GIcon();						// 9/16/08
+            var baseIcon = new GIcon();                        // 9/16/08
             baseIcon.iconSize = new GSize(32, 32);
             baseIcon.iconAnchor = new GPoint(16, 16);
             cross = new GIcon(baseIcon, "./markers/crosshair.png", null);
 
-            //	map.setCenter(new GLatLng(<?php print $lat; ?>, <?php print $lng; ?>), <?php print get_variable('def_zoom');?>);	// larger # => tighter zoom
+            //    map.setCenter(new GLatLng(<?php print $lat; ?>, <?php print $lng; ?>), <?php print get_variable('def_zoom');?>);    // larger # => tighter zoom
 
             var center = new GLatLng(<?php print get_variable('def_lat') ?>, <?php print get_variable('def_lng'); ?>);
             map.setCenter(center, <?php print get_variable('def_zoom');?>);
-            var thisMarker = new GMarker(center, {icon: cross, draggable: false});				// 9/16/08
+            var thisMarker = new GMarker(center, {icon: cross, draggable: false});                // 9/16/08
 
-            //	map.addOverlay(marker);
+            //    map.addOverlay(marker);
             map.addOverlay(thisMarker);
             map.enableScrollWheelZoom();
 
             GEvent.addListener(map, "click", function (overlay, latlng) {
                 if (latlng) {
-//			alert(latlng.lat().toFixed(6));
+//            alert(latlng.lat().toFixed(6));
                     map.clearOverlays();
 
-                    thisMarker = new GMarker(latlng, {icon: cross, draggable: false});		// 9/16/08
+                    thisMarker = new GMarker(latlng, {icon: cross, draggable: false});        // 9/16/08
                     map.setCenter(thisMarker.getPoint());
                     map.addOverlay(thisMarker);
-//			GEvent.addListener(thisMarker, "dragstart", function() {
-//				alert("start");
-//				});
+//            GEvent.addListener(thisMarker, "dragstart", function() {
+//                alert("start");
+//                });
                     var lat = new Number(latlng.lat());
                     var lng = new Number(latlng.lng());
 
                     do_lat(lat.toFixed(6));
                     do_lng(lng.toFixed(6));
-                    do_grids(document.cen_Form);			// 9/16/08
+                    do_grids(document.cen_Form);            // 9/16/08
                     GEvent.addListener(thisMarker, "dragend", function () {
-//				alert(1145);
+//                alert(1145);
                         map.setCenter(marker.getPoint());
                         var gp_lat = new Number(marker.getPoint().lat());
                         var gp_lng = new Number(marker.getPoint().lng());
                         do_lat(gp_lat.toFixed(6));
                         do_lng(gp_lng.toFixed(6));
-                        do_grids(document.cen_Form);			// 9/16/08
+                        do_grids(document.cen_Form);            // 9/16/08
                     });
 
                     map.addOverlay(thisMarker);
-                }		// end if (latlng)
-            });		// end GEvent.addListener()
+                }        // end if (latlng)
+            });        // end GEvent.addListener()
 
             var theCenter;
 
             GEvent.addListener(map, "zoomstart", function () {
-                theCenter = marker.getPoint();							// save center
+                theCenter = marker.getPoint();                            // save center
             });
 
             GEvent.addListener(map, "zoomend", function (oldzoom, newzoom) {
-                do_zoom(newzoom);										// set form values
-                map.setCenter(theCenter);								// to original center
+                do_zoom(newzoom);                                        // set form values
+                map.setCenter(theCenter);                                // to original center
             });
 
         </SCRIPT>

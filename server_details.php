@@ -14,15 +14,15 @@ echo $serverstring . "<BR />";
 
 $server = stream_socket_server("{$serverstring}", $errno, $errstr);
 
-//	Check if server started.
+//    Check if server started.
 
 if ($server === false) {
-	echo 99;
-	sleep(2);
-	echo "\r\nServer Failed to start\r\n";
-	} else {
-	echo 1;
-	sleep(2);
-	echo "\r\nServer Started OK\r\n";
-	}
+    echo 99;
+    sleep(2);
+    echo "\r\nServer Failed to start\r\n";
+    } else {
+    echo 1;
+    sleep(2);
+    echo "\r\nServer Started OK\r\n";
+    }
 ?>

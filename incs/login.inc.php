@@ -10,7 +10,7 @@
 12/2/10 list_type added - AH
 3/15/11 Revised show hide session variables.
 2/16/11 Add fac_flag_2 session variable to persist facilities listing sort order
-3/15/11	Changes for show and hide and css colors
+3/15/11    Changes for show and hide and css colors
 3/19/11 get_unit() added for unit login, $_SESSION['user_unit_id']
 5/10/11 logo changed
 7/3/11 key check corrected
@@ -24,824 +24,824 @@
 */
 $colors = array ('odd', 'even');
 
-function userlist(){		/* list users */
-	global $colors;
-	$ary = array();
-	$output = "";
-	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` ORDER BY `u`.`user` ASC");
-	if (!$result || $result->num_rows == 0) {
-		print '<B>[no users found]</B><BR />';
-		return;
-		}
+function userlist(){        /* list users */
+    global $colors;
+    $ary = array();
+    $output = "";
+    $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` ORDER BY `u`.`user` ASC");
+    if (!$result || $result->num_rows == 0) {
+        print '<B>[no users found]</B><BR />';
+        return;
+        }
 
-	$now = mysql_format_date(time() - (get_variable('delta_mins')*60));		// 1/23/10
+    $now = mysql_format_date(time() - (get_variable('delta_mins')*60));        // 1/23/10
 
-	$output .= "<TABLE>";
-	$output .= "<TR CLASS='even'>";
-	$output .= "<TD CLASS='heading' COLSPAN='99' ALIGN='center'>Users Currently or recently online</TD></TR>";
-	$i=0;
-	while($row = stripslashes_deep($result->fetch_array())) {
-		$level = get_level_text($row['level']);
-		$lastlogintime = format_date_2(mysql_format_date(safe_strtotime($row['login']) + (intval(get_variable('delta_mins'))*60)));
-		$isonline = ($row['expires'] > $now) ? true: false;
-		if($isonline) {
-			$ary[$i]['user'] = $row['user'];
-			$ary[$i]['when'] = $lastlogintime;
-			}
-		}
-	if(count($ary) > 0) {
-		$output .= "<TR CLASS='header'><TD><B>&nbsp;User</B></TD><TD><B>&nbsp;Online</B></TD><TD><B>&nbsp;Log in</B></TD></TR>";
-		$j = 1;
-		for($j = 0; $j < count($ary); $j++){
-			$output .= "<TR CLASS='{$colors[$j%2]}'><TD>&nbsp;{$ary[$j]['user']}</TD><TD ALIGN = 'center'><IMG SRC = './markers/checked.png' BORDER=0></TD>	<TD>{$ary[$j]['when']}</TD></TR>\n";
-			}
-		} else {
-		$output .= "<TR CLASS='{$colors[$i%2]}'><TD COLSPAN = 3 style='text-align: center;'>No Other users logged in</TD></TR>\n";
-		}
-	$output .= '</TABLE><BR />';
-	return $output;
-	}		// end function list_users()
+    $output .= "<TABLE>";
+    $output .= "<TR CLASS='even'>";
+    $output .= "<TD CLASS='heading' COLSPAN='99' ALIGN='center'>Users Currently or recently online</TD></TR>";
+    $i=0;
+    while($row = stripslashes_deep($result->fetch_array())) {
+        $level = get_level_text($row['level']);
+        $lastlogintime = format_date_2(mysql_format_date(safe_strtotime($row['login']) + (intval(get_variable('delta_mins'))*60)));
+        $isonline = ($row['expires'] > $now) ? true: false;
+        if($isonline) {
+            $ary[$i]['user'] = $row['user'];
+            $ary[$i]['when'] = $lastlogintime;
+            }
+        }
+    if(count($ary) > 0) {
+        $output .= "<TR CLASS='header'><TD><B>&nbsp;User</B></TD><TD><B>&nbsp;Online</B></TD><TD><B>&nbsp;Log in</B></TD></TR>";
+        $j = 1;
+        for($j = 0; $j < count($ary); $j++){
+            $output .= "<TR CLASS='{$colors[$j%2]}'><TD>&nbsp;{$ary[$j]['user']}</TD><TD ALIGN = 'center'><IMG SRC = './markers/checked.png' BORDER=0></TD>    <TD>{$ary[$j]['when']}</TD></TR>\n";
+            }
+        } else {
+        $output .= "<TR CLASS='{$colors[$i%2]}'><TD COLSPAN = 3 style='text-align: center;'>No Other users logged in</TD></TR>\n";
+        }
+    $output .= '</TABLE><BR />';
+    return $output;
+    }        // end function list_users()
 
-function do_logout($return=FALSE){						/* logout - destroy session data */
-	global $hide_dispatched, $hide_status_groups;
-	@session_start();
- 	$_SESSION['expires'] = 0;
-	if (array_key_exists ('user_id', $_SESSION)) {			// 7/27/10 - 8/10/10
-		db_query(
-			"DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = ? AND `_by` = ?",
-			[sanitize_int($GLOBALS['STATUS_RESERVED']), sanitize_int($_SESSION['user_id'])]
-		);
-		}
-	$sid = session_id();
-												// 1/8/10
-	db_query(
-		"UPDATE `{$GLOBALS['mysql_prefix']}user` SET `sid` = NULL, `expires` = NULL WHERE `sid` = ? LIMIT 1",
-		[$sid]
-	);
-	$browser = checkBrowser(FALSE);
-	$the_id = array_key_exists ('user_id', $_SESSION)? $_SESSION['user_id'] : 0;	// possibly already logged out
-	do_log($GLOBALS['LOG_SIGN_OUT'], 0, 0, $browser);								// log this logout
+function do_logout($return=false){                        /* logout - destroy session data */
+    global $hide_dispatched, $hide_status_groups;
+    @session_start();
+     $_SESSION['expires'] = 0;
+    if (array_key_exists ('user_id', $_SESSION)) {            // 7/27/10 - 8/10/10
+        db_query(
+            "DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = ? AND `_by` = ?",
+            [sanitize_int($GLOBALS['STATUS_RESERVED']), sanitize_int($_SESSION['user_id'])]
+        );
+        }
+    $sid = session_id();
+                                                // 1/8/10
+    db_query(
+        "UPDATE `{$GLOBALS['mysql_prefix']}user` SET `sid` = NULL, `expires` = NULL WHERE `sid` = ? LIMIT 1",
+        [$sid]
+    );
+    $browser = checkBrowser(false);
+    $the_id = array_key_exists ('user_id', $_SESSION)? $_SESSION['user_id'] : 0;    // possibly already logged out
+    do_log($GLOBALS['LOG_SIGN_OUT'], 0, 0, $browser);                                // log this logout
 
-	if (isset($_COOKIE[session_name()])) { setcookie(session_name(), '', time()-42000, '/'); }		// 8/25/10
-	unset ($sid);
-	$_SESSION = array();
-	@session_destroy();						// 2/18/08
+    if (isset($_COOKIE[session_name()])) { setcookie(session_name(), '', time()-42000, '/'); }        // 8/25/10
+    unset ($sid);
+    $_SESSION = array();
+    @session_destroy();                        // 2/18/08
 
-	// 3/14/26 - Start a fresh session after logout so the login form's CSRF token is valid
-	// session_regenerate_id forces PHP to send a new Set-Cookie header, overriding the
-	// cookie deletion above so the browser keeps the session for CSRF token validation
-	configure_secure_session();
-	session_start();
-	session_regenerate_id(true);
+    // 3/14/26 - Start a fresh session after logout so the login form's CSRF token is valid
+    // session_regenerate_id forces PHP to send a new Set-Cookie header, overriding the
+    // cookie deletion above so the browser keeps the session for CSRF token validation
+    configure_secure_session();
+    session_start();
+    session_regenerate_id(true);
 
-	if ($return) return;
+    if ($return) return;
 
-	do_login('main.php', TRUE);				// wait for login
-	}
+    do_login('main.php', true);                // wait for login
+    }
 // ==========================================================================
-function check_conn () {				// returns TRUE/FALSE
-	$url = "http://www.yahoo.com/";
-	$response="";
-	$parts=parse_url($url);
-	if(!$parts) return false; /* the URL was seriously wrong */
+function check_conn () {                // returns TRUE/FALSE
+    $url = "http://www.yahoo.com/";
+    $response="";
+    $parts=parse_url($url);
+    if(!$parts) return false; /* the URL was seriously wrong */
 
-	if (function_exists("curl_init")) {
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)');
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-		@curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);				// 8/11/10
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-		curl_setopt($ch, CURLOPT_NOBODY, true);
-		curl_setopt($ch, CURLOPT_HEADER, true);
+    if (function_exists("curl_init")) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+        @curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);                // 8/11/10
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+        curl_setopt($ch, CURLOPT_NOBODY, true);
+        curl_setopt($ch, CURLOPT_HEADER, true);
 
-		if($parts['scheme']=='https'){
-			$verify_ssl = function_exists('get_variable') ? (get_variable('verify_ssl') !== '0') : true; // Default: verify SSL
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $verify_ssl ? 2 : 0);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verify_ssl);
-			}
+        if($parts['scheme']=='https'){
+            $verify_ssl = function_exists('get_variable') ? (get_variable('verify_ssl') !== '0') : true; // Default: verify SSL
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $verify_ssl ? 2 : 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verify_ssl);
+            }
 
-		$response = curl_exec($ch);
-		curl_close($ch);
-		if(preg_match('/HTTP\/1\.\d+\s+(\d+)/', $response, $matches)){
-			$code=intval($matches[1]);
-			} else {
-			$code=0;
-			}
+        $response = curl_exec($ch);
+        curl_close($ch);
+        if(preg_match('/HTTP\/1\.\d+\s+(\d+)/', $response, $matches)){
+            $code=intval($matches[1]);
+            } else {
+            $code=0;
+            }
 
-		if(($code>=200) && ($code<400)) {
-			return TRUE;
-			} else {
-			return FALSE;
-			}
-		} else {				// not CURL
-		if ($fp = @fopen($url, "r")) {
-			while (!feof($fp) && (safe_strlen($response)<9000)) $response .= fgets($fp, 128);
-			fclose($fp);
-			return TRUE;
-			} else {
-			return FALSE;
-			}
-		}
-	}	// end function check_conn ()
+        if(($code>=200) && ($code<400)) {
+            return true;
+            } else {
+            return false;
+            }
+        } else {                // not CURL
+        if ($fp = @fopen($url, "r")) {
+            while (!feof($fp) && (safe_strlen($response)<9000)) $response .= fgets($fp, 128);
+            fclose($fp);
+            return true;
+            } else {
+            return false;
+            }
+        }
+    }    // end function check_conn ()
 
 function set_filenames($internet, $userchoice) {
-	$localmaps = get_variable('local_maps');
-	$internet_good = (check_conn()) ? 1: 0;
-	$internet = intval($internet);
-	$internet = ($internet == 1 || $internet == 3) ? 1 : 0;
-	if($internet && $internet_good && $userchoice == "Show") {	//	10/29/13
-		$normal = 1;
-		} elseif($userchoice == "Hide") {
-		$normal = 0;
-		} elseif(!$internet) {
-		$normal = 0;
-		} elseif(!$internet_good) {
-		$normal = 0;
-		} elseif($localmaps == "1") {
-		$normal = 1;
-		} else {
-		$normal = 0;
-		}
-	$_SESSION['internet'] = $normal;
-	$_SESSION['good_internet'] = $internet_good;
-	$_SESSION['fip'] ="./incs/functions.inc.php";                        // 8/27/10
-	$_SESSION['fmp'] = ($normal)? "./incs/functions_major.inc.php": "./incs/functions_major_nm.inc.php";
-	$_SESSION['addfile'] = ($normal)? "add.php": "add.php";
-	$_SESSION['editfile'] = ($normal)? "edit.php":	"edit.php";
-	$_SESSION['unitsfile'] = ($normal)? "units.php": "units_nm.php";
-	$_SESSION['facilitiesfile'] = ($normal)?	"facilities.php": "facilities_nm.php";
-	$_SESSION['routesfile'] = ($normal)?	"routes.php": "routes_nm.php";
-	$_SESSION['facroutesfile'] = ($normal)? "fac_routes.php": "fac_routes_nm.php";
-	$_SESSION['warnlocationsfile'] = ($normal)? "warn_locations.php": "warn_locations_nm.php";
-	}
+    $localmaps = get_variable('local_maps');
+    $internet_good = (check_conn()) ? 1: 0;
+    $internet = intval($internet);
+    $internet = ($internet == 1 || $internet == 3) ? 1 : 0;
+    if($internet && $internet_good && $userchoice == "Show") {    //    10/29/13
+        $normal = 1;
+        } elseif($userchoice == "Hide") {
+        $normal = 0;
+        } elseif(!$internet) {
+        $normal = 0;
+        } elseif(!$internet_good) {
+        $normal = 0;
+        } elseif($localmaps == "1") {
+        $normal = 1;
+        } else {
+        $normal = 0;
+        }
+    $_SESSION['internet'] = $normal;
+    $_SESSION['good_internet'] = $internet_good;
+    $_SESSION['fip'] ="./incs/functions.inc.php";                        // 8/27/10
+    $_SESSION['fmp'] = ($normal)? "./incs/functions_major.inc.php": "./incs/functions_major_nm.inc.php";
+    $_SESSION['addfile'] = ($normal)? "add.php": "add.php";
+    $_SESSION['editfile'] = ($normal)? "edit.php":    "edit.php";
+    $_SESSION['unitsfile'] = ($normal)? "units.php": "units_nm.php";
+    $_SESSION['facilitiesfile'] = ($normal)?    "facilities.php": "facilities_nm.php";
+    $_SESSION['routesfile'] = ($normal)?    "routes.php": "routes_nm.php";
+    $_SESSION['facroutesfile'] = ($normal)? "fac_routes.php": "fac_routes_nm.php";
+    $_SESSION['warnlocationsfile'] = ($normal)? "warn_locations.php": "warn_locations_nm.php";
+    }
 
 // ==========================================================================
 
-function is_expired($id) {		// returns boolean
-	$now = time() - (intval(get_variable('delta_mins'))*60);
-	$id = sanitize_int($id);
-	$row = db_fetch_one(
-		"SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1",
-		[$id]
-	);
-	if (!$row) return false;
-	$row = stripslashes_deep($row);
-	$expires = (array_key_exists('expires', $row) && !is_null($row['expires'])) ? safe_strtotime($row['expires']) : 0;
-	return ($expires > $now);
-	}
+function is_expired($id) {        // returns boolean
+    $now = time() - (intval(get_variable('delta_mins'))*60);
+    $id = sanitize_int($id);
+    $row = db_fetch_one(
+        "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1",
+        [$id]
+    );
+    if (!$row) return false;
+    $row = stripslashes_deep($row);
+    $expires = (array_key_exists('expires', $row) && !is_null($row['expires'])) ? safe_strtotime($row['expires']) : 0;
+    return ($expires > $now);
+    }
 
-function redir($url, $time = 0, $top = FALSE) {
-	if ($top) {
-		echo '<script type="text/javascript">top.location.href=' . json_encode($url) . ';</script>';
-		echo '<noscript><meta http-equiv="refresh" content="', $time, ';URL=', $url, '"></noscript>';
-	} else {
-		echo '<meta http-equiv="refresh" content="', $time, ';URL=', $url, '">';
-	}
-	die;
-	}
+function redir($url, $time = 0, $top = false) {
+    if ($top) {
+        echo '<script type="text/javascript">top.location.href=' . json_encode($url) . ';</script>';
+        echo '<noscript><meta http-equiv="refresh" content="', $time, ';URL=', $url, '"></noscript>';
+    } else {
+        echo '<meta http-equiv="refresh" content="', $time, ';URL=', $url, '">';
+    }
+    die;
+    }
 
 function dupe_user($id, $ip) {
-	$row = db_fetch_one(
-		"SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? AND `_from` != ? LIMIT 1",
-		[$id, $ip]
-	);
-	return ($row !== null);
-	}
+    $row = db_fetch_one(
+        "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? AND `_from` != ? LIMIT 1",
+        [$id, $ip]
+    );
+    return ($row !== null);
+    }
 
-function do_login($requested_page, $outinfo = FALSE, $hh = FALSE, $na = FALSE) {			// do login/ses sion code - returns array - 2/12/09, 3/8/09,	1/30/14
-	global $hide_dispatched, $hide_status_groups;
-	configure_secure_session();		// 3/14/26 - Set HttpOnly, Secure, SameSite cookie flags
-	@session_start();
-	global $expiry, $istest;
-	$https = (array_key_exists('HTTPS', $_SERVER)) ? TRUE : FALSE;
-	$allow_accessRequests = get_variable("access_requests");
-	$no_autoforward = ($na) ? 1 : 0;	//	1/30/14
-	$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
-	$the_sid = (isset($_SESSION['id']))? $_SESSION['id'] : null;
-//																			7/3/11
-	$warn = ((array_key_exists ('expires', $_SESSION)) && ($now > $_SESSION['expires']))? "Log-in has expired due to inactivity.  Please log in again." : "";
+function do_login($requested_page, $outinfo = false, $hh = false, $na = false) {            // do login/ses sion code - returns array - 2/12/09, 3/8/09,    1/30/14
+    global $hide_dispatched, $hide_status_groups;
+    configure_secure_session();        // 3/14/26 - Set HttpOnly, Secure, SameSite cookie flags
+    @session_start();
+    global $expiry, $istest;
+    $https = (array_key_exists('HTTPS', $_SERVER)) ? true : false;
+    $allow_accessRequests = get_variable("access_requests");
+    $no_autoforward = ($na) ? 1 : 0;    //    1/30/14
+    $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
+    $the_sid = (isset($_SESSION['id']))? $_SESSION['id'] : null;
+//                                                                            7/3/11
+    $warn = ((array_key_exists ('expires', $_SESSION)) && ($now > $_SESSION['expires']))? "Log-in has expired due to inactivity.  Please log in again." : "";
 
-	$internet = (get_variable('internet') != "") ? intval(get_variable("internet")) : 3;
-	if ((array_key_exists ('user_id', $_SESSION)) && (is_expired($_SESSION['user_id']))) {
-		if(dupe_user($_SESSION['user_id'], $_SERVER['REMOTE_ADDR'])) {
-			do_logout();
-			}
-		$the_date = mysql_format_date($expiry) ;
-		$sess_key = session_id();										// not expired
-		db_query(
-			"UPDATE `{$GLOBALS['mysql_prefix']}user` SET `expires` = ? WHERE `sid` = ? LIMIT 1",
-			[$the_date, $sess_key]
-		);
-		$_SESSION['expires'] = $expiry;
-		$userchoice = $_SESSION['maps_sh'];
-		$warn = "";
-		set_filenames($internet, $userchoice);
-		}				// end if((!(empty($_SESSION)))  && ...)
+    $internet = (get_variable('internet') != "") ? intval(get_variable("internet")) : 3;
+    if ((array_key_exists ('user_id', $_SESSION)) && (is_expired($_SESSION['user_id']))) {
+        if(dupe_user($_SESSION['user_id'], $_SERVER['REMOTE_ADDR'])) {
+            do_logout();
+            }
+        $the_date = mysql_format_date($expiry) ;
+        $sess_key = session_id();                                        // not expired
+        db_query(
+            "UPDATE `{$GLOBALS['mysql_prefix']}user` SET `expires` = ? WHERE `sid` = ? LIMIT 1",
+            [$the_date, $sess_key]
+        );
+        $_SESSION['expires'] = $expiry;
+        $userchoice = $_SESSION['maps_sh'];
+        $warn = "";
+        set_filenames($internet, $userchoice);
+        }                // end if((!(empty($_SESSION)))  && ...)
 
-	else { 				// not logged in; now either get form data or db check form entries
-		if(array_key_exists('frm_passwd', $_POST)) {		// first, db check
-			// 3/14/26 - CSRF token verification
-			if (!csrf_verify($_POST['csrf_token'] ?? '')) {
-				$warn = "Security token expired. Please try again.";
-			} else {
-																						// 6/25/10
-			$userchoice = $_POST['frm_maps'];
-			$categories = array();													// 3/15/11
-//			$query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` <> 'NULL'";	// 3/15/11
-			$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ISNULL (`clear`)");
-			$num_disp = $result ? $result->num_rows : 0;
-			if(($num_disp > 0) && ($hide_dispatched == 1)) { $category_butts[0] = "Deployed"; $i=1; } else { $i=0; }
+    else {                 // not logged in; now either get form data or db check form entries
+        if(array_key_exists('frm_passwd', $_POST)) {        // first, db check
+            // 3/14/26 - CSRF token verification
+            if (!csrf_verify($_POST['csrf_token'] ?? '')) {
+                $warn = "Security token expired. Please try again.";
+            } else {
+                                                                                        // 6/25/10
+            $userchoice = $_POST['frm_maps'];
+            $categories = array();                                                    // 3/15/11
+//            $query = "SELECT * FROM `$GLOBALS[mysql_prefix]assigns` WHERE `clear` <> 'NULL'";    // 3/15/11
+            $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ISNULL (`clear`)");
+            $num_disp = $result ? $result->num_rows : 0;
+            if(($num_disp > 0) && ($hide_dispatched == 1)) { $category_butts[0] = "Deployed"; $i=1; } else { $i=0; }
 
-			if($hide_status_groups == 1) {	// 3/15/11
-				$result = db_query("SELECT DISTINCT `group` FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group` ASC");
+            if($hide_status_groups == 1) {    // 3/15/11
+                $result = db_query("SELECT DISTINCT `group` FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group` ASC");
 
-				while ($result && $row = stripslashes_deep($result->fetch_assoc())) {
-					$categories[$i] = $row['group'];
-					$i++;
-					}
-				unset($result);
-			} else {
-				$categories[$i] = "Available";
-				$i++;
-				$categories[$i] = "Not Available";
-				}
+                while ($result && $row = stripslashes_deep($result->fetch_assoc())) {
+                    $categories[$i] = $row['group'];
+                    $i++;
+                    }
+                unset($result);
+            } else {
+                $categories[$i] = "Available";
+                $i++;
+                $categories[$i] = "Not Available";
+                }
 
-			$fac_categories = array();
-			$i=0;
-			$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` ORDER BY `name` ASC");
-			while ($result && $row = stripslashes_deep($result->fetch_assoc())) {
-				$fac_categories[$i] = $row['name'];
-				$i++;
-				}
-			unset($result);
-													
-			// 2026-02-24 Vulnerability reported here SQL INJECTION RISK reported by Dominick Walenczak <d.walenczak@gmail.com> 
-			$login_user = strip_tags($_POST['frm_user']);
-			$login_passwd = $_POST['frm_passwd'];
-			$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? LIMIT 1", [$login_user]);
-			$row = $result->fetch_assoc();
-			$auth_result = $row ? verify_password($login_passwd, $row['passwd']) : ['valid' => false, 'needs_rehash' => false];
-			$authenticated = $auth_result['valid'];
+            $fac_categories = array();
+            $i=0;
+            $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` ORDER BY `name` ASC");
+            while ($result && $row = stripslashes_deep($result->fetch_assoc())) {
+                $fac_categories[$i] = $row['name'];
+                $i++;
+                }
+            unset($result);
 
-			// Auto-rehash legacy MD5 passwords to bcrypt on successful login
-			if ($authenticated && $auth_result['needs_rehash']) {
-				$new_hash = hash_password($login_passwd);
-				db_query(
-					"UPDATE `{$GLOBALS['mysql_prefix']}user` SET `passwd` = ? WHERE `id` = ? LIMIT 1",
-					[$new_hash, $row['id']]
-				);
-			}
+            // 2026-02-24 Vulnerability reported here SQL INJECTION RISK reported by Dominick Walenczak <d.walenczak@gmail.com>
+            $login_user = strip_tags($_POST['frm_user']);
+            $login_passwd = $_POST['frm_passwd'];
+            $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? LIMIT 1", [$login_user]);
+            $row = $result->fetch_assoc();
+            $auth_result = $row ? verify_password($login_passwd, $row['passwd']) : ['valid' => false, 'needs_rehash' => false];
+            $authenticated = $auth_result['valid'];
+
+            // Auto-rehash legacy MD5 passwords to bcrypt on successful login
+            if ($authenticated && $auth_result['needs_rehash']) {
+                $new_hash = hash_password($login_passwd);
+                db_query(
+                    "UPDATE `{$GLOBALS['mysql_prefix']}user` SET `passwd` = ? WHERE `id` = ? LIMIT 1",
+                    [$new_hash, $row['id']]
+                );
+            }
 
             if ( $authenticated ) {
-				session_regenerate_id(true);		// 3/14/26 - Prevent session fixation attacks
-				$row = stripslashes_deep($row);
-				if ($row['sortorder'] == NULL) $row['sortorder'] = "date";
-				$dir = ($row['sort_desc']) ? " DESC " : "";
+                session_regenerate_id(true);        // 3/14/26 - Prevent session fixation attacks
+                $row = stripslashes_deep($row);
+                if ($row['sortorder'] == null) $row['sortorder'] = "date";
+                $dir = ($row['sort_desc']) ? " DESC " : "";
 
-				$sid = session_id();							// 1/8/10
-				$browser = checkBrowser(FALSE);
-				$the_date = mysql_format_date($expiry) ;
+                $sid = session_id();                            // 1/8/10
+                $browser = checkBrowser(false);
+                $the_date = mysql_format_date($expiry) ;
 
-				// 2/28/26 prepared statement ahrdening
-				$user_id = intval($row['id']);
-				$remote_addr = $_SERVER['REMOTE_ADDR'];
-				db_query("UPDATE `{$GLOBALS['mysql_prefix']}user` SET
-					`sid` = ?,
-					`expires` = ?,
-					`login` = ?,
-					`_from` = ?,
-					`browser` = ?
-					WHERE `id` = ? LIMIT 1",
-				[$sid, $the_date, $now, $remote_addr, $browser, $user_id]);
+                // 2/28/26 prepared statement ahrdening
+                $user_id = intval($row['id']);
+                $remote_addr = $_SERVER['REMOTE_ADDR'];
+                db_query("UPDATE `{$GLOBALS['mysql_prefix']}user` SET
+                    `sid` = ?,
+                    `expires` = ?,
+                    `login` = ?,
+                    `_from` = ?,
+                    `browser` = ?
+                    WHERE `id` = ? LIMIT 1",
+                [$sid, $the_date, $now, $remote_addr, $browser, $user_id]);
 
-				$type = 4;
-				$result_gp = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = ? AND `resource_id` = ? ORDER BY `id` ASC", [$type, $user_id]);
-				$al_groups = array();
-				while ($row_gp = stripslashes_deep($result_gp->fetch_assoc())) 	{	//	6/10/11
-					$al_groups[] = $row_gp['group'];
-					}
-				
-				$_SESSION['user_groups'] = $al_groups;
-				$_SESSION['noautoforward'] = ($_POST['no_autoforward']==1) ? TRUE : FALSE;	//	1/30/14
-				$_SESSION['id'] = 			$sid;
-				$_SESSION['expires'] = 		time();
-				$_SESSION['user_id'] = 		$row['id'];
-				$_SESSION['user'] = 		$row['user'];
-				$_SESSION['level'] = 		$row['level'];
-				$_SESSION['login_at'] = 	$now;
-				$_SESSION['scr_height'] = 	$_POST['scr_height'];
-				$_SESSION['scr_width'] = 	$_POST['scr_width'];		// monitor dimensions this user
-				$_SESSION['allow_dirs'] = 	TRUE;						// allow directions
-				$_SESSION['show_closed'] = 	TRUE;						// show closed dispatched
-				$_SESSION['sortorder'] = ($row['sortorder']==NULL)? "date" : $row['sortorder'];
-				$_SESSION['sort_desc'] = ($row['sort_desc']==NULL)? " DESC " : $row['sort_desc'];
-				$_SESSION['ticket_per_page'] = 0;
-				$_SESSION['show_hide_unit'] =  "s";		// show/hide units
-				$_SESSION['show_hide_unav'] = "s";		// show/hide unavailable units - 4/27/10
-				$_SESSION['show_hide_fac']  = "s";		// show/hide facilities - 3/8/10
-				$_SESSION['unit_flag_1'] = "";		// unit id where status or position change
-				$_SESSION['unit_flag_2'] = "";		// usage tbd 4/7/10
-				$_SESSION['tick_flag_1'] = "";		// usage tbd 4/7/10
-				$_SESSION['tick_flag_2'] = "";		// usage tbd 4/7/10
-				$_SESSION['fac_flag_2'] = 2;		// 2/16/11
-				$_SESSION['list_type'] = 0;		// 12/2/10
-				$_SESSION['show_hide_Deployed'] = "s";	// Show all deployed tickets 3/15/11
-				$_SESSION['day_night'] = $_POST['frm_daynight'];	// 01/20/11 Set Day or Night Colors
-				$_SESSION['maps_sh'] = $_POST['frm_maps'];	// 9/10/13 Show or Hide Maps
-				$_SESSION['hide_controls'] = "s";		// 3/15/11
-				$_SESSION['incs_list'] = "s";		// 3/15/11
-				$_SESSION['resp_list'] = "s";		// 3/15/11
-				$_SESSION['facs_list'] = "s";		// 3/15/11
-				$_SESSION['regions_boxes'] = "s";		// 6/10/11
-				$_SESSION['user_unit_id'] = $row['responder_id'];		//3/19/11
-				$_SESSION['show_hide_upper'] = "s";		//6/10/11
-				$_SESSION['sh_cond'] = "s";
-				$_SESSION['mobile_selected'] = 0;
-				$_SESSION['sit_resp_minimised'] = "n";
-				$_SESSION['sit_fac_minimised'] = "n";
-				$_SESSION['responderlist'] = "s";
-				$_SESSION['facilitylist'] = "s";
-				$_SESSION['loglist'] = "s";
-				$initLayer = intval(get_variable('default_map_layer'));
-				$baseLayerNamesArr = Array("Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial");
-				$_SESSION['layer_inuse'] = $baseLayerNamesArr[$initLayer];
-				foreach($categories as $key => $value) {				// 3/15/11
-					$sess_flag = "show_hide_" . $value;
-					$_SESSION[$sess_flag] = "s";
-					}
+                $type = 4;
+                $result_gp = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type` = ? AND `resource_id` = ? ORDER BY `id` ASC", [$type, $user_id]);
+                $al_groups = array();
+                while ($row_gp = stripslashes_deep($result_gp->fetch_assoc()))     {    //    6/10/11
+                    $al_groups[] = $row_gp['group'];
+                    }
 
-				foreach($fac_categories as $key => $value) {				// 3/15/11
-					$fac_sess_flag = "show_hide_fac_" . $value;
-					$_SESSION[$fac_sess_flag] = "s";
-					}
-//				$temp = implode(";",  $_SESSION);
+                $_SESSION['user_groups'] = $al_groups;
+                $_SESSION['noautoforward'] = ($_POST['no_autoforward']==1) ? true : false;    //    1/30/14
+                $_SESSION['id'] =             $sid;
+                $_SESSION['expires'] =         time();
+                $_SESSION['user_id'] =         $row['id'];
+                $_SESSION['user'] =         $row['user'];
+                $_SESSION['level'] =         $row['level'];
+                $_SESSION['login_at'] =     $now;
+                $_SESSION['scr_height'] =     $_POST['scr_height'];
+                $_SESSION['scr_width'] =     $_POST['scr_width'];        // monitor dimensions this user
+                $_SESSION['allow_dirs'] =     true;                        // allow directions
+                $_SESSION['show_closed'] =     true;                        // show closed dispatched
+                $_SESSION['sortorder'] = ($row['sortorder']==null)? "date" : $row['sortorder'];
+                $_SESSION['sort_desc'] = ($row['sort_desc']==null)? " DESC " : $row['sort_desc'];
+                $_SESSION['ticket_per_page'] = 0;
+                $_SESSION['show_hide_unit'] =  "s";        // show/hide units
+                $_SESSION['show_hide_unav'] = "s";        // show/hide unavailable units - 4/27/10
+                $_SESSION['show_hide_fac']  = "s";        // show/hide facilities - 3/8/10
+                $_SESSION['unit_flag_1'] = "";        // unit id where status or position change
+                $_SESSION['unit_flag_2'] = "";        // usage tbd 4/7/10
+                $_SESSION['tick_flag_1'] = "";        // usage tbd 4/7/10
+                $_SESSION['tick_flag_2'] = "";        // usage tbd 4/7/10
+                $_SESSION['fac_flag_2'] = 2;        // 2/16/11
+                $_SESSION['list_type'] = 0;        // 12/2/10
+                $_SESSION['show_hide_Deployed'] = "s";    // Show all deployed tickets 3/15/11
+                $_SESSION['day_night'] = $_POST['frm_daynight'];    // 01/20/11 Set Day or Night Colors
+                $_SESSION['maps_sh'] = $_POST['frm_maps'];    // 9/10/13 Show or Hide Maps
+                $_SESSION['hide_controls'] = "s";        // 3/15/11
+                $_SESSION['incs_list'] = "s";        // 3/15/11
+                $_SESSION['resp_list'] = "s";        // 3/15/11
+                $_SESSION['facs_list'] = "s";        // 3/15/11
+                $_SESSION['regions_boxes'] = "s";        // 6/10/11
+                $_SESSION['user_unit_id'] = $row['responder_id'];        //3/19/11
+                $_SESSION['show_hide_upper'] = "s";        //6/10/11
+                $_SESSION['sh_cond'] = "s";
+                $_SESSION['mobile_selected'] = 0;
+                $_SESSION['sit_resp_minimised'] = "n";
+                $_SESSION['sit_fac_minimised'] = "n";
+                $_SESSION['responderlist'] = "s";
+                $_SESSION['facilitylist'] = "s";
+                $_SESSION['loglist'] = "s";
+                $initLayer = intval(get_variable('default_map_layer'));
+                $baseLayerNamesArr = Array("Open_Streetmaps","Google","Google_Terrain","Google_Satellite","Google_Hybrid","USGS_Topo","Dark","Aerial");
+                $_SESSION['layer_inuse'] = $baseLayerNamesArr[$initLayer];
+                foreach($categories as $key => $value) {                // 3/15/11
+                    $sess_flag = "show_hide_" . $value;
+                    $_SESSION[$sess_flag] = "s";
+                    }
 
-				set_filenames($internet, $userchoice);			// 8/31/10
+                foreach($fac_categories as $key => $value) {                // 3/15/11
+                    $fac_sess_flag = "show_hide_fac_" . $value;
+                    $_SESSION[$fac_sess_flag] = "s";
+                    }
+//                $temp = implode(";",  $_SESSION);
 
-				do_log($GLOBALS['LOG_SIGN_IN'],0,0,"{$browser}");		// log it - 12/1/2012
+                set_filenames($internet, $userchoice);            // 8/31/10
 
-				// 2/28/26 - Prepared statement hardening
-				$reserved_status = intval($GLOBALS['STATUS_RESERVED']);
-				$user_id = intval($_SESSION['user_id']);
-				db_query("DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = ? AND `_by` = ?", [$reserved_status, $user_id]);
-				
-				$to = "";
-				$subject = "Tickets Login";
-				$message = "From: " . gethostbyaddr($_SERVER['REMOTE_ADDR']) ."\nBrowser:" . $_SERVER['HTTP_USER_AGENT'];
-				$message .= "\nBy: " . $_POST['frm_user'];
-				$message .= "\nScreen: " . $_POST['scr_width'] . " x " .$_POST['scr_height'];
-				$message .= "\nReferrer: " . $_POST['frm_referer'];
+                do_log($GLOBALS['LOG_SIGN_IN'],0,0,"{$browser}");        // log it - 12/1/2012
 
-//				@mail  ($to, $subject, $message);				// 1/11/09
+                // 2/28/26 - Prepared statement hardening
+                $reserved_status = intval($GLOBALS['STATUS_RESERVED']);
+                $user_id = intval($_SESSION['user_id']);
+                db_query("DELETE FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = ? AND `_by` = ?", [$reserved_status, $user_id]);
 
-				header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-				header('Cache-Control: no-store, no-cache, must-revalidate');
-				header('Cache-Control: post-check=0, pre-check=0', FALSE);
-				header('Pragma: no-cache');
+                $to = "";
+                $subject = "Tickets Login";
+                $message = "From: " . gethostbyaddr($_SERVER['REMOTE_ADDR']) ."\nBrowser:" . $_SERVER['HTTP_USER_AGENT'];
+                $message .= "\nBy: " . $_POST['frm_user'];
+                $message .= "\nScreen: " . $_POST['scr_width'] . " x " .$_POST['scr_height'];
+                $message .= "\nReferrer: " . $_POST['frm_referer'];
 
-				$host  = $_SERVER['HTTP_HOST'];
-				$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+//                @mail  ($to, $subject, $message);                // 1/11/09
 
-				$unit_id = get_unit();				// 3/19/11
-				$level = $row['level'];
+                header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+                header('Cache-Control: no-store, no-cache, must-revalidate');
+                header('Cache-Control: post-check=0, pre-check=0', false);
+                header('Pragma: no-cache');
 
-				if (!function_exists('tickets_get_versions')) {
-					require_once __DIR__ . '/versions.inc.php';
-				}
-				$versionMeta = tickets_get_versions();
-				$versionMismatch = ($versionMeta['installed'] !== null && $versionMeta['installed'] !== $versionMeta['installer']);
-				$isAdminPlus = ($level <= $GLOBALS['LEVEL_ADMINISTRATOR']);
-				if ($versionMismatch && $isAdminPlus) {
-					$extra = 'install.php';
-					$protocol = ($https) ? "https" : "http";
-					$url = $protocol . "://" . $host . $uri . "/" . $extra;
-					redir($url, 0, TRUE);
-					exit();
-				}
+                $host  = $_SERVER['HTTP_HOST'];
+                $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
-				if($level == $GLOBALS['LEVEL_UNIT']) {	//	3/1/12
-					$extra = 'mobile.php';
-					} else if($level == $GLOBALS['LEVEL_STATS']) {
-					$extra = 'stats_scr.php?stats=stats';
-					} else if($level == $GLOBALS['LEVEL_SERVICE_USER']) {	//	10/11/12
-					$extra = 'portal.php';
-					} else if($level == $GLOBALS['LEVEL_FACILITY']) {	//	10/11/12
-					$extra = 'facility_board.php';
-					} else if($level == $GLOBALS['LEVEL_MEMBER']){
-					$_SESSION = array();
-					@session_destroy();
-					// 3/14/26 - Start fresh session so login form CSRF token is valid
-					configure_secure_session();
-					session_start();
-					session_regenerate_id(true);
-					$extra = 'main.php?logout=1';
-					} else {
-					$extra = 'main.php?log_in=1';
-					$_SESSION['refresh_top_once'] = true;
-					}
+                $unit_id = get_unit();                // 3/19/11
+                $level = $row['level'];
 
-				$protocol = ($https) ? "https" : "http";
-				$url = $protocol . "://" . $host . $uri . "/" . $extra;
-//				$url = "http://" . $host . $uri . "/" . $extra;
-				redir($url);
-				exit();
-				}			// end if (mysql_affected_rows()==1)
-			}			// end if((!empty($_POST))&&(check_for_rows(...)
-			}			// end CSRF else block
+                if (!function_exists('tickets_get_versions')) {
+                    require_once __DIR__ . '/versions.inc.php';
+                }
+                $versionMeta = tickets_get_versions();
+                $versionMismatch = ($versionMeta['installed'] !== null && $versionMeta['installed'] !== $versionMeta['installer']);
+                $isAdminPlus = ($level <= $GLOBALS['LEVEL_ADMINISTRATOR']);
+                if ($versionMismatch && $isAdminPlus) {
+                    $extra = 'install.php';
+                    $protocol = ($https) ? "https" : "http";
+                    $url = $protocol . "://" . $host . $uri . "/" . $extra;
+                    redir($url, 0, true);
+                    exit();
+                }
 
-//		if no form data or values fail
-		$_SESSION = array();			// 4/29/10 - Clear session data (keep session alive for CSRF token)
+                if($level == $GLOBALS['LEVEL_UNIT']) {    //    3/1/12
+                    $extra = 'mobile.php';
+                    } else if($level == $GLOBALS['LEVEL_STATS']) {
+                    $extra = 'stats_scr.php?stats=stats';
+                    } else if($level == $GLOBALS['LEVEL_SERVICE_USER']) {    //    10/11/12
+                    $extra = 'portal.php';
+                    } else if($level == $GLOBALS['LEVEL_FACILITY']) {    //    10/11/12
+                    $extra = 'facility_board.php';
+                    } else if($level == $GLOBALS['LEVEL_MEMBER']){
+                    $_SESSION = array();
+                    @session_destroy();
+                    // 3/14/26 - Start fresh session so login form CSRF token is valid
+                    configure_secure_session();
+                    session_start();
+                    session_regenerate_id(true);
+                    $extra = 'main.php?logout=1';
+                    } else {
+                    $extra = 'main.php?log_in=1';
+                    $_SESSION['refresh_top_once'] = true;
+                    }
+
+                $protocol = ($https) ? "https" : "http";
+                $url = $protocol . "://" . $host . $uri . "/" . $extra;
+//                $url = "http://" . $host . $uri . "/" . $extra;
+                redir($url);
+                exit();
+                }            // end if (mysql_affected_rows()==1)
+            }            // end if((!empty($_POST))&&(check_for_rows(...)
+            }            // end CSRF else block
+
+//        if no form data or values fail
+        $_SESSION = array();            // 4/29/10 - Clear session data (keep session alive for CSRF token)
 
 ?>
-		<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-		<HTML xmlns="http://www.w3.org/1999/xhtml">
-		<HEAD><TITLE>Tickets - free open source computer-aided dispatch software (CAD)</TITLE>
-		<META HTTP-EQUIV=="Description" CONTENT="free, open source, CAD, dispatch, emergency response, ARES Teams, RACES Teams, amateur radio " />
-		<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
-		<META HTTP-EQUIV="Expires" CONTENT="0">
-		<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
-		<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-		<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
-		<META HTTP-EQUIV="Script-date" CONTENT="1/23/10">
-		<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">			<!-- 3/15/11 -->
-		<STYLE type="text/css">
-		input		{background-color:transparent;}		/* Benefit IE radio buttons */
-	  	</STYLE>
-		<SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
-		<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
-		<SCRIPT defer="defer">	<!-- 11/18/10 -->
-		window.onresize=function(){set_size()};
-		var viewportwidth;
-		var viewportheight;
+        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+        <HTML xmlns="http://www.w3.org/1999/xhtml">
+        <HEAD><TITLE>Tickets - free open source computer-aided dispatch software (CAD)</TITLE>
+        <META HTTP-EQUIV=="Description" CONTENT="free, open source, CAD, dispatch, emergency response, ARES Teams, RACES Teams, amateur radio " />
+        <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+        <META HTTP-EQUIV="Expires" CONTENT="0">
+        <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
+        <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
+        <META HTTP-EQUIV="Content-Script-Type"    CONTENT="application/x-javascript">
+        <META HTTP-EQUIV="Script-date" CONTENT="1/23/10">
+        <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">            <!-- 3/15/11 -->
+        <STYLE type="text/css">
+        input        {background-color:transparent;}        /* Benefit IE radio buttons */
+          </STYLE>
+        <SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
+        <SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+        <SCRIPT defer="defer">    <!-- 11/18/10 -->
+        window.onresize=function(){set_size()};
+        var viewportwidth;
+        var viewportheight;
 
-		function set_size() {
-			if (typeof window.innerWidth != 'undefined') {
-				viewportwidth = window.innerWidth,
-				viewportheight = window.innerHeight
-				} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-				viewportwidth = document.documentElement.clientWidth,
-				viewportheight = document.documentElement.clientHeight
-				} else {
-				viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-				viewportheight = document.getElementsByTagName('body')[0].clientHeight
-				}
-			set_fontsizes(viewportwidth,"fullscreen");
-			}
+        function set_size() {
+            if (typeof window.innerWidth != 'undefined') {
+                viewportwidth = window.innerWidth,
+                viewportheight = window.innerHeight
+                } else if (typeof document.documentElement != 'undefined'    && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+                viewportwidth = document.documentElement.clientWidth,
+                viewportheight = document.documentElement.clientHeight
+                } else {
+                viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+                viewportheight = document.getElementsByTagName('body')[0].clientHeight
+                }
+            set_fontsizes(viewportwidth,"fullscreen");
+            }
 
-		String.prototype.trim = function () {
-			return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
-			};
+        String.prototype.trim = function () {
+            return this.replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1");
+            };
 
-		function getBrowserWidth(){
-			var val="";
-		    if (window.innerWidth){
-		        var val= window.innerWidth;}
-		    else if (document.documentElement && document.documentElement.clientWidth != 0){
-		        var val= document.documentElement.clientWidth;    }
-		    else if (window.screen.width && window.screen.width != 0){
-		        var val= window.screen.width;    }
-		    else if (document.body){var val= document.body.clientWidth;}
-		        return(isNaN(val))? 1024: val;
-			}
-		function getBrowserHeight(){
-			var val="";
-		    if (window.innerHeight){
-		        var val= window.innerHeight;}
-		    else if (document.documentElement && document.documentElement.clientHeight != 0){
-		        var val= document.documentElement.clientHeight;    }
-		    else if (window.screen.height && window.screen.height != 0){
-		        var val= window.screen.height;    }
-		    else if (document.body){var val= document.body.clientHeight;}
-		        return(isNaN(val))? 740: val;
-			}
+        function getBrowserWidth(){
+            var val="";
+            if (window.innerWidth){
+                var val= window.innerWidth;}
+            else if (document.documentElement && document.documentElement.clientWidth != 0){
+                var val= document.documentElement.clientWidth;    }
+            else if (window.screen.width && window.screen.width != 0){
+                var val= window.screen.width;    }
+            else if (document.body){var val= document.body.clientWidth;}
+                return(isNaN(val))? 1024: val;
+            }
+        function getBrowserHeight(){
+            var val="";
+            if (window.innerHeight){
+                var val= window.innerHeight;}
+            else if (document.documentElement && document.documentElement.clientHeight != 0){
+                var val= document.documentElement.clientHeight;    }
+            else if (window.screen.height && window.screen.height != 0){
+                var val= window.screen.height;    }
+            else if (document.body){var val= document.body.clientHeight;}
+                return(isNaN(val))? 740: val;
+            }
 
-		function Set_Cookie( name, value, expires, path, domain, secure ) {
-			var today = new Date();	// set time in milliseconds
-			today.setTime( today.getTime() );
-			if ( expires )	{
-				expires = expires * 1000 * 60 ;
-				}
-			var expires_date = new Date( today.getTime() + (expires) );
-			document.cookie = name + "=" +escape( value ) +
-				( ( expires ) ? ";expires=" + expires_date.toGMTString() : "" ) + //expires.toGMTString()
-				( ( path ) ? ";path=" + path : "" ) +
-				( ( domain ) ? ";domain=" + domain : "" ) +
-				( ( secure ) ? ";secure" : "" );
-			}
-			// if the expires variable is set, make the correct expires time, the
-			// current script below will set it for x number of days, to make it
-			// for hours, delete * 24, for minutes, delete * 60 * 24
-			// alert('expires ' + expires_date.toGMTString());// this is for testing purposes only
-			// alert( 'today ' + today.toGMTString() );// this is for testing purpose only
+        function Set_Cookie( name, value, expires, path, domain, secure ) {
+            var today = new Date();    // set time in milliseconds
+            today.setTime( today.getTime() );
+            if ( expires )    {
+                expires = expires * 1000 * 60 ;
+                }
+            var expires_date = new Date( today.getTime() + (expires) );
+            document.cookie = name + "=" +escape( value ) +
+                ( ( expires ) ? ";expires=" + expires_date.toGMTString() : "" ) + //expires.toGMTString()
+                ( ( path ) ? ";path=" + path : "" ) +
+                ( ( domain ) ? ";domain=" + domain : "" ) +
+                ( ( secure ) ? ";secure" : "" );
+            }
+            // if the expires variable is set, make the correct expires time, the
+            // current script below will set it for x number of days, to make it
+            // for hours, delete * 24, for minutes, delete * 60 * 24
+            // alert('expires ' + expires_date.toGMTString());// this is for testing purposes only
+            // alert( 'today ' + today.toGMTString() );// this is for testing purpose only
 
-			function Get_Cookie( check_name ) {
-				var a_all_cookies = document.cookie.split( ';' ); 	// first we'll split this cookie up into name/value pairs
-				var a_temp_cookie = '';							  	// note: document.cookie only returns name=value, not the other components
-				var cookie_name = '';
-				var cookie_value = '';
-				var b_cookie_found = false; // set boolean t/f default f
-				var i = '';
-				for ( i = 0; i < a_all_cookies.length; i++ ) {
-					a_temp_cookie = a_all_cookies[i].split( '=' );					// plit each name=value pair
-					cookie_name = a_temp_cookie[0].replace(/^\s+|\s+$/g, '');		// and trim left/right whitespace
-					if ( cookie_name == check_name ){								// if the extracted name matches passed check_name
-						b_cookie_found = true;
-						if ( a_temp_cookie.length > 1 ){	// we need to handle case where cookie has no value but exists (no = sign, that is):
-							cookie_value = unescape( a_temp_cookie[1].replace(/^\s+|\s+$/g, '') );
-							}
-						return cookie_value;// note that in cases where cookie is initialized but no value, null is returned
-						break;
-						}
-					a_temp_cookie = null;
-					cookie_name = '';
-					}
-				if ( !b_cookie_found ) {
-					return null;
-					}
-				}		// end function Get_Cookie(
+            function Get_Cookie( check_name ) {
+                var a_all_cookies = document.cookie.split( ';' );     // first we'll split this cookie up into name/value pairs
+                var a_temp_cookie = '';                                  // note: document.cookie only returns name=value, not the other components
+                var cookie_name = '';
+                var cookie_value = '';
+                var b_cookie_found = false; // set boolean t/f default f
+                var i = '';
+                for ( i = 0; i < a_all_cookies.length; i++ ) {
+                    a_temp_cookie = a_all_cookies[i].split( '=' );                    // plit each name=value pair
+                    cookie_name = a_temp_cookie[0].replace(/^\s+|\s+$/g, '');        // and trim left/right whitespace
+                    if ( cookie_name == check_name ){                                // if the extracted name matches passed check_name
+                        b_cookie_found = true;
+                        if ( a_temp_cookie.length > 1 ){    // we need to handle case where cookie has no value but exists (no = sign, that is):
+                            cookie_value = unescape( a_temp_cookie[1].replace(/^\s+|\s+$/g, '') );
+                            }
+                        return cookie_value;// note that in cases where cookie is initialized but no value, null is returned
+                        break;
+                        }
+                    a_temp_cookie = null;
+                    cookie_name = '';
+                    }
+                if ( !b_cookie_found ) {
+                    return null;
+                    }
+                }        // end function Get_Cookie(
 
-		function do_hh_onload () {				// 2/24/09
-			document.login_form.scr_width.value=getBrowserWidth();
-			document.login_form.scr_height.value=getBrowserHeight();
-			document.login_form.frm_user.focus();
-			}		// end function
+        function do_hh_onload () {                // 2/24/09
+            document.login_form.scr_width.value=getBrowserWidth();
+            document.login_form.scr_height.value=getBrowserHeight();
+            document.login_form.frm_user.focus();
+            }        // end function
 
 
-		function do_onload () {
-			if (this.window.name!="main") {self.close();}			// in a popup
-			if(self.location.href==parent.location.href) {			// prevent frame jump
-				self.location.href = 'index.php';
-				};
-			try {		// should always be true
-				parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php echo NOT_STR;?>" ;
-				parent.frames["upper"].document.getElementById("level").innerHTML  = "<?php echo NA_STR;?>" ;
-				parent.frames["upper"].document.getElementById("script").innerHTML  = "login";
-				}
-			catch(e) {
-				}
-			document.login_form.scr_width.value=screen.width;			// 1/23/10
-			document.login_form.scr_height.value=screen.height;
-			}		// end function do onload ()
+        function do_onload () {
+            if (this.window.name!="main") {self.close();}            // in a popup
+            if(self.location.href==parent.location.href) {            // prevent frame jump
+                self.location.href = 'index.php';
+                };
+            try {        // should always be true
+                parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php echo NOT_STR;?>" ;
+                parent.frames["upper"].document.getElementById("level").innerHTML  = "<?php echo NA_STR;?>" ;
+                parent.frames["upper"].document.getElementById("script").innerHTML  = "login";
+                }
+            catch(e) {
+                }
+            document.login_form.scr_width.value=screen.width;            // 1/23/10
+            document.login_form.scr_height.value=screen.height;
+            }        // end function do onload ()
 <?php
-		if (get_variable('call_board')==2) {		// 7/7/09
+        if (get_variable('call_board')==2) {        // 7/7/09
 ?>
-			try {											// 8/10/10
-				parent.calls.location.href = 'board.php';
-				}
-			catch (e) {
-				}
+            try {                                            // 8/10/10
+                parent.calls.location.href = 'board.php';
+                }
+            catch (e) {
+                }
 <?php
-			}
-		print "\tparent.upper.location.href = 'top.php';\n";					// reload and initialize top frame 6/19/09
+            }
+        print "\tparent.upper.location.href = 'top.php';\n";                    // reload and initialize top frame 6/19/09
 ?>
-		window.setTimeout("document.forms[0].frm_user.focus()", 1000);
-		var selected = [];
-		selected['show_maps_but'] = true;
-		selected['hide_maps_but'] = false;
-		selected['day_but'] = true;
-		selected['night_but'] = false;
+        window.setTimeout("document.forms[0].frm_user.focus()", 1000);
+        var selected = [];
+        selected['show_maps_but'] = true;
+        selected['hide_maps_but'] = false;
+        selected['day_but'] = true;
+        selected['night_but'] = false;
 
-		function do_is_set(the_id) {
-			CngClass(the_id, 'isselected text')
-			return true;
-			}
+        function do_is_set(the_id) {
+            CngClass(the_id, 'isselected text')
+            return true;
+            }
 
-		function do_not_set(the_id) {
-			CngClass(the_id, 'plain_centerbuttons text')
-			return true;
-			}
+        function do_not_set(the_id) {
+            CngClass(the_id, 'plain_centerbuttons text')
+            return true;
+            }
 
-		function set_maps(val) {
-			if(val == 1) {
-				do_is_set("show_maps_but");
-				do_not_set("hide_maps_but");
-				selected['show_maps_but'] = true;
-				selected['hide_maps_but'] = false;
-				document.login_form.frm_maps.value="Show";
-				} else {
-				do_is_set("hide_maps_but");
-				do_not_set("show_maps_but");
-				selected['show_maps_but'] = false;
-				selected['hide_maps_but'] = true;
-				document.login_form.frm_maps.value="Hide";
-				}
-			}
+        function set_maps(val) {
+            if(val == 1) {
+                do_is_set("show_maps_but");
+                do_not_set("hide_maps_but");
+                selected['show_maps_but'] = true;
+                selected['hide_maps_but'] = false;
+                document.login_form.frm_maps.value="Show";
+                } else {
+                do_is_set("hide_maps_but");
+                do_not_set("show_maps_but");
+                selected['show_maps_but'] = false;
+                selected['hide_maps_but'] = true;
+                document.login_form.frm_maps.value="Hide";
+                }
+            }
 
-		function set_daynight(val) {
-			if(val == 1) {
-				do_is_set("day_but");
-				do_not_set("night_but");
-				selected['day_but'] = true;
-				selected['night_but'] = false;
-				document.login_form.frm_daynight.value="Day";
-				} else {
-				do_is_set("night_but");
-				do_not_set("day_but");
-				selected['day_but'] = false;
-				selected['night_but'] = true;
-				document.login_form.frm_daynight.value="Night";
-				}
-			}
+        function set_daynight(val) {
+            if(val == 1) {
+                do_is_set("day_but");
+                do_not_set("night_but");
+                selected['day_but'] = true;
+                selected['night_but'] = false;
+                document.login_form.frm_daynight.value="Day";
+                } else {
+                do_is_set("night_but");
+                do_not_set("day_but");
+                selected['day_but'] = false;
+                selected['night_but'] = true;
+                document.login_form.frm_daynight.value="Night";
+                }
+            }
 
-		function do_hover_centerbuttons(the_id) {
-			if(selected[the_id]) {return;}
-			CngClass(the_id, 'hover_centerbuttons text');
-			return true;
-			}
+        function do_hover_centerbuttons(the_id) {
+            if(selected[the_id]) {return;}
+            CngClass(the_id, 'hover_centerbuttons text');
+            return true;
+            }
 
-		function do_plain_centerbuttons(the_id) {
-			if(selected[the_id]) {return;}
-			CngClass(the_id, 'plain_centerbuttons text');
-			return true;
-			}
+        function do_plain_centerbuttons(the_id) {
+            if(selected[the_id]) {return;}
+            CngClass(the_id, 'plain_centerbuttons text');
+            return true;
+            }
 
-		</SCRIPT>
-		</HEAD>
+        </SCRIPT>
+        </HEAD>
 <?php
-		print ($hh)? "\n\t<BODY onLoad = 'do_hh_onload(); set_size();'>\n" : "\n\t<BODY onLoad = 'do_onload(); set_size();'>\n";		// 2/24/09
+        print ($hh)? "\n\t<BODY onLoad = 'do_hh_onload(); set_size();'>\n" : "\n\t<BODY onLoad = 'do_onload(); set_size();'>\n";        // 2/24/09
 ?>
-		<CENTER>
-		<SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
-		<DIV CLASS='even' style='position: absolute; top: 5%; right: 20%; width: 60%; border: 1px outset #707070;'><BR /><BR />
+        <CENTER>
+        <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
+        <DIV CLASS='even' style='position: absolute; top: 5%; right: 20%; width: 60%; border: 1px outset #707070;'><BR /><BR />
 <?php
-		if(get_variable('_version') != '') print "<SPAN CLASS='text_large text_bold text_black'>" . get_variable('login_banner')."</SPAN><BR /><BR />";
+        if(get_variable('_version') != '') print "<SPAN CLASS='text_large text_bold text_black'>" . get_variable('login_banner')."</SPAN><BR /><BR />";
 ?>
-		</FONT>
+        </FONT>
 
-		<FORM METHOD="post" ACTION="<?php print $requested_page;?>" NAME="login_form"  onSubmit="return true;">
-		<TABLE BORDER=0>
+        <FORM METHOD="post" ACTION="<?php print $requested_page;?>" NAME="login_form"  onSubmit="return true;">
+        <TABLE BORDER=0>
 <?php
-		if(array_key_exists('frm_passwd', $_POST) && empty($warn)) {$warn = "Login failed. Pls enter correct values and try again.";}
-		if(!(empty($warn))) {
-			print "<TR CLASS='odd'><TH COLSPAN='99'><FONT CLASS='warn'>
-			{$warn}
-			</FONT><BR /><BR /></TH></TR>";
-			}
-		$temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";
-		$my_click = ($_SERVER["HTTP_HOST"] == "127.0.0.1")? " onClick = \"document.login_form.frm_user.value='admin';document.login_form.frm_passwd.value='admin';\"" : "" ;
-//	6/1/12
-		$result_guest = db_query(
-			"SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? LIMIT 1",
-			['guest']
-		);
-		$guest_exists = ($result_guest && $result_guest->num_rows == 1);
+        if(array_key_exists('frm_passwd', $_POST) && empty($warn)) {$warn = "Login failed. Pls enter correct values and try again.";}
+        if(!(empty($warn))) {
+            print "<TR CLASS='odd'><TH COLSPAN='99'><FONT CLASS='warn'>
+            {$warn}
+            </FONT><BR /><BR /></TH></TR>";
+            }
+        $temp =  isset($_SERVER['HTTP_REFERER'])? $_SERVER['HTTP_REFERER'] : "";
+        $my_click = ($_SERVER["HTTP_HOST"] == "127.0.0.1")? " onClick = \"document.login_form.frm_user.value='admin';document.login_form.frm_passwd.value='admin';\"" : "" ;
+//    6/1/12
+        $result_guest = db_query(
+            "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? LIMIT 1",
+            ['guest']
+        );
+        $guest_exists = ($result_guest && $result_guest->num_rows == 1);
 
 // End of code to check for guest account existence
 ?>
-		<TR CLASS='even'>
-			<TD ROWSPAN=99>
-				<IMG BORDER=0 SRC='open_source_button.png' /><BR /><BR /><BR /><BR /><img src="php.png" />
-			</TD>
-			<TD CLASS="td_label text_large">
-				<?php print get_text("User"); ?>:
-			</TD>
-			<TD>
-				<INPUT CLASS='text_large' TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();" VALUE="">
-			</TD>
-		</TR>
-		<TR CLASS='even'>
-			<TD CLASS="td_label text_large">
-				<?php print get_text("Password"); ?>: &nbsp;&nbsp;
-			</TD>
-			<TD>
-				<INPUT CLASS='text_large' TYPE="password" NAME="frm_passwd" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();$('login_but').focus();"  VALUE="">
-			</TD>
-		</TR>
-		<TR CLASS="even">
-			<TD COLSPAN=2>
-				&nbsp;&nbsp;
-			</TD>
-		</TR>
-		<TR CLASS="even">
-			<TD COLSPAN=2>
-				&nbsp;&nbsp;
-			</TD>
-		</TR>
-		<TR CLASS='even'>
-			<TD COLSPAN=99 STYLE='text-align: center;'>
-				<SPAN ID='day_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Day Colors');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_daynight(1);"><IMG id='can_img' SRC='./images/sun.png' /></SPAN>
-				<SPAN ID='night_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Night Colors');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_daynight(0);"><IMG id='can_img' SRC='./images/moon.png' /></SPAN>
-			</TD>
-		</TR>
-		<TR CLASS="even">
-			<TD COLSPAN=2>
-				&nbsp;&nbsp;
-			</TD>
-		</TR>
+        <TR CLASS='even'>
+            <TD ROWSPAN=99>
+                <IMG BORDER=0 SRC='open_source_button.png' /><BR /><BR /><BR /><BR /><img src="php.png" />
+            </TD>
+            <TD CLASS="td_label text_large">
+                <?php print get_text("User"); ?>:
+            </TD>
+            <TD>
+                <INPUT CLASS='text_large' TYPE="text" NAME="frm_user" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_user.value = document.login_form.frm_user.value.trim();" VALUE="">
+            </TD>
+        </TR>
+        <TR CLASS='even'>
+            <TD CLASS="td_label text_large">
+                <?php print get_text("Password"); ?>: &nbsp;&nbsp;
+            </TD>
+            <TD>
+                <INPUT CLASS='text_large' TYPE="password" NAME="frm_passwd" MAXLENGTH="255" SIZE="30" onChange = "document.login_form.frm_passwd.value = document.login_form.frm_passwd.value.trim();$('login_but').focus();"  VALUE="">
+            </TD>
+        </TR>
+        <TR CLASS="even">
+            <TD COLSPAN=2>
+                &nbsp;&nbsp;
+            </TD>
+        </TR>
+        <TR CLASS="even">
+            <TD COLSPAN=2>
+                &nbsp;&nbsp;
+            </TD>
+        </TR>
+        <TR CLASS='even'>
+            <TD COLSPAN=99 STYLE='text-align: center;'>
+                <SPAN ID='day_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Day Colors');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_daynight(1);"><IMG id='can_img' SRC='./images/sun.png' /></SPAN>
+                <SPAN ID='night_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Night Colors');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_daynight(0);"><IMG id='can_img' SRC='./images/moon.png' /></SPAN>
+            </TD>
+        </TR>
+        <TR CLASS="even">
+            <TD COLSPAN=2>
+                &nbsp;&nbsp;
+            </TD>
+        </TR>
 <?php
-	if(get_variable("internet") != 2) {
+    if(get_variable("internet") != 2) {
 ?>
-		<TR CLASS='even' STYLE='text-align: center;'>
-			<TD COLSPAN=99>
-				<SPAN ID='show_maps_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Show Maps');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_maps(1);"><IMG id='can_img' SRC='./images/maps.png' /></SPAN>
-				<SPAN ID='hide_maps_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Hide Maps');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_maps(0);"><IMG id='can_img' SRC='./images/no_maps.png' /></SPAN>
-			</TD>
-		</TR>
+        <TR CLASS='even' STYLE='text-align: center;'>
+            <TD COLSPAN=99>
+                <SPAN ID='show_maps_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Show Maps');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_maps(1);"><IMG id='can_img' SRC='./images/maps.png' /></SPAN>
+                <SPAN ID='hide_maps_but' CLASS='plain_centerbuttons text' style='height: auto; width: auto; display: inline-block; float: none;' onMouseover="do_hover_centerbuttons(this.id); Tip('Hide Maps');" onMouseout="do_plain_centerbuttons(this.id); UnTip();" onClick="set_maps(0);"><IMG id='can_img' SRC='./images/no_maps.png' /></SPAN>
+            </TD>
+        </TR>
 <?php
-		} else {
+        } else {
 ?>
-			<INPUT type="hidden" NAME="frm_maps" VALUE="Show">
+            <INPUT type="hidden" NAME="frm_maps" VALUE="Show">
 <?php
-		}
+        }
 ?>
-		<TR CLASS="even">
-			<TD COLSPAN=2>&nbsp;&nbsp;</TD>
-		</TR>
-		<TR CLASS='even'>
-			<TD COLSPAN=2 ALIGN='center'>
-				<SPAN id='login_but' tabindex=0 class='plain text' style='width: 100px; float: none; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.login_form.submit();'><?php print get_text("Log In"); ?></SPAN>
-			</TD>
-		</TR>
-		<TR CLASS='even'>
-			<TD COLSPAN=2 ALIGN='center' style='height: 30px;'>
-				&nbsp;
-			</TD>
-		</TR>
+        <TR CLASS="even">
+            <TD COLSPAN=2>&nbsp;&nbsp;</TD>
+        </TR>
+        <TR CLASS='even'>
+            <TD COLSPAN=2 ALIGN='center'>
+                <SPAN id='login_but' tabindex=0 class='plain text' style='width: 100px; float: none; display: inline-block;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='document.login_form.submit();'><?php print get_text("Log In"); ?></SPAN>
+            </TD>
+        </TR>
+        <TR CLASS='even'>
+            <TD COLSPAN=2 ALIGN='center' style='height: 30px;'>
+                &nbsp;
+            </TD>
+        </TR>
 <?php
-		if($allow_accessRequests == "1") {
+        if($allow_accessRequests == "1") {
 ?>
-			<TR CLASS='even'>
-				<TD CLASS='text_small' COLSPAN=99 ALIGN='CENTER'><BR />
-					<A ID='req_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF="contact.php">Request Access</A>
-				</TD>
-			</TR>
+            <TR CLASS='even'>
+                <TD CLASS='text_small' COLSPAN=99 ALIGN='CENTER'><BR />
+                    <A ID='req_but' class='plain' style='float: none;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' HREF="contact.php">Request Access</A>
+                </TD>
+            </TR>
 <?php
-			}
-  		if($guest_exists) {	//	6/1/12
+            }
+          if($guest_exists) {    //    6/1/12
 ?>
-			<TR CLASS='even'>
-				<TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><BR />&nbsp;&nbsp;&nbsp;&nbsp;Visitors may login as <B>guest</B> with password <B>guest</B>.&nbsp;&nbsp;&nbsp;&nbsp;</TD>
-			</TR>
+            <TR CLASS='even'>
+                <TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><BR />&nbsp;&nbsp;&nbsp;&nbsp;Visitors may login as <B>guest</B> with password <B>guest</B>.&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+            </TR>
 <?php
-			}
+            }
 ?>
-		<TR CLASS='even'>
-			<TD CLASS='text_medium' COLSPAN=99 ALIGN='CENTER'><BR />
-				<A HREF="mailto:<?php echo get_contact_addr ();?>?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A>
-			</TD>
-		</TR>
-		<TR CLASS='even'>
-			<TD COLSPAN=2>&nbsp;</TD>
-		</TR>
-		<TR CLASS='even'>
-			<TD COLSPAN=2>&nbsp;</TD>
-		</TR>
-		<TR CLASS='even'>
-			<TD COLSPAN=2>&nbsp;</TD>
-		</TR>
-	 	</TABLE>
-		<INPUT TYPE='hidden' NAME = 'scr_width' VALUE=''>
-		<INPUT TYPE='hidden' NAME = 'scr_height' VALUE=''>
-		<INPUT TYPE='hidden' NAME = 'frm_maps' VALUE=''>
-		<INPUT TYPE='hidden' NAME = 'frm_daynight' VALUE=''>
-		<INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print e($temp); ?>">
-		<INPUT TYPE='hidden' NAME = 'no_autoforward' VALUE="<?php print e($no_autoforward); ?>">
-		<?php echo csrf_token_field(); ?>
-		</FORM><BR /><BR />
-		</DIV>
-		</CENTER>
+        <TR CLASS='even'>
+            <TD CLASS='text_medium' COLSPAN=99 ALIGN='CENTER'><BR />
+                <A HREF="mailto:<?php echo get_contact_addr ();?>?subject=Question/Comment on Tickets Dispatch System"><u>Contact us</u>&nbsp;&nbsp;&nbsp;&nbsp;<IMG SRC="mail.png" BORDER="0" STYLE="vertical-align: text-bottom"></A>
+            </TD>
+        </TR>
+        <TR CLASS='even'>
+            <TD COLSPAN=2>&nbsp;</TD>
+        </TR>
+        <TR CLASS='even'>
+            <TD COLSPAN=2>&nbsp;</TD>
+        </TR>
+        <TR CLASS='even'>
+            <TD COLSPAN=2>&nbsp;</TD>
+        </TR>
+         </TABLE>
+        <INPUT TYPE='hidden' NAME = 'scr_width' VALUE=''>
+        <INPUT TYPE='hidden' NAME = 'scr_height' VALUE=''>
+        <INPUT TYPE='hidden' NAME = 'frm_maps' VALUE=''>
+        <INPUT TYPE='hidden' NAME = 'frm_daynight' VALUE=''>
+        <INPUT TYPE='hidden' NAME = 'frm_referer' VALUE="<?php print e($temp); ?>">
+        <INPUT TYPE='hidden' NAME = 'no_autoforward' VALUE="<?php print e($no_autoforward); ?>">
+        <?php echo csrf_token_field(); ?>
+        </FORM><BR /><BR />
+        </DIV>
+        </CENTER>
 <?php
-		if(get_variable('login_userlist') == "1") {
+        if(get_variable('login_userlist') == "1") {
 ?>
-			<DIV CLASS='even' style='position: absolute; top: 5%; right: 2%; height: 40%; overflow-y: scroll; border: 1px outset #707070; padding: 20px;'><BR /><BR />
-				<?php print userlist();?>
-			</DIV>
+            <DIV CLASS='even' style='position: absolute; top: 5%; right: 2%; height: 40%; overflow-y: scroll; border: 1px outset #707070; padding: 20px;'><BR /><BR />
+                <?php print userlist();?>
+            </DIV>
 <?php
-			}
+            }
 ?>
 <SCRIPT>
-		document.addEventListener("keyup", function(event) {	//	Captures return key click on login button to simulate it being an input button
-			event.preventDefault();
-			if (event.keyCode == 13) {
-				if(document.login_form.frm_user.value.length >=1 && document.login_form.frm_passwd.value.length >=5) {
-					$('login_but').click();
-					} else {
-					alert("User or password length is too short, please try again");
-					}
-				}
-			});
+        document.addEventListener("keyup", function(event) {    //    Captures return key click on login button to simulate it being an input button
+            event.preventDefault();
+            if (event.keyCode == 13) {
+                if(document.login_form.frm_user.value.length >=1 && document.login_form.frm_passwd.value.length >=5) {
+                    $('login_but').click();
+                    } else {
+                    alert("User or password length is too short, please try again");
+                    }
+                }
+            });
 
-		if (typeof window.innerWidth != 'undefined') {
-			viewportwidth = window.innerWidth,
-			viewportheight = window.innerHeight
-			} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-			viewportwidth = document.documentElement.clientWidth,
-			viewportheight = document.documentElement.clientHeight
-			} else {
-			viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-			viewportheight = document.getElementsByTagName('body')[0].clientHeight
-			}
-		set_fontsizes(viewportwidth, "fullscreen");
-		set_maps(1);
-		set_daynight(1);
+        if (typeof window.innerWidth != 'undefined') {
+            viewportwidth = window.innerWidth,
+            viewportheight = window.innerHeight
+            } else if (typeof document.documentElement != 'undefined'    && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+            viewportwidth = document.documentElement.clientWidth,
+            viewportheight = document.documentElement.clientHeight
+            } else {
+            viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+            viewportheight = document.getElementsByTagName('body')[0].clientHeight
+            }
+        set_fontsizes(viewportwidth, "fullscreen");
+        set_maps(1);
+        set_daynight(1);
 </SCRIPT>
-		</HTML>
+        </HTML>
 <?php
-			exit();		// no return value
-			}
-		}		// end function do_login()
+            exit();        // no return value
+            }
+        }        // end function do_login()
 /*
 $useragent=$_SERVER['HTTP_USER_AGENT'];
 if(preg_match('/android|avantgo|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i',$useragent)||preg_match('/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|e\-|e\/|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(di|rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|xda(\-|2|g)|yas\-|your|zeto|zte\-/i',substr($useragent,0,4)))

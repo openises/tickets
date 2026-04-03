@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 require_once('incs/functions.inc.php');
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
-do_login(basename(__FILE__));	// session_start()
+do_login(basename(__FILE__));    // session_start()
 @session_start();
 session_write_close();
 
@@ -21,332 +21,332 @@ $existingDataCount = 0;
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<META HTTP-EQUIV="Content-Script-Type"    CONTENT="application/x-javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
 <SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT type="text/javascript">
-window.onresize=function(){set_size()};	
+window.onresize=function(){set_size()};
 var viewportwidth, viewportheight, outerWidth, outerHeight, colWidth, colHeight;
 
 function set_size() {
-	if (typeof window.innerWidth != 'undefined') {
-		viewportwidth = window.innerWidth,
-		viewportheight = window.innerHeight
-		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-		viewportwidth = document.documentElement.clientWidth,
-		viewportheight = document.documentElement.clientHeight
-		} else {
-		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-		viewportheight = document.getElementsByTagName('body')[0].clientHeight
-		}
-	outerWidth = viewportwidth *.98;
-	outerHeigth = viewportheight *.85;
-	colWidth = outerWidth * .8;
-	colHeight = outerHeight *.6;
-	set_fontsizes(viewportwidth, "fullscreen");
-	if($('outer')) {$('outer').style.width = outerWidth + "px";}
-	if($('outer')) {$('outer').style.height = outerHeight + "px";}
-	if($('leftcol')) {$('leftcol').style.width = colWidth + "px";}
-	if($('leftcol')) {$('leftcol').style.height = colHeight + "px";}
-	setWidths();
-	}	
+    if (typeof window.innerWidth != 'undefined') {
+        viewportwidth = window.innerWidth,
+        viewportheight = window.innerHeight
+        } else if (typeof document.documentElement != 'undefined'    && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+        viewportwidth = document.documentElement.clientWidth,
+        viewportheight = document.documentElement.clientHeight
+        } else {
+        viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+        viewportheight = document.getElementsByTagName('body')[0].clientHeight
+        }
+    outerWidth = viewportwidth *.98;
+    outerHeigth = viewportheight *.85;
+    colWidth = outerWidth * .8;
+    colHeight = outerHeight *.6;
+    set_fontsizes(viewportwidth, "fullscreen");
+    if($('outer')) {$('outer').style.width = outerWidth + "px";}
+    if($('outer')) {$('outer').style.height = outerHeight + "px";}
+    if($('leftcol')) {$('leftcol').style.width = colWidth + "px";}
+    if($('leftcol')) {$('leftcol').style.height = colHeight + "px";}
+    setWidths();
+    }
 
 function ck_frames() {
-	if(self.location.href==parent.location.href) {
-		self.location.href = 'index.php';
-		} else {
-		parent.upper.show_butts();
-		}
-	}		// end function ck_frames()
+    if(self.location.href==parent.location.href) {
+        self.location.href = 'index.php';
+        } else {
+        parent.upper.show_butts();
+        }
+    }        // end function ck_frames()
 </SCRIPT>
 </HEAD>
 <BODY style='overflow: hidden;'>
 <DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
 <?php
 switch($mode) {
-	case "start":
+    case "start":
 ?>
-	<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
-		<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-			<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'>Import Tickets MDB Data into Tickets</SPAN>
-		</DIV>
-		<BR />
-		<BR />
-		<FORM METHOD="POST" NAME= "db_connect_Form" ACTION="ticketsmdb_import.php?mode=go">
-		<FIELDSET>
-			<LEGEND class='text_large text_bold'>Tickets MDB Database Connection Information</LEGEND>
-			<DIV style='position: relative;'>
-				<LABEL for="mdbhost">Tickets MDB Database Host</LABEL>
-				<INPUT name='mdbhost' type='text' VALUE='localhost'/>
-				<BR />
-				<LABEL for="mdbhost">Tickets MDB Database Name</LABEL>
-				<INPUT name='mdbdb' type='text' />
-				<BR />
-				<LABEL for="mdbuser">Tickets MDB Database User</LABEL>
-				<INPUT name='mdbuser' type='text' />
-				<BR />
-				<LABEL for="mdbpassword">Tickets MDB Database User Password</LABEL>
-				<INPUT name='mdbpassword' type='password' />
-				<BR />
-				<LABEL for="mdbprefix">Tickets MDB Database Prefix</LABEL>
-				<INPUT name='mdbprefix' type='text' />
-				<BR />
-			</DIV>				
-		</FIELDSET>
-		<FIELDSET>
-			<LEGEND class='text_large text_bold'>Tickets Database Connection Information</LEGEND>
-			<DIV style='position: relative;'>
-				<LABEL for="ticketshost">Tickets Database Host</LABEL>
-				<INPUT name='ticketshost' type='text' VALUE='<?php print $mysql_host;?>' />
-				<BR />
-				<LABEL for="ticketsdb">Tickets Database Name</LABEL>
-				<INPUT name='ticketsdb' type='text' VALUE='<?php print $mysql_db;?>' />
-				<BR />
-				<LABEL for="ticketsuser">Tickets Database User</LABEL>
-				<INPUT name='ticketsuser' type='text' VALUE='<?php print $mysql_user;?>' />
-				<BR />
-				<LABEL for="ticketspassword">Tickets Database User Password</LABEL>
-				<INPUT name='ticketspassword' type='password' VALUE='<?php print $mysql_passwd;?>' />
-				<BR />
-				<LABEL for="ticketsprefix">Tickets Database Prefix</LABEL>
-				<INPUT name='ticketsprefix' type='text' VALUE='<?php print $mysql_prefix;?>' />
-				<BR />
-			</DIV>		
-		</FIELDSET>		
-		</FORM>
-		<CENTER>
-		<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.db_connect_Form.submit();'><?php print get_text('Submit');?><IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
-		</CENTER>
-	</DIV>
+    <DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
+        <DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
+            <SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'>Import Tickets MDB Data into Tickets</SPAN>
+        </DIV>
+        <BR />
+        <BR />
+        <FORM METHOD="POST" NAME= "db_connect_Form" ACTION="ticketsmdb_import.php?mode=go">
+        <FIELDSET>
+            <LEGEND class='text_large text_bold'>Tickets MDB Database Connection Information</LEGEND>
+            <DIV style='position: relative;'>
+                <LABEL for="mdbhost">Tickets MDB Database Host</LABEL>
+                <INPUT name='mdbhost' type='text' VALUE='localhost'/>
+                <BR />
+                <LABEL for="mdbhost">Tickets MDB Database Name</LABEL>
+                <INPUT name='mdbdb' type='text' />
+                <BR />
+                <LABEL for="mdbuser">Tickets MDB Database User</LABEL>
+                <INPUT name='mdbuser' type='text' />
+                <BR />
+                <LABEL for="mdbpassword">Tickets MDB Database User Password</LABEL>
+                <INPUT name='mdbpassword' type='password' />
+                <BR />
+                <LABEL for="mdbprefix">Tickets MDB Database Prefix</LABEL>
+                <INPUT name='mdbprefix' type='text' />
+                <BR />
+            </DIV>
+        </FIELDSET>
+        <FIELDSET>
+            <LEGEND class='text_large text_bold'>Tickets Database Connection Information</LEGEND>
+            <DIV style='position: relative;'>
+                <LABEL for="ticketshost">Tickets Database Host</LABEL>
+                <INPUT name='ticketshost' type='text' VALUE='<?php print $mysql_host;?>' />
+                <BR />
+                <LABEL for="ticketsdb">Tickets Database Name</LABEL>
+                <INPUT name='ticketsdb' type='text' VALUE='<?php print $mysql_db;?>' />
+                <BR />
+                <LABEL for="ticketsuser">Tickets Database User</LABEL>
+                <INPUT name='ticketsuser' type='text' VALUE='<?php print $mysql_user;?>' />
+                <BR />
+                <LABEL for="ticketspassword">Tickets Database User Password</LABEL>
+                <INPUT name='ticketspassword' type='password' VALUE='<?php print $mysql_passwd;?>' />
+                <BR />
+                <LABEL for="ticketsprefix">Tickets Database Prefix</LABEL>
+                <INPUT name='ticketsprefix' type='text' VALUE='<?php print $mysql_prefix;?>' />
+                <BR />
+            </DIV>
+        </FIELDSET>
+        </FORM>
+        <CENTER>
+        <SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.db_connect_Form.submit();'><?php print get_text('Submit');?><IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+        </CENTER>
+    </DIV>
 <?php
-	break;
-	
-	case "go":
-	// 3/14/26 - Removed redundant mysql_connect/mysql_close; db_query() handles the connection
-	for($y = 0; $y < $tableCount; $y++) {
-		if($tickets_mdbTables[$y] != "log") {
-			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$y] . "`";
-			$result = db_query($query);
-			if($result->num_rows > 0) {
-				$existingDataCount++;
-				}
-			}
-		}
-	
- 	if($existingDataCount > 0) {
+    break;
+
+    case "go":
+    // 3/14/26 - Removed redundant mysql_connect/mysql_close; db_query() handles the connection
+    for($y = 0; $y < $tableCount; $y++) {
+        if($tickets_mdbTables[$y] != "log") {
+            $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$y] . "`";
+            $result = db_query($query);
+            if($result->num_rows > 0) {
+                $existingDataCount++;
+                }
+            }
+        }
+
+     if($existingDataCount > 0) {
 ?>
-		<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
-			<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-				<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'>Import Tickets MDB Data into Tickets</SPAN>
-			</DIV>
-			<BR />
-			<BR />
-			<CENTER>
-			<SPAN CLASS='warn'>For Tickets Database <?php print $mysql_db;?><BR />Data already exists in Tickets in the MDB Tables</SPAN><BR /><BR /><BR />
-			<SPAN id='dodelete_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.dodelete_Form.submit();'>Empty Tables<IMG id='can_img' style='float: right;' SRC='./images/delete.png' /></SPAN>
-			<SPAN id='nodelete_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.nodelete_Form.submit();;'>Cancel<IMG id='can_img' style='float: right;' SRC='./images/cancel.png' /></SPAN>
-			</CENTER>
-		</DIV>
-		<FORM NAME='dodelete_Form' METHOD="post" ACTION = "ticketsmdb_import.php?mode=dodelete">
-		<INPUT TYPE='hidden' NAME = 'mdbhost' VALUE="<?php print htmlspecialchars($_POST['mdbhost'], ENT_QUOTES, 'UTF-8');?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbdb' VALUE="<?php print htmlspecialchars($_POST['mdbdb'], ENT_QUOTES, 'UTF-8');?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbuser' VALUE="<?php print htmlspecialchars($_POST['mdbuser'], ENT_QUOTES, 'UTF-8');?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbpassword' VALUE="<?php print htmlspecialchars($_POST['mdbpassword'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'mdbprefix' VALUE="<?php print htmlspecialchars($_POST['mdbprefix'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketshost' VALUE="<?php print htmlspecialchars($_POST['ticketshost'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsdb' VALUE="<?php print htmlspecialchars($_POST['ticketsdb'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsuser' VALUE="<?php print htmlspecialchars($_POST['ticketsuser'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketspassword' VALUE="<?php print htmlspecialchars($_POST['ticketspassword'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsprefix' VALUE="<?php print htmlspecialchars($_POST['ticketsprefix'], ENT_QUOTES, 'UTF-8');?>" />
-		</FORM>
-		<FORM NAME='nodelete_Form' METHOD="post" ACTION = "config.php"></FORM>
+        <DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
+            <DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
+                <SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'>Import Tickets MDB Data into Tickets</SPAN>
+            </DIV>
+            <BR />
+            <BR />
+            <CENTER>
+            <SPAN CLASS='warn'>For Tickets Database <?php print $mysql_db;?><BR />Data already exists in Tickets in the MDB Tables</SPAN><BR /><BR /><BR />
+            <SPAN id='dodelete_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.dodelete_Form.submit();'>Empty Tables<IMG id='can_img' style='float: right;' SRC='./images/delete.png' /></SPAN>
+            <SPAN id='nodelete_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.nodelete_Form.submit();;'>Cancel<IMG id='can_img' style='float: right;' SRC='./images/cancel.png' /></SPAN>
+            </CENTER>
+        </DIV>
+        <FORM NAME='dodelete_Form' METHOD="post" ACTION = "ticketsmdb_import.php?mode=dodelete">
+        <INPUT TYPE='hidden' NAME = 'mdbhost' VALUE="<?php print htmlspecialchars($_POST['mdbhost'], ENT_QUOTES, 'UTF-8');?>"/>
+        <INPUT TYPE='hidden' NAME = 'mdbdb' VALUE="<?php print htmlspecialchars($_POST['mdbdb'], ENT_QUOTES, 'UTF-8');?>"/>
+        <INPUT TYPE='hidden' NAME = 'mdbuser' VALUE="<?php print htmlspecialchars($_POST['mdbuser'], ENT_QUOTES, 'UTF-8');?>"/>
+        <INPUT TYPE='hidden' NAME = 'mdbpassword' VALUE="<?php print htmlspecialchars($_POST['mdbpassword'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'mdbprefix' VALUE="<?php print htmlspecialchars($_POST['mdbprefix'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'ticketshost' VALUE="<?php print htmlspecialchars($_POST['ticketshost'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'ticketsdb' VALUE="<?php print htmlspecialchars($_POST['ticketsdb'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'ticketsuser' VALUE="<?php print htmlspecialchars($_POST['ticketsuser'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'ticketspassword' VALUE="<?php print htmlspecialchars($_POST['ticketspassword'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'ticketsprefix' VALUE="<?php print htmlspecialchars($_POST['ticketsprefix'], ENT_QUOTES, 'UTF-8');?>" />
+        </FORM>
+        <FORM NAME='nodelete_Form' METHOD="post" ACTION = "config.php"></FORM>
 <?php
-		} else {
-		$output_text = "";
-		for($z = 0; $z < $tableCount; $z++) {
-			$tabledatacount = 0;
-			$tabledata = array();
-			$table_fields = array();
-			// 3/14/26 - Migrated from mysql_* to mysqli for external MDB source DB
-			$mdb_conn = new mysqli($_POST['mdbhost'], $_POST['mdbuser'], $_POST['mdbpassword'], $_POST['mdbdb']);
+        } else {
+        $output_text = "";
+        for($z = 0; $z < $tableCount; $z++) {
+            $tabledatacount = 0;
+            $tabledata = array();
+            $table_fields = array();
+            // 3/14/26 - Migrated from mysql_* to mysqli for external MDB source DB
+            $mdb_conn = new mysqli($_POST['mdbhost'], $_POST['mdbuser'], $_POST['mdbpassword'], $_POST['mdbdb']);
 
-			$table_name_escaped = $mdb_conn->real_escape_string($mdbTables[$z]);
-			$query = "DESCRIBE `{$GLOBALS['mysql_prefix']}" . $table_name_escaped . "`";
-			$result = $mdb_conn->query($query);
-			while ($row = stripslashes_deep($result->fetch_assoc())) {
-				$table_fields[] = $row['Field'];
-				}
+            $table_name_escaped = $mdb_conn->real_escape_string($mdbTables[$z]);
+            $query = "DESCRIBE `{$GLOBALS['mysql_prefix']}" . $table_name_escaped . "`";
+            $result = $mdb_conn->query($query);
+            while ($row = stripslashes_deep($result->fetch_assoc())) {
+                $table_fields[] = $row['Field'];
+                }
 
-			$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $table_name_escaped . "`";
-			$result = $mdb_conn->query($query);
-			while ($row = stripslashes_deep($result->fetch_assoc())) {
-				$tabledata[] = $row;
-				}
+            $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}" . $table_name_escaped . "`";
+            $result = $mdb_conn->query($query);
+            while ($row = stripslashes_deep($result->fetch_assoc())) {
+                $tabledata[] = $row;
+                }
 
-			$mdb_conn->close();
-			// Tickets DB inserts below use db_query() which manages its own connection
+            $mdb_conn->close();
+            // Tickets DB inserts below use db_query() which manages its own connection
 
-			$dataCount = count($tabledata);
-			$fieldCount = count($table_fields);
-			for($m = 0; $m < $dataCount; $m++) {
-				if($tickets_mdbTables[$z] != "log") {
-					$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$z] . "` (";
-					for($i = 0; $i < $fieldCount; $i++) {
-						if($i < ($fieldCount-1)) {
-							$query .= "`" . $table_fields[$i] . "`, ";
-							} else {
-							$query .= "`" . $table_fields[$i] . "`";
-							}
-						}
-					$query .= ") VALUES (";
-					$insert_params = [];
-					for($j = 0; $j < $fieldCount; $j++) {
-						$insert_params[] = trim($tabledata[$m][$table_fields[$j]]);
-						if($j < ($fieldCount-1)) {
-							$query .= "?,";
-							} else {
-							$query .= "?";
-							}
-						}
-					$query .= ");";
-					$result = db_query($query, $insert_params);
-					if($result) {$tabledatacount++;}
-					} else {
-					$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$z] . "` (";
-					for($i = 0; $i < $fieldCount; $i++) {
-						if($table_fields[$i] != 'id') {
-							if($i < ($fieldCount-1)) {
-								$query .= "`" . $table_fields[$i] . "`, ";
-								} else {
-								$query .= "`" . $table_fields[$i] . "`";
-								}
-							}
-						}
-					$query .= ") VALUES (";
-					$insert_params = [];
-					for($j = 0; $j < $fieldCount; $j++) {
-						if($table_fields[$j] != 'id') {
-							$insert_params[] = trim($tabledata[$m][$table_fields[$j]]);
-							if($j < ($fieldCount-1)) {
-								$query .= "?,";
-								} else {
-								$query .= "?";
-								}
-							}
-						}
-					$query .= ");";
-					$result = db_query($query, $insert_params);
-					if($result) {$tabledatacount++;}
-					}
-				}
-				
+            $dataCount = count($tabledata);
+            $fieldCount = count($table_fields);
+            for($m = 0; $m < $dataCount; $m++) {
+                if($tickets_mdbTables[$z] != "log") {
+                    $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$z] . "` (";
+                    for($i = 0; $i < $fieldCount; $i++) {
+                        if($i < ($fieldCount-1)) {
+                            $query .= "`" . $table_fields[$i] . "`, ";
+                            } else {
+                            $query .= "`" . $table_fields[$i] . "`";
+                            }
+                        }
+                    $query .= ") VALUES (";
+                    $insert_params = [];
+                    for($j = 0; $j < $fieldCount; $j++) {
+                        $insert_params[] = trim($tabledata[$m][$table_fields[$j]]);
+                        if($j < ($fieldCount-1)) {
+                            $query .= "?,";
+                            } else {
+                            $query .= "?";
+                            }
+                        }
+                    $query .= ");";
+                    $result = db_query($query, $insert_params);
+                    if($result) {$tabledatacount++;}
+                    } else {
+                    $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$z] . "` (";
+                    for($i = 0; $i < $fieldCount; $i++) {
+                        if($table_fields[$i] != 'id') {
+                            if($i < ($fieldCount-1)) {
+                                $query .= "`" . $table_fields[$i] . "`, ";
+                                } else {
+                                $query .= "`" . $table_fields[$i] . "`";
+                                }
+                            }
+                        }
+                    $query .= ") VALUES (";
+                    $insert_params = [];
+                    for($j = 0; $j < $fieldCount; $j++) {
+                        if($table_fields[$j] != 'id') {
+                            $insert_params[] = trim($tabledata[$m][$table_fields[$j]]);
+                            if($j < ($fieldCount-1)) {
+                                $query .= "?,";
+                                } else {
+                                $query .= "?";
+                                }
+                            }
+                        }
+                    $query .= ");";
+                    $result = db_query($query, $insert_params);
+                    if($result) {$tabledatacount++;}
+                    }
+                }
 
-			$output_text .= "Added " . $tabledatacount . " entries to Table " . $tickets_mdbTables[$z] . "<BR />";
-			}
 
-			$query = "SELECT `id`, `field5`, `field1`, `field2` from `{$GLOBALS['mysql_prefix']}member`";
-			$result = db_query($query);
-			while ($row = stripslashes_deep($result->fetch_assoc())) {
-				if($row['field5'] != "") {
-					$id = intval($row['id']);
-					$temp = $row['field5'];
-					$field1 = $row['field1'];
-					$field2 = $row['field2'];
-					$location = str_replace('pictures', 'mdb_pictures', $temp);
-					$query2 = "UPDATE `{$GLOBALS['mysql_prefix']}member` SET `field5` = ? WHERE `id` = ?";
-					$result2 = db_query($query2, [$location, $id]);
-					if($result2) {$output_text .= "Updated picture location for member " . $field2 . " " . $field1 . "<BR />";}
-					}
-				}
+            $output_text .= "Added " . $tabledatacount . " entries to Table " . $tickets_mdbTables[$z] . "<BR />";
+            }
 
-			$query = "SELECT `id`, `name`, `member_id` from `{$GLOBALS['mysql_prefix']}mdb_files`";
-			$result = db_query($query);
-			while ($row = stripslashes_deep($result->fetch_assoc())) {
-				$id = intval($row['id']);
-				$temp = $row['name'];
-				$location = str_replace('files', 'mdb_files', $temp);
-				$membername = get_member_name($row['member_id']);
-				$query2 = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_files` SET `name` = ? WHERE `id` = ?";
-				$result2 = db_query($query2, [$location, $id]);
-				if($result2) {$output_text .= "Updated file location for member " . $membername . "<BR />";}
-				}
-				
-			// 3/14/26 - Removed mysql_close(); db_query() manages its own connection
-?>				
-		<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
-			<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-				<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'>Import Tickets MDB Data into Tickets</SPAN>
-			</DIV>
-			<BR />
-			<BR />
-			<DIV style='width: 98%; display: block; height: 200px; overflow-y: scroll;'><?php print $output_text;?></DIV><BR /><BR />
-			<SPAN CLASS='text text_bold' style='text-align: left;'>Data Import Complete<BR /><BR /><BR />You now need to make sure that settings are updated to "use_mdb"<BR />and then associate responders with members as required<BR /></SPAN><BR /><BR /><BR />
-			<CENTER>
-			<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.fin_Form.submit();'>Finish<IMG id='can_img' style='float: right;' SRC='./images/finished_small.png' /></SPAN>
-			</CENTER>
-		</DIV>
-		<FORM NAME='fin_Form' METHOD="post" ACTION = "config.php"></FORM>				
-<?php
-		}
-	break;
-	
-	case "dodelete":
-	$output_text = "";
-	for($i = 0; $i < $ticketsTableCount; $i++) {
-		if($tickets_mdbTables[$i] != "log") {
-			$query = "TRUNCATE TABLE `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$i] . "`";
-			$result = db_query($query);
-			if($result) {$output_text .= "Emptied data from " . $tickets_mdbTables[$i] . " table<BR />";}
-			}
-		}
-	$query = "TRUNCATE TABLE `{$GLOBALS['mysql_prefix']}responder_x_member`";
-	$result = db_query($query);
-	if($result) {$output_text .= "Emptied data from responder_x_member table<BR />";}
-	
+            $query = "SELECT `id`, `field5`, `field1`, `field2` from `{$GLOBALS['mysql_prefix']}member`";
+            $result = db_query($query);
+            while ($row = stripslashes_deep($result->fetch_assoc())) {
+                if($row['field5'] != "") {
+                    $id = intval($row['id']);
+                    $temp = $row['field5'];
+                    $field1 = $row['field1'];
+                    $field2 = $row['field2'];
+                    $location = str_replace('pictures', 'mdb_pictures', $temp);
+                    $query2 = "UPDATE `{$GLOBALS['mysql_prefix']}member` SET `field5` = ? WHERE `id` = ?";
+                    $result2 = db_query($query2, [$location, $id]);
+                    if($result2) {$output_text .= "Updated picture location for member " . $field2 . " " . $field1 . "<BR />";}
+                    }
+                }
+
+            $query = "SELECT `id`, `name`, `member_id` from `{$GLOBALS['mysql_prefix']}mdb_files`";
+            $result = db_query($query);
+            while ($row = stripslashes_deep($result->fetch_assoc())) {
+                $id = intval($row['id']);
+                $temp = $row['name'];
+                $location = str_replace('files', 'mdb_files', $temp);
+                $membername = get_member_name($row['member_id']);
+                $query2 = "UPDATE `{$GLOBALS['mysql_prefix']}mdb_files` SET `name` = ? WHERE `id` = ?";
+                $result2 = db_query($query2, [$location, $id]);
+                if($result2) {$output_text .= "Updated file location for member " . $membername . "<BR />";}
+                }
+
+            // 3/14/26 - Removed mysql_close(); db_query() manages its own connection
 ?>
-	<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
-		<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-			<SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'>Import Tickets MDB Data into Tickets</SPAN>
-		</DIV>
-		<BR />
-		<BR />
-		<DIV style='width: 98%; display: block; height: 200px; overflow-y: scroll;'><?php print $output_text;?></DIV><BR /><BR />
-		<SPAN CLASS='text text_bold text_left'>Existing Data deleted</SPAN><BR /><BR /><BR />
-		<CENTER>
-		<SPAN id='dodelete_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.go_Form.submit();'>Continue<IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
-		</CENTER>
-	</DIV>
-		<FORM NAME='go_Form' METHOD="post" ACTION = "ticketsmdb_import.php?mode=go">
-		<INPUT TYPE='hidden' NAME = 'mdbhost' VALUE="<?php print htmlspecialchars($_POST['mdbhost'], ENT_QUOTES, 'UTF-8');?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbdb' VALUE="<?php print htmlspecialchars($_POST['mdbdb'], ENT_QUOTES, 'UTF-8');?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbuser' VALUE="<?php print htmlspecialchars($_POST['mdbuser'], ENT_QUOTES, 'UTF-8');?>"/>
-		<INPUT TYPE='hidden' NAME = 'mdbpassword' VALUE="<?php print htmlspecialchars($_POST['mdbpassword'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'mdbprefix' VALUE="<?php print htmlspecialchars($_POST['mdbprefix'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketshost' VALUE="<?php print htmlspecialchars($_POST['ticketshost'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsdb' VALUE="<?php print htmlspecialchars($_POST['ticketsdb'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsuser' VALUE="<?php print htmlspecialchars($_POST['ticketsuser'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketspassword' VALUE="<?php print htmlspecialchars($_POST['ticketspassword'], ENT_QUOTES, 'UTF-8');?>" />
-		<INPUT TYPE='hidden' NAME = 'ticketsprefix' VALUE="<?php print htmlspecialchars($_POST['ticketsprefix'], ENT_QUOTES, 'UTF-8');?>" />
-		</FORM>
+        <DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
+            <DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
+                <SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'>Import Tickets MDB Data into Tickets</SPAN>
+            </DIV>
+            <BR />
+            <BR />
+            <DIV style='width: 98%; display: block; height: 200px; overflow-y: scroll;'><?php print $output_text;?></DIV><BR /><BR />
+            <SPAN CLASS='text text_bold' style='text-align: left;'>Data Import Complete<BR /><BR /><BR />You now need to make sure that settings are updated to "use_mdb"<BR />and then associate responders with members as required<BR /></SPAN><BR /><BR /><BR />
+            <CENTER>
+            <SPAN id='fin_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.fin_Form.submit();'>Finish<IMG id='can_img' style='float: right;' SRC='./images/finished_small.png' /></SPAN>
+            </CENTER>
+        </DIV>
+        <FORM NAME='fin_Form' METHOD="post" ACTION = "config.php"></FORM>
 <?php
-	break;
-	}
+        }
+    break;
+
+    case "dodelete":
+    $output_text = "";
+    for($i = 0; $i < $ticketsTableCount; $i++) {
+        if($tickets_mdbTables[$i] != "log") {
+            $query = "TRUNCATE TABLE `{$GLOBALS['mysql_prefix']}" . $tickets_mdbTables[$i] . "`";
+            $result = db_query($query);
+            if($result) {$output_text .= "Emptied data from " . $tickets_mdbTables[$i] . " table<BR />";}
+            }
+        }
+    $query = "TRUNCATE TABLE `{$GLOBALS['mysql_prefix']}responder_x_member`";
+    $result = db_query($query);
+    if($result) {$output_text .= "Emptied data from responder_x_member table<BR />";}
+
+?>
+    <DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
+        <DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
+            <SPAN ID='theHeading' CLASS='header text_bold text_big' STYLE='background-color: inherit;'>Import Tickets MDB Data into Tickets</SPAN>
+        </DIV>
+        <BR />
+        <BR />
+        <DIV style='width: 98%; display: block; height: 200px; overflow-y: scroll;'><?php print $output_text;?></DIV><BR /><BR />
+        <SPAN CLASS='text text_bold text_left'>Existing Data deleted</SPAN><BR /><BR /><BR />
+        <CENTER>
+        <SPAN id='dodelete_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.go_Form.submit();'>Continue<IMG id='can_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+        </CENTER>
+    </DIV>
+        <FORM NAME='go_Form' METHOD="post" ACTION = "ticketsmdb_import.php?mode=go">
+        <INPUT TYPE='hidden' NAME = 'mdbhost' VALUE="<?php print htmlspecialchars($_POST['mdbhost'], ENT_QUOTES, 'UTF-8');?>"/>
+        <INPUT TYPE='hidden' NAME = 'mdbdb' VALUE="<?php print htmlspecialchars($_POST['mdbdb'], ENT_QUOTES, 'UTF-8');?>"/>
+        <INPUT TYPE='hidden' NAME = 'mdbuser' VALUE="<?php print htmlspecialchars($_POST['mdbuser'], ENT_QUOTES, 'UTF-8');?>"/>
+        <INPUT TYPE='hidden' NAME = 'mdbpassword' VALUE="<?php print htmlspecialchars($_POST['mdbpassword'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'mdbprefix' VALUE="<?php print htmlspecialchars($_POST['mdbprefix'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'ticketshost' VALUE="<?php print htmlspecialchars($_POST['ticketshost'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'ticketsdb' VALUE="<?php print htmlspecialchars($_POST['ticketsdb'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'ticketsuser' VALUE="<?php print htmlspecialchars($_POST['ticketsuser'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'ticketspassword' VALUE="<?php print htmlspecialchars($_POST['ticketspassword'], ENT_QUOTES, 'UTF-8');?>" />
+        <INPUT TYPE='hidden' NAME = 'ticketsprefix' VALUE="<?php print htmlspecialchars($_POST['ticketsprefix'], ENT_QUOTES, 'UTF-8');?>" />
+        </FORM>
+<?php
+    break;
+    }
 ?>
 </DIV>
 </BODY>
 <SCRIPT>
 if (typeof window.innerWidth != 'undefined') {
-	viewportwidth = window.innerWidth,
-	viewportheight = window.innerHeight
-	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-	viewportwidth = document.documentElement.clientWidth,
-	viewportheight = document.documentElement.clientHeight
-	} else {
-	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-	viewportheight = document.getElementsByTagName('body')[0].clientHeight
-	}
+    viewportwidth = window.innerWidth,
+    viewportheight = window.innerHeight
+    } else if (typeof document.documentElement != 'undefined'    && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+    viewportwidth = document.documentElement.clientWidth,
+    viewportheight = document.documentElement.clientHeight
+    } else {
+    viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+    viewportheight = document.getElementsByTagName('body')[0].clientHeight
+    }
 outerWidth = viewportwidth *.98;
 outerHeigth = viewportheight *.70;
 colWidth = outerWidth * .80;

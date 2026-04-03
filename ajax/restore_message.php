@@ -5,7 +5,7 @@ restore_message.php - restores message from wastebasket to inbox.
 */
 require_once('../incs/functions.inc.php');
 
-$id = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : NULL;
+$id = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : null;
 $ret_arr = array();
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages_bin` WHERE `id` = ?";
@@ -31,37 +31,37 @@ $from = $row['_from'];
 $on = $row['_on'];
 
 $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}messages` (
-		`msg_type`, `message_id`, `ticket_id`, `resp_id`, `recipients`, `from_address`, `fromname`, `subject`, `message`, `status`, `date`, `read_status`, `readby`, `delivered`, `delivery_status`, `_by`, `_from`, `_on`
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        `msg_type`, `message_id`, `ticket_id`, `resp_id`, `recipients`, `from_address`, `fromname`, `subject`, `message`, `status`, `date`, `read_status`, `readby`, `delivered`, `delivery_status`, `_by`, `_from`, `_on`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $params = [
-	trim($msg_type),
-	trim($message_id),
-	trim($ticket_id),
-	trim($resp_id),
-	trim($recipients),
-	trim($from_address),
-	trim($fromname),
-	trim($subject),
-	trim($message),
-	trim($status),
-	trim($date),
-	trim($read_status),
-	trim($readby),
-	trim($delivered),
-	trim($delivery_status),
-	trim($by),
-	trim($from),
-	trim($on)
+    trim($msg_type),
+    trim($message_id),
+    trim($ticket_id),
+    trim($resp_id),
+    trim($recipients),
+    trim($from_address),
+    trim($fromname),
+    trim($subject),
+    trim($message),
+    trim($status),
+    trim($date),
+    trim($read_status),
+    trim($readby),
+    trim($delivered),
+    trim($delivery_status),
+    trim($by),
+    trim($from),
+    trim($on)
 ];
 $result = db_query($query, $params);
 
 $query = "DELETE FROM `{$GLOBALS['mysql_prefix']}messages_bin` WHERE `id` = ?";
 $result = db_query($query, [$id]);
 if($result) {
-	$ret_arr[0] = 100;
-	} else {
-	$ret_arr[0] = 200;
-	}
+    $ret_arr[0] = 100;
+    } else {
+    $ret_arr[0] = 200;
+    }
 print json_encode($ret_arr);
 exit();
 ?>

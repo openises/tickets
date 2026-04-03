@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL);			// 9/13/08
+error_reporting(E_ALL);            // 9/13/08
 
 $test=true;
 $test2=true;

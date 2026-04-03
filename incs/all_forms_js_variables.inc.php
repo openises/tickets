@@ -1,9 +1,9 @@
 <?php
-$not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : NULL;
+$not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : null;
 if(file_exists("./incs/modules.inc.php")) {
-	require_once('./incs/modules.inc.php');
-	}
-$do_blink = TRUE;
+    require_once('./incs/modules.inc.php');
+    }
+$do_blink = true;
 $ld_ticker = "";
 $nature = get_text("Nature");
 $disposition = get_text("Disposition");
@@ -18,12 +18,12 @@ $use_ticker = 0;
 $def_lat = get_variable('def_lat');
 $def_lng = get_variable('def_lng');
 if(file_exists("modules.inc.php")) {
-	require_once('modules.inc.php');
-	$use_ticker = (($_SESSION['good_internet'] == 1) && (module_active("Ticker") == 1) && (!$not_sit)) ? 1 : 0;
-	} elseif(file_exists("./incs/modules.inc.php")) {
-	require_once('./incs/modules.inc.php');
-	$use_ticker = (($_SESSION['good_internet'] == 1) && (module_active("Ticker") == 1) && (!$not_sit)) ? 1 : 0;
-	}
+    require_once('modules.inc.php');
+    $use_ticker = (($_SESSION['good_internet'] == 1) && (module_active("Ticker") == 1) && (!$not_sit)) ? 1 : 0;
+    } elseif(file_exists("./incs/modules.inc.php")) {
+    require_once('./incs/modules.inc.php');
+    $use_ticker = (($_SESSION['good_internet'] == 1) && (module_active("Ticker") == 1) && (!$not_sit)) ? 1 : 0;
+    }
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $show_controls = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] == "s")) ? "" : "none" ;
 $col_butt = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] == "s")) ? "" : "none";
@@ -42,18 +42,18 @@ $api_key = get_variable('gmaps_api_key');
 $key_str = (safe_strlen($api_key) == 39) ? "key={$api_key}&" : false;
 $gmaps = (array_key_exists('internet', $_SESSION) && $_SESSION['internet']) ? 1 : 0;
 $gmaps_ok = ($key_str) ? 1 : 0;
-$temp = get_variable('auto_poll');				// 1/28/09
+$temp = get_variable('auto_poll');                // 1/28/09
 $poll_val = ($temp==0)? "none" : $temp ;
-$day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';	//	3/15/11
-$curr_cats = get_category_butts();	//	get current categories.
+$day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';    //    3/15/11
+$curr_cats = get_category_butts();    //    get current categories.
 $fac_curr_cats = get_fac_category_butts();
-$cat_sess_stat = get_session_status($curr_cats);	//	get session current status categories.
+$cat_sess_stat = get_session_status($curr_cats);    //    get session current status categories.
 $hidden = find_hidden($curr_cats);
 $shown = find_showing($curr_cats);
 $un_stat_cats = get_all_categories();
 $guest = (is_guest()) ? 1 : 0;
 $customSit_setting = get_variable('custom_situation');
-$customSit_arr = explode ("/", $customSit_setting);			// Recent Events, Statistics
+$customSit_arr = explode ("/", $customSit_setting);            // Recent Events, Statistics
 $showEvents = intval($customSit_arr[0]);
 $showStats = intval($customSit_arr[1]);
 $quick = ((is_super() || is_administrator()) && (intval(get_variable('quick'))==1)) ? 1 : 0;
@@ -63,26 +63,26 @@ $protocols = array();
 $query_in = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
 $result_in = db_query($query_in);
 while ($row_in = stripslashes_deep($result_in->fetch_assoc())) {
-	if($row_in['protocol'] != "") {$protocols[$row_in['id']] = safe_addslashes($row_in['protocol']);}
-	}
+    if($row_in['protocol'] != "") {$protocols[$row_in['id']] = safe_addslashes($row_in['protocol']);}
+    }
 $mapzooms = array();
 $dir = (is_dir('./_osm/tiles')) ? './_osm/tiles' : '../_osm/tiles';
 $mapdir = is_dir($dir) ? scandir($dir) : [];
 foreach($mapdir as $val) {
-	if($val <> "." && $val <> "..") {
-		if(is_dir('../_osm/tiles/' . $val)) {
-			$mapzooms[] = intval($val);
-			}
-		}
-	}
+    if($val <> "." && $val <> "..") {
+        if(is_dir('../_osm/tiles/' . $val)) {
+            $mapzooms[] = intval($val);
+            }
+        }
+    }
 if(count($mapzooms) > 0 && get_variable('local_maps') == "1") {$localZoomMin = min($mapzooms); $localZoomMax = max($mapzooms);} else {$localZoomMin = 0; $localZoomMax = 20;}
 // print $localZoomMin . ", " . $localZoomMax . ", " . $localZoomMin . "<BR />";
 $setZoom = (get_variable('local_maps') == "1") ? $localZoomMin : get_variable('def_zoom');
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator`";
-$result	= db_query($query);
+$result    = db_query($query);
 while ($row = stripslashes_deep($result->fetch_assoc())){
-	$states[$row['name']] = $row['code'];
-	}
+    $states[$row['name']] = $row['code'];
+    }
 $def_srt_arr_respsit = array('icon','handle','mail','incidents','status','m','asof');
 $def_srt_arr_resp = array('icon','name','handle','mail','incidents','status','sa','m','asof');
 $def_sort = (get_variable('responder_list_sort') != "") ? get_variable('responder_list_sort') : "1,1";
@@ -116,85 +116,85 @@ $respondersHandles_arr = array();
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `group`";
 $result = db_query($query);
 while ($row = stripslashes_deep($result->fetch_assoc())) {
-	$tmp_arr[$row['group']] = $row['group'];
-	}
+    $tmp_arr[$row['group']] = $row['group'];
+    }
 $tmp_arr = array_unique($tmp_arr);
 foreach($tmp_arr as $key => $val) {
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `group` = ? ORDER BY `sort`";
-	$result = db_query($query, [$val]);
-	while ($row = stripslashes_deep($result->fetch_assoc())) {
-		$responder_statuses[$key][$row['id']]['name'] = $row['status_val'];
-		$responder_statuses[$key][$row['id']]['hide'] = $row['hide'];
-		$responder_statuses[$key][$row['id']]['bg_color'] = $row['bg_color'];
-		$responder_statuses[$key][$row['id']]['text_color'] = $row['text_color'];	
-		}
-	}
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `group` = ? ORDER BY `sort`";
+    $result = db_query($query, [$val]);
+    while ($row = stripslashes_deep($result->fetch_assoc())) {
+        $responder_statuses[$key][$row['id']]['name'] = $row['status_val'];
+        $responder_statuses[$key][$row['id']]['hide'] = $row['hide'];
+        $responder_statuses[$key][$row['id']]['bg_color'] = $row['bg_color'];
+        $responder_statuses[$key][$row['id']]['text_color'] = $row['text_color'];
+        }
+    }
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` ORDER BY `group`";
 $result = db_query($query);
 while ($row = stripslashes_deep($result->fetch_assoc())) {
-	$tmp_arr[$row['group']] = $row['group'];
-	}
+    $tmp_arr[$row['group']] = $row['group'];
+    }
 $tmp_arr = array_unique($tmp_arr);
 foreach($tmp_arr as $key => $val) {
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` WHERE `group` = ? ORDER BY `sort`";
-	$result = db_query($query, [$val]);
-	while ($row = stripslashes_deep($result->fetch_assoc())) {
-		$facility_statuses[$key][$row['id']]['name'] = $row['status_val'];
-		$facility_statuses[$key][$row['id']]['bg_color'] = $row['bg_color'];
-		$facility_statuses[$key][$row['id']]['text_color'] = $row['text_color'];	
-		}
-	}
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` WHERE `group` = ? ORDER BY `sort`";
+    $result = db_query($query, [$val]);
+    while ($row = stripslashes_deep($result->fetch_assoc())) {
+        $facility_statuses[$key][$row['id']]['name'] = $row['status_val'];
+        $facility_statuses[$key][$row['id']]['bg_color'] = $row['bg_color'];
+        $facility_statuses[$key][$row['id']]['text_color'] = $row['text_color'];
+        }
+    }
 
-$query = "SELECT `a`.`ticket_id`, 
-	`a`.`responder_id`, 
-	`t`.`scope` AS `ticket` 
-	FROM `$GLOBALS[mysql_prefix]assigns` `a`
-	LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON `a`.`ticket_id`=`t`.`id`
-	WHERE (`t`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `t`.`status`='{$GLOBALS['STATUS_SCHEDULED']}') AND (`a`.`clear` IS NULL OR DATE_FORMAT(`a`.`clear`,'%y') = '00' )";
+$query = "SELECT `a`.`ticket_id`,
+    `a`.`responder_id`,
+    `t`.`scope` AS `ticket`
+    FROM `$GLOBALS[mysql_prefix]assigns` `a`
+    LEFT JOIN `$GLOBALS[mysql_prefix]ticket` `t` ON `a`.`ticket_id`=`t`.`id`
+    WHERE (`t`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `t`.`status`='{$GLOBALS['STATUS_SCHEDULED']}') AND (`a`.`clear` IS NULL OR DATE_FORMAT(`a`.`clear`,'%y') = '00' )";
 $result = db_query($query);
 $num_assigns = $result->num_rows;
 while ($row = stripslashes_deep($result->fetch_assoc())) {
-	$assigns[$row['responder_id']][] = $row['ticket_id'];
-	}
+    $assigns[$row['responder_id']][] = $row['ticket_id'];
+    }
 unset($result);
 foreach($assigns as $key => $resp_arr) {
-	$resp_assigns[$key] = $resp_arr;
-	}
+    $resp_assigns[$key] = $resp_arr;
+    }
 
 $query = "SELECT `t`.`id`,
-	`t`.`scope` AS `scope`
-	FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
-	WHERE (`t`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `t`.`status`='{$GLOBALS['STATUS_SCHEDULED']}')";
+    `t`.`scope` AS `scope`
+    FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
+    WHERE (`t`.`status`='{$GLOBALS['STATUS_OPEN']}' OR `t`.`status`='{$GLOBALS['STATUS_SCHEDULED']}')";
 $result = db_query($query);
 $num_assigns = $result->num_rows;
 while ($row = stripslashes_deep($result->fetch_assoc())) {
-	$tickets_arr[$row['id']][] = $type = shorten($row['scope'], 18);
-	}
+    $tickets_arr[$row['id']][] = $type = shorten($row['scope'], 18);
+    }
 unset($result);
 
 $query = "SELECT `r`.`id`, `r`.`handle` AS `handle` FROM `{$GLOBALS['mysql_prefix']}responder` `r`";
 $result = db_query($query);
 $num_responders = $result->num_rows;
 while ($row = stripslashes_deep($result->fetch_assoc())) {
-	$responders_arr[$row['handle']] = $row['id'];
-	}
+    $responders_arr[$row['handle']] = $row['id'];
+    }
 unset($result);
 
 $query = "SELECT `r`.`id`, `r`.`handle` AS `handle` FROM `{$GLOBALS['mysql_prefix']}responder` `r`";
 $result = db_query($query);
 $num_responders = $result->num_rows;
 while ($row = stripslashes_deep($result->fetch_assoc())) {
-	$id = $row['id'];
-	$handle = ($row['handle'] != "") ? $row['handle'] : "UNK";
-	$respondersHandles_arr[$id] = $handle;
-	}
+    $id = $row['id'];
+    $handle = ($row['handle'] != "") ? $row['handle'] : "UNK";
+    $respondersHandles_arr[$id] = $handle;
+    }
 unset($result);
 ?>
 <SCRIPT>
 var allow_nogeo = "<?php print get_variable('allow_nogeo');?>";
 var https = "<?php echo $https;?>";
-var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;	
+var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;
 var nm_lat_val = "<?php echo $GLOBALS['NM_LAT_VAL'];?>";
 var use_mdb = "<?php echo get_variable('use_mdb');?>";
 var use_mdb_contact = '<?php echo $useMDBContact;?>';
@@ -233,7 +233,7 @@ var fac_field = window.sit_fac_def_sort;
 var fac_id = window.sit_fac_def_sort_index;
 var fac_field2 = window.fac_def_sort;
 var fac_id2 = window.fac_def_sort_index;
-var maps = '<?php print $_SESSION['maps_sh'];?>' 
+var maps = '<?php print $_SESSION['maps_sh'];?>'
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
 var showTicker = <?php print $use_ticker;?>;
 var showEvents = <?php print $showEvents;?>;
@@ -255,13 +255,13 @@ var openspace_api = "<?php print get_variable('openspace_api');?>";
 var currentSessionLayer = "<?php print $_SESSION['layer_inuse'];?>";
 var quick = <?php print intval($quick);?>;
 var icons=[];
-icons[<?php echo $GLOBALS['SEVERITY_NORMAL'];?>] = 1;	// blue
-icons[<?php echo $GLOBALS['SEVERITY_MEDIUM'];?>] = 2;	// yellow
-icons[<?php echo $GLOBALS['SEVERITY_HIGH']; ?>] =  3;	// red
+icons[<?php echo $GLOBALS['SEVERITY_NORMAL'];?>] = 1;    // blue
+icons[<?php echo $GLOBALS['SEVERITY_MEDIUM'];?>] = 2;    // yellow
+icons[<?php echo $GLOBALS['SEVERITY_HIGH']; ?>] =  3;    // red
 var dzf = parseInt("<?php print get_variable('def_zoom_fixed');?>");
-var max_zoom = 19;		// Maximum zoom level for map tiles (def_zoom is initial zoom, not max)
-var columns = "<?php print get_msg_variable('columns');?>";	//	10/23/12
-var the_columns = new Array(<?php print get_msg_variable('columns');?>);	//	10/23/12
+var max_zoom = 19;        // Maximum zoom level for map tiles (def_zoom is initial zoom, not max)
+var columns = "<?php print get_msg_variable('columns');?>";    //    10/23/12
+var the_columns = new Array(<?php print get_msg_variable('columns');?>);    //    10/23/12
 var thelevel = '<?php print $the_level;?>';
 var locale = <?php print get_variable('locale');?>;
 var theLocale = <?php print get_variable('locale');?>;
@@ -276,7 +276,7 @@ var initZoom = <?php print get_variable('def_zoom');?>;
 var zoom = <?php print get_variable('def_zoom');?>;
 var protocols = <?php echo json_encode($protocols); ?>;
 var states_arr = <?php echo json_encode($states); ?>;
-var NOT_STR = '<?php echo NOT_STR;?>';			// value if not logged-in, defined in functions.inc.php
+var NOT_STR = '<?php echo NOT_STR;?>';            // value if not logged-in, defined in functions.inc.php
 var curr_cats = <?php echo json_encode($curr_cats); ?>;
 var cat_sess_stat = <?php echo json_encode($cat_sess_stat); ?>;
 var hidden = <?php print json_encode($hidden); ?>;
@@ -328,17 +328,17 @@ var actTip = "<?php print get_tip('Number of Actions');?>";
 var assTip = "<?php print get_tip('Number of Units assigned to this Incident');?>";
 var updatedTip = "<?php print get_tip('Incident data last updated');?>";
 
-var textIcon = "<?php print get_text('Icon');?>"; 
-var textHandle = "<?php print get_text('Handle');?>"; 
+var textIcon = "<?php print get_text('Icon');?>";
+var textHandle = "<?php print get_text('Handle');?>";
 var textName = "<?php print get_text('Name');?>";
-var textMail = "<?php print get_text('Mail');?>"; 
-var textIncs = "<?php print get_text('Incidents');?>"; 
-var textStatus = "<?php print get_text('Status');?>"; 
-var textM = "<?php print get_text('M');?>"; 
-var textAsof = "<?php print get_text('As of');?>"; 
+var textMail = "<?php print get_text('Mail');?>";
+var textIncs = "<?php print get_text('Incidents');?>";
+var textStatus = "<?php print get_text('Status');?>";
+var textM = "<?php print get_text('M');?>";
+var textAsof = "<?php print get_text('As of');?>";
 
 var respBull = (resp_direct == "ASC") ? "&#9650" : "&#9660";
-var r1_text = (resp_id == "r1") ? textIcon + respBull : textIcon; 
+var r1_text = (resp_id == "r1") ? textIcon + respBull : textIcon;
 var r2_text = (resp_id == "r2") ? textHandle + respBull : textHandle;
 var r3_text = (resp_id == "r3") ? textName + respBull : textName;
 var r4_text = (resp_id == "r4") ? textMail + respBull : textMail;
@@ -360,15 +360,15 @@ var statusAboutTip = "<?php print get_tip('Responder status about');?>";
 
 var textName = "<?php print get_text('Name');?>";
 var textStatusAbout = "<?php print get_text('Status About');?>";
-var textM = "<?php print get_text('M');?>"; 
+var textM = "<?php print get_text('M');?>";
 
 var respBull = (resp_direct == "ASC") ? "&#9650" : "&#9660";
-var rr1_text = (resp_id == "rr1") ? textIcon + respBull : textIcon; 
+var rr1_text = (resp_id == "rr1") ? textIcon + respBull : textIcon;
 var rr2_text = (resp_id == "rr2") ? textName + respBull : textName;
 var rr3_text = (resp_id == "rr3") ? textMail + respBull : textMail;
 var rr4_text = (resp_id == "rr4") ? textIncs + respBull : textIncs;
 var rr5_text = (resp_id == "rr5") ? textStatus + respBull : textStatus;
-var rr6_text = (resp_id == "rr6") ? textStatusAbout + respBull : textStatusAbout; 
+var rr6_text = (resp_id == "rr6") ? textStatusAbout + respBull : textStatusAbout;
 var rr7_text = (resp_id == "rr7") ? textM + respBull : textM;
 var rr8_text = (resp_id == "rr8") ? textAsof + respBull : textAsof;
 var resp_header = textIcon + respBull;
@@ -404,9 +404,9 @@ var file3_text = "";
 var file4_text = "";
 var file_header = "";
 
-var fiNameTip =	"<?php print get_tip('The File Name');?>";
-var fiUploadedTip =	"<?php print get_tip('Who uploaded this?');?>";
-var fiDateTip =	"<?php print get_tip('When was it uploaded?');?>?";
+var fiNameTip =    "<?php print get_tip('The File Name');?>";
+var fiUploadedTip =    "<?php print get_tip('Who uploaded this?');?>";
+var fiDateTip =    "<?php print get_tip('When was it uploaded?');?>?";
 var fiLinkedTip = "<?php print get_tip('File Associated with?');?>?";
 
 var textWlID = "<?php print get_text('ID');?>";
@@ -495,7 +495,7 @@ var textRequested = "<?php print get_text('Requested');?>";
 var textBy = "<?php print get_text('By');?>";
 var textJoined = "<?php print get_text('Joined');?>";
 
-var h0_text = textID;			
+var h0_text = textID;
 var h1_text = textName;
 var h2_text = textSurname;
 var h3_text = textTeamID;
@@ -504,7 +504,7 @@ var h5_text = textType;
 var h6_text = textStatus;
 var h7_text = textContact;
 var h8_text = textJoined;
-var h9_text = textAsof;	
+var h9_text = textAsof;
 
 var textDispHandle = "<?php print get_text('Handle');?>";
 var textDispNames = "<?php print get_text('Name(s)');?>";

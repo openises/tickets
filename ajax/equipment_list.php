@@ -5,8 +5,8 @@ require_once('../incs/functions.inc.php');
 @session_start();
 $the_session = $_GET['session'];
 if(!(secure_page($the_session))) {
-	exit();
-	} else {
+    exit();
+    } else {
 
 $page = sanitize_int($_GET['page']);
 
@@ -53,11 +53,11 @@ if($start <0) $start = 0;
 
 // the actual query for the grid data
 $query = "SELECT *, `a`.`id` AS `id`,
-	`a`.`equipment_name` AS `name`,
-	`a`.`description` AS `description`,
-	`a`.`spec` AS `spec`
-	FROM `$GLOBALS[mysql_prefix]equipment_types` `a`
-	ORDER BY `$sidx` $sord LIMIT ?, ?";
+    `a`.`equipment_name` AS `name`,
+    `a`.`description` AS `description`,
+    `a`.`spec` AS `spec`
+    FROM `$GLOBALS[mysql_prefix]equipment_types` `a`
+    ORDER BY `$sidx` $sord LIMIT ?, ?";
 
 $result = db_query($query, [$start, $limit], 'ii') or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 

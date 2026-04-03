@@ -5,8 +5,8 @@ require_once('../incs/functions.inc.php');
 @session_start();
 $the_session = $_GET['session'];
 if(!(secure_page($the_session))) {
-	exit();
-	} else {
+    exit();
+    } else {
 
 $page = sanitize_int($_GET['page']);
 
@@ -53,17 +53,17 @@ $sord = (strtoupper($sord) === 'DESC') ? 'DESC' : 'ASC';
 
 // the actual query for the grid data
 $query = "SELECT *, `a`.`id` AS `id`,
-	`a`.`make` AS `make`,
-	`a`.`model` AS `model`,
-	`a`.`regno` AS `regno`,
-	`t`.`name` AS `type_name`
-	FROM `{$GLOBALS['mysql_prefix']}vehicles` `a`
-	LEFT JOIN `{$GLOBALS['mysql_prefix']}vehicle_types` `t` ON ( `a`.`type` = `t`.`id` )
-	ORDER BY `$sidx` $sord LIMIT ?, ?";
+    `a`.`make` AS `make`,
+    `a`.`model` AS `model`,
+    `a`.`regno` AS `regno`,
+    `t`.`name` AS `type_name`
+    FROM `{$GLOBALS['mysql_prefix']}vehicles` `a`
+    LEFT JOIN `{$GLOBALS['mysql_prefix']}vehicle_types` `t` ON ( `a`.`type` = `t`.`id` )
+    ORDER BY `$sidx` $sord LIMIT ?, ?";
 
 $result = db_query($query, [
-	$start,
-	$limit
+    $start,
+    $limit
 ]);
 
 // we should set the appropriate header information. Do not forget this.

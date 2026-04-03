@@ -1,6 +1,6 @@
 <?php
 /*
-11/30/15	AJAX log handler
+11/30/15    AJAX log handler
 */
 error_reporting(E_ALL);
 
@@ -17,11 +17,11 @@ $rec_facility_id = (array_key_exists('rec_fac_id', $_GET)) ? sanitize_int($_GET[
 $mileage = (array_key_exists('mileage', $_GET)) ? sanitize_int($_GET['mileage']) : 0;
 
 //if($istest) {
-//	dump ($_GET);
-//	dump ($_POST);
-//	}
+//    dump ($_GET);
+//    dump ($_POST);
+//    }
 
-do_log($code, $ticket_id, $responder_id, $info, $facility_id, $rec_facility_id, $mileage);		// call generic log table writer
+do_log($code, $ticket_id, $responder_id, $info, $facility_id, $rec_facility_id, $mileage);        // call generic log table writer
 
 print"";
 ?>

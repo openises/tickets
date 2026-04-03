@@ -1,9 +1,9 @@
 <?php
 /*
-8/7/08	initial release - replaces a Google search
+8/7/08    initial release - replaces a Google search
 1/18/09 POST replace GET
-1/26/09 added functions.inc, get_variable for wp key 
-10/1/09	revised return string to include match count as initial entry
+1/26/09 added functions.inc, get_variable for wp key
+10/1/09    revised return string to include match count as initial entry
 3/13/10 constituents table handling added
 4/30/10 accommodate add'l phone fields
 7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
@@ -15,50 +15,50 @@
 11/28/2013 handle null WP returns
 */
 
-require_once('incs/functions.inc.php');		//7/28/10
+require_once('incs/functions.inc.php');        //7/28/10
 
 $phone = (empty($_POST))? "1234560000": sanitize_string($_POST['phone']);
-$vals = array("", "", "{$phone}", "", "", "", "", "", "", "", "");		// output values
-	function do_the_row($inRow) {		// for ticket or constituents data
-		global $vals;
-		$vals[1] = $inRow['contact'];
-		$apt_str = array_key_exists  ( "apartment", $inRow )? " # {$inRow['apartment']}" : "";
-		$vals[3] = $inRow['street']	. $apt_str ;
-		$vals[4] = $inRow['city'];
-		$vals[5] = $inRow['state'];
-		$vals[7] = $inRow['lat'];
-		$vals[8] = $inRow['lng'];
-		$misc_str = array_key_exists  ( "miscellaneous", $inRow ) ? $inRow['miscellaneous'] : "";
-		$vals[9] = $misc_str;
-//		return 	$outStr;						// end function do_the_row()
-		}
-															// collect constituent data this phone no.
+$vals = array("", "", "{$phone}", "", "", "", "", "", "", "", "");        // output values
+    function do_the_row($inRow) {        // for ticket or constituents data
+        global $vals;
+        $vals[1] = $inRow['contact'];
+        $apt_str = array_key_exists  ( "apartment", $inRow )? " # {$inRow['apartment']}" : "";
+        $vals[3] = $inRow['street']    . $apt_str ;
+        $vals[4] = $inRow['city'];
+        $vals[5] = $inRow['state'];
+        $vals[7] = $inRow['lat'];
+        $vals[8] = $inRow['lng'];
+        $misc_str = array_key_exists  ( "miscellaneous", $inRow ) ? $inRow['miscellaneous'] : "";
+        $vals[9] = $misc_str;
+//        return     $outStr;                        // end function do_the_row()
+        }
+                                                            // collect constituent data this phone no.
 $query  = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE
-	`phone`= ? OR `phone_2`= ? OR `phone_3`= ? OR `phone_4`= ?
-	LIMIT 1";
+    `phone`= ? OR `phone_2`= ? OR `phone_3`= ? OR `phone_4`= ?
+    LIMIT 1";
 
 $result = db_query($query, [$phone, $phone, $phone, $phone]) or do_error("", 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-$cons_row = (db()->affected_rows==1) ? stripslashes_deep($result->fetch_array()): NULL;
+$cons_row = (db()->affected_rows==1) ? stripslashes_deep($result->fetch_array()): null;
 
-$query  = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `phone` = ? ORDER BY `updated` DESC";			// 9/29/09
+$query  = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `phone` = ? ORDER BY `updated` DESC";            // 9/29/09
 $result = db_query($query, [$phone]) or do_error("", 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
 //dump(db()->affected_rows);
-if (db()->affected_rows> 0) {							// build return string from newest incident data
-	$vals[0] = db()->affected_rows;
-	$vals[10] = 1;										// identify data source as ticket
-	$row = stripslashes_deep($result->fetch_array());
-	do_the_row($row);
-	}
+if (db()->affected_rows> 0) {                            // build return string from newest incident data
+    $vals[0] = db()->affected_rows;
+    $vals[10] = 1;                                        // identify data source as ticket
+    $row = stripslashes_deep($result->fetch_array());
+    do_the_row($row);
+    }
 
- elseif (!(is_null($cons_row))) {						// 3/13/10
-	$vals[10] = 2;
-	do_the_row($cons_row);						// otherwise use constituents data
-	}
+ elseif (!(is_null($cons_row))) {                        // 3/13/10
+    $vals[10] = 2;
+    do_the_row($cons_row);                        // otherwise use constituents data
+    }
 
-else {													// no priors or constituents - do WP
-		$wp_key = trim(get_variable("wp_key"));				// 1/26/09
-		
+else {                                                    // no priors or constituents - do WP
+        $wp_key = trim(get_variable("wp_key"));                // 1/26/09
+
 // 2023-May-17 - WIP - It appears the whitepages.com URL is dead and this service no longer available.
 // A substitute service may be available at: https://apilayer.com/marketplace/number_verification-api?live_demo=show
 //    --url 'https://api.apilayer.com/number_verification/validate?number={$phone}' \
@@ -66,67 +66,67 @@ else {													// no priors or constituents - do WP
 //  Returned values are:   "carrier": "country_code": "country_name": "country_prefix": "international_format": "line_type": "local_format": "location": "number": "valid"
 //  Unfortunately the location data is not specific enough to have value.
 
-		$url = "http://api.whitepages.com/reverse_phone/1.0/?phone={$phone};api_key={$wp_key};outputtype=JSON";	// 4507191994
-			
-		$data = "";
-		if (function_exists("curl_init")) {
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $url);
-			curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
-			$data = curl_exec ($ch);
-			curl_close ($ch);
-			}
-		else {				// not CURL
-			if ($fp = @fopen($url, "r")) {
-				while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
-				fclose($fp);
-				}		
-			else {
-				@session_start();
-				$err_str = "WhitePages connection fails @ " .  __LINE__;		// 6/8/2013
-				if (!(array_key_exists ( $err_str, $_SESSION ))) {		// limit to once per session
-					do_log($GLOBALS['LOG_ERROR'], 0, 0, $err_str);
-					$_SESSION[$err_str] = TRUE;		
-					}
-				echo "0;";
-				session_write_close();
-				return;
-			}
-		}				// end if/else CURL
-				
-	$jsonresp = json_decode ($data, true); 	
-	
-//	if ( ! (array_key_exists ( "errors", $jsonresp ) ) ) {
-	if ( ( is_array($jsonresp) ) && ( ! (array_key_exists ( "errors", $jsonresp ) ) ) ) {	// 11/28/2013
+        $url = "http://api.whitepages.com/reverse_phone/1.0/?phone={$phone};api_key={$wp_key};outputtype=JSON";    // 4507191994
 
-		$vals[10] = "3";		// id WP as data source
-		$vals[1] = array_key_exists (  "displayname", $jsonresp["listings"][0] ) ?
-					$jsonresp["listings"][0]["displayname"] : "" ;
-		$vals[3] = array_key_exists (  "fullstreet", $jsonresp["listings"][0]["address"] ) ?
-					$jsonresp["listings"][0]["address"] ["fullstreet"] : "" ;
-		$vals[4] = array_key_exists (  "city", $jsonresp["listings"][0]["address"] ) ?
-					$jsonresp["listings"][0]["address"] ["city"] : "" ;
-		$vals[5] = array_key_exists (  "state", $jsonresp["listings"][0]["address"] ) ?
-					$jsonresp["listings"][0]["address"] ["state"] : "" ;
-		$vals[6] = array_key_exists (  "zip", $jsonresp["listings"][0]["address"] ) ?
-					$jsonresp["listings"][0]["address"] ["zip"] : "" ;
-		if (array_key_exists ( "geodata", $jsonresp["listings"][0])) {					// 11/15/2013
-			$vals[7] = array_key_exists (  "latitude", $jsonresp["listings"][0]["geodata"] ) ?
-						$jsonresp["listings"][0]["geodata"] ["latitude"] : "" ;
-			$vals[8] = array_key_exists ( "longitude", $jsonresp["listings"][0]["geodata"] ) ?
-						$jsonresp["listings"][0]["geodata"] ["longitude"] : "" ;
-			}
-		else {$vals[7] = $vals[8] = ""; }
+        $data = "";
+        if (function_exists("curl_init")) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+            $data = curl_exec ($ch);
+            curl_close ($ch);
+            }
+        else {                // not CURL
+            if ($fp = @fopen($url, "r")) {
+                while (!feof($fp) && (safe_strlen($data)<9000)) $data .= fgets($fp, 128);
+                fclose($fp);
+                }
+            else {
+                @session_start();
+                $err_str = "WhitePages connection fails @ " .  __LINE__;        // 6/8/2013
+                if (!(array_key_exists ( $err_str, $_SESSION ))) {        // limit to once per session
+                    do_log($GLOBALS['LOG_ERROR'], 0, 0, $err_str);
+                    $_SESSION[$err_str] = true;
+                    }
+                echo "0;";
+                session_write_close();
+                return;
+            }
+        }                // end if/else CURL
 
-		$val_str = implode(";", $vals);				
-		}				// end no errors
-	else {			
-		echo "0;";				// report failure
-		return;
-		};	
-	}					// end WP
+    $jsonresp = json_decode ($data, true);
 
-$val_str = implode(";", $vals);			// success
-print $val_str;		
+//    if ( ! (array_key_exists ( "errors", $jsonresp ) ) ) {
+    if ( ( is_array($jsonresp) ) && ( ! (array_key_exists ( "errors", $jsonresp ) ) ) ) {    // 11/28/2013
+
+        $vals[10] = "3";        // id WP as data source
+        $vals[1] = array_key_exists (  "displayname", $jsonresp["listings"][0] ) ?
+                    $jsonresp["listings"][0]["displayname"] : "" ;
+        $vals[3] = array_key_exists (  "fullstreet", $jsonresp["listings"][0]["address"] ) ?
+                    $jsonresp["listings"][0]["address"] ["fullstreet"] : "" ;
+        $vals[4] = array_key_exists (  "city", $jsonresp["listings"][0]["address"] ) ?
+                    $jsonresp["listings"][0]["address"] ["city"] : "" ;
+        $vals[5] = array_key_exists (  "state", $jsonresp["listings"][0]["address"] ) ?
+                    $jsonresp["listings"][0]["address"] ["state"] : "" ;
+        $vals[6] = array_key_exists (  "zip", $jsonresp["listings"][0]["address"] ) ?
+                    $jsonresp["listings"][0]["address"] ["zip"] : "" ;
+        if (array_key_exists ( "geodata", $jsonresp["listings"][0])) {                    // 11/15/2013
+            $vals[7] = array_key_exists (  "latitude", $jsonresp["listings"][0]["geodata"] ) ?
+                        $jsonresp["listings"][0]["geodata"] ["latitude"] : "" ;
+            $vals[8] = array_key_exists ( "longitude", $jsonresp["listings"][0]["geodata"] ) ?
+                        $jsonresp["listings"][0]["geodata"] ["longitude"] : "" ;
+            }
+        else {$vals[7] = $vals[8] = ""; }
+
+        $val_str = implode(";", $vals);
+        }                // end no errors
+    else {
+        echo "0;";                // report failure
+        return;
+        };
+    }                    // end WP
+
+$val_str = implode(";", $vals);            // success
+print $val_str;
 return;
 ?>

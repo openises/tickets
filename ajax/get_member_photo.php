@@ -19,31 +19,31 @@
 error_reporting(0);
 
 if (empty($_GET['id'])) {
-	http_response_code(400);
-	exit;
+    http_response_code(400);
+    exit;
 }
 
 $member_id = intval($_GET['id']);
 if ($member_id <= 0) {
-	http_response_code(400);
-	exit;
+    http_response_code(400);
+    exit;
 }
 
 // Fixed path pattern — no user-controlled path components beyond the integer ID
 $file = dirname(__DIR__) . "/mdb_pictures/" . $member_id . "/id.jpg";
 
 if (!file_exists($file) || !is_readable($file)) {
-	// Serve the no_image placeholder
-	$file = dirname(__DIR__) . "/images/no_image.jpg";
-	if (!file_exists($file)) {
-		http_response_code(404);
-		exit;
-	}
+    // Serve the no_image placeholder
+    $file = dirname(__DIR__) . "/images/no_image.jpg";
+    if (!file_exists($file)) {
+        http_response_code(404);
+        exit;
+    }
 }
 
 // Clean any output buffers that may have been started
 while (ob_get_level()) {
-	ob_end_clean();
+    ob_end_clean();
 }
 
 header('Content-Type: image/jpeg');

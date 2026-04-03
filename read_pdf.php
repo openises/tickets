@@ -1,14 +1,14 @@
 <?php
 $file = sanitize_string($_GET['file']);
-	include ( './lib/PdfToText.phpclass' ) ;
+    include ( './lib/PdfToText.phpclass' ) ;
 
-	function  output ( $message )
-	   {
-		if  ( php_sapi_name ( )  ==  'cli' )
-			echo ( $message ) ;
-		else
-			echo ( nl2br ( $message ) ) ;
-	    }
+    function  output ( $message )
+       {
+        if  ( php_sapi_name ( )  ==  'cli' )
+            echo ( $message ) ;
+        else
+            echo ( nl2br ( $message ) ) ;
+        }
 
-	$pdf	=  new PdfToText ( "$file.pdf" ) ;
-	output ( $pdf -> Text ) ;
+    $pdf    =  new PdfToText ( "$file.pdf" ) ;
+    output ( $pdf -> Text ) ;

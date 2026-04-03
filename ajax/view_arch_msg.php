@@ -20,132 +20,132 @@ $responderlist = array();
 $responderlist[0] = "NA";
 $caption = "Messages: ";
 while ($act_row = $result->fetch_assoc()){
-	$responderlist[$act_row['id']] = $act_row['handle'];
-	}
+    $responderlist[$act_row['id']] = $act_row['handle'];
+    }
 
-if (($handle = fopen($filename, "r")) !== FALSE) {
-	while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-		$numrows++;
-		}
-	fclose($handle);
-	}
+if (($handle = fopen($filename, "r")) !== false) {
+    while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+        $numrows++;
+        }
+    fclose($handle);
+    }
 
-if (($handle = fopen($filename, "r")) !== FALSE) {
-	while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-		$num = count($data);
-		if($filerow==0) {
-			for($f=0; $f < $num; $f++) {
-				$col_names[$f] = $data[$f];
-				}
-			} elseif($filerow == $the_row) {
-				for ($c=0; $c < $num; $c++) {
-					$thedata = trim( preg_replace( '/\s+/', ' ', $data[$c] ) );
-					$msg_row["$col_names[$c]"] = $thedata;
-					}
-			} else {
-			}
-		$filerow++;
-		}
-	fclose($handle);
-	}
+if (($handle = fopen($filename, "r")) !== false) {
+    while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+        $num = count($data);
+        if($filerow==0) {
+            for($f=0; $f < $num; $f++) {
+                $col_names[$f] = $data[$f];
+                }
+            } elseif($filerow == $the_row) {
+                for ($c=0; $c < $num; $c++) {
+                    $thedata = trim( preg_replace( '/\s+/', ' ', $data[$c] ) );
+                    $msg_row["$col_names[$c]"] = $thedata;
+                    }
+            } else {
+            }
+        $filerow++;
+        }
+    fclose($handle);
+    }
 $the_readers = array();
 $the_readers = explode("," , $msg_row['readby']);
 if(($the_readers[0] == "") || (!in_array($the_user, $the_readers, true))) {
-	$the_class = 0;
-	} else {
-	$the_class = 1;
-	}
+    $the_class = 0;
+    } else {
+    $the_class = 1;
+    }
 
 $the_message_id = $msg_row['message_id'];
-//		$the_class = ($msg_row['read_status'] == 0) ? "0" : "1";
+//        $the_class = ($msg_row['read_status'] == 0) ? "0" : "1";
 $the_responder = $msg_row['resp_id'];
 $the_resp_ids = explode(",", $the_responder);
 $resp_names = "";
 $n = 1;
 $thesep = ",";
 foreach($the_resp_ids as $val) {
-	if($n == count($the_resp_ids)) {
-		$thesep = "";
-		}
-	$resp_names .= $responderlist[$val] . $thesep;
-	$n++;
-	}
+    if($n == count($the_resp_ids)) {
+        $thesep = "";
+        }
+    $resp_names .= $responderlist[$val] . $thesep;
+    $n++;
+    }
 $resp_name = (isset($responderlist[$the_responder])) ? $responderlist[$the_responder] : "INCOMING";
 $the_message = ($msg_row['message'] != "") ? html2text($msg_row['message']) : "";
-if($msg_row['recipients'] == NULL) {
-	$respstring = $resp_names;
-	} else {
-	$responders = explode (" ", trim($msg_row['recipients']));	// space-separated list to array
-	$sep = $respstring = "";
-	for ($k=0 ;$k < count($responders);$k++) {				// build string of responder names
-		if (in_array($responders[$k], $responderlist)) {
-			$respstring .= $sep . $responders[$k];
-			$sep = "<BR />";
-			} else {
-			$respstring .= $responders[$k];
-			}
-		}
-	}
+if($msg_row['recipients'] == null) {
+    $respstring = $resp_names;
+    } else {
+    $responders = explode (" ", trim($msg_row['recipients']));    // space-separated list to array
+    $sep = $respstring = "";
+    for ($k=0 ;$k < count($responders);$k++) {                // build string of responder names
+        if (in_array($responders[$k], $responderlist)) {
+            $respstring .= $sep . $responders[$k];
+            $sep = "<BR />";
+            } else {
+            $respstring .= $responders[$k];
+            }
+        }
+    }
 
 if ($msg_row['msg_type'] == 1) {
-	$type_flag = "OE";
-	$color = "background-color: blue; color: white;";
-	} elseif ($msg_row['msg_type'] ==2) {
-	$type_flag = "IE";
-	$color = "background-color: white; color: blue;";
-	} elseif ($msg_row['msg_type'] ==3) {
-	$color = "background-color: orange; color: white;";
-	$type_flag = "OS";
-	} elseif (($msg_row['msg_type'] ==4) || ($msg_row['msg_type'] ==5) || ($msg_row['msg_type'] ==6)) {
-	$color = "background-color: white; color: orange;";
-	$type_flag = "IS";
-	} else {
-	$color = "";
-	$type_flag = "?";
-	}
+    $type_flag = "OE";
+    $color = "background-color: blue; color: white;";
+    } elseif ($msg_row['msg_type'] ==2) {
+    $type_flag = "IE";
+    $color = "background-color: white; color: blue;";
+    } elseif ($msg_row['msg_type'] ==3) {
+    $color = "background-color: orange; color: white;";
+    $type_flag = "OS";
+    } elseif (($msg_row['msg_type'] ==4) || ($msg_row['msg_type'] ==5) || ($msg_row['msg_type'] ==6)) {
+    $color = "background-color: white; color: orange;";
+    $type_flag = "IS";
+    } else {
+    $color = "";
+    $type_flag = "?";
+    }
 
 if(($msg_row['msg_type'] == 4) || ($msg_row['msg_type'] == 5) || ($msg_row['msg_type'] == 6)) {
-	$fromAddress = ($msg_row['from_address'] == "") ? $msg_row['recipients'] : $msg_row['from_address'];
-	$theFrom = explode(",", $fromAddress);
-	$theOthers = array();
-	foreach($theFrom AS $val) {
-		$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` `m` WHERE `smsg_id` = ?";
-		$result1 = db_query($query1, [$val]);
-		while ($row1 = $result1->fetch_assoc()) {
-			$theOthers[] = $row1['contact_via'];
-			}
-		}
-	$theothers = implode("|", $theOthers);
-	$recipients = implode("|", $theFrom);
-	$recipients = "Tickets";
-	}
+    $fromAddress = ($msg_row['from_address'] == "") ? $msg_row['recipients'] : $msg_row['from_address'];
+    $theFrom = explode(",", $fromAddress);
+    $theOthers = array();
+    foreach($theFrom AS $val) {
+        $query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` `m` WHERE `smsg_id` = ?";
+        $result1 = db_query($query1, [$val]);
+        while ($row1 = $result1->fetch_assoc()) {
+            $theOthers[] = $row1['contact_via'];
+            }
+        }
+    $theothers = implode("|", $theOthers);
+    $recipients = implode("|", $theFrom);
+    $recipients = "Tickets";
+    }
 
 if($msg_row['msg_type'] == 1) {
-	$fromAddress = get_variable('email_reply_to');
-	}
+    $fromAddress = get_variable('email_reply_to');
+    }
 
 if($msg_row['msg_type'] == 3) {
-	$theRecipients = explode(",", $msg_row['recipients']);
-	$theOthers = array();
-	foreach($theRecipients AS $val) {
-		$query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` `m` WHERE `smsg_id` = ?";
-		$result1 = db_query($query1, [$val]);
-		while ($row1 = $result1->fetch_assoc()) {
-			$theOthers[] = $row1['contact_via'];
-			}
-		}
-	$theothers = implode("|", $theOthers);
-	$fromAddress = "Tickets";
-	}
+    $theRecipients = explode(",", $msg_row['recipients']);
+    $theOthers = array();
+    foreach($theRecipients AS $val) {
+        $query1 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` `m` WHERE `smsg_id` = ?";
+        $result1 = db_query($query1, [$val]);
+        while ($row1 = $result1->fetch_assoc()) {
+            $theOthers[] = $row1['contact_via'];
+            }
+        }
+    $theothers = implode("|", $theOthers);
+    $fromAddress = "Tickets";
+    }
 
 if($msg_row['recipients'] == "Tickets") {
-	$recipients = "Tickets";
-	}
+    $recipients = "Tickets";
+    }
 
 $the_readby = array();
 foreach($the_readers AS $val) {
-	$the_readby[] = get_reader($val);
-	}
+    $the_readby[] = get_reader($val);
+    }
 $readers_string = implode(",", $the_readby);
 
 $fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";

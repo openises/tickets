@@ -26,56 +26,56 @@ $httppwd     = get_variable('httppwd');
 // ---- Build URL to fetch the HTML report ----
 
 function curPageURL() {
-	$pageURL = 'http';
-	if (array_key_exists("HTTPS", $_SERVER) && $_SERVER["HTTPS"] == "on") { $pageURL .= "s"; }
-	$pageURL .= "://";
-	$uri = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-	if ($_SERVER["SERVER_PORT"] != "80") {
-		$pageURL .= $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"] . $uri;
-	} else {
-		$pageURL .= $_SERVER["SERVER_NAME"] . $uri;
-	}
-	return $pageURL;
+    $pageURL = 'http';
+    if (array_key_exists("HTTPS", $_SERVER) && $_SERVER["HTTPS"] == "on") { $pageURL .= "s"; }
+    $pageURL .= "://";
+    $uri = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+    if ($_SERVER["SERVER_PORT"] != "80") {
+        $pageURL .= $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"] . $uri;
+    } else {
+        $pageURL .= $_SERVER["SERVER_NAME"] . $uri;
+    }
+    return $pageURL;
 }
 
 $serverpath = curPageURL();
 $randomnumber = rand(0, 9999999);
 $url = $serverpath . "/ajax/reports.php?"
-	. "report=" . urlencode($report)
-	. "&func=" . urlencode($func)
-	. "&date=" . urlencode($date)
-	. "&tick_sel=" . urlencode($ticksel)
-	. "&resp_sel=" . urlencode($respsel)
-	. "&organisation=" . urlencode($organisation)
-	. "&startdate=" . urlencode($startdate)
-	. "&enddate=" . urlencode($enddate)
-	. "&dohtml=true&version=$randomnumber";
+    . "report=" . urlencode($report)
+    . "&func=" . urlencode($func)
+    . "&date=" . urlencode($date)
+    . "&tick_sel=" . urlencode($ticksel)
+    . "&resp_sel=" . urlencode($respsel)
+    . "&organisation=" . urlencode($organisation)
+    . "&startdate=" . urlencode($startdate)
+    . "&enddate=" . urlencode($enddate)
+    . "&dohtml=true&version=$randomnumber";
 
 // ---- Fetch HTML ----
 
 $thePage = '';
 if (function_exists("curl_init")) {
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
-	if (($httpuser != "") && ($httppwd != "")) {
-		curl_setopt($ch, CURLOPT_USERPWD, $httpuser . ":" . $httppwd);
-	}
-	$thePage = curl_exec($ch);
-	curl_close($ch);
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
+    if (($httpuser != "") && ($httppwd != "")) {
+        curl_setopt($ch, CURLOPT_USERPWD, $httpuser . ":" . $httppwd);
+    }
+    $thePage = curl_exec($ch);
+    curl_close($ch);
 } else {
-	if ($fp = @fopen($url, "r")) {
-		while (!feof($fp)) { $thePage .= fgets($fp, 4096); }
-		fclose($fp);
-	}
+    if ($fp = @fopen($url, "r")) {
+        while (!feof($fp)) { $thePage .= fgets($fp, 4096); }
+        fclose($fp);
+    }
 }
 
 if (empty($thePage)) {
-	http_response_code(500);
-	header('Content-Type: text/plain');
-	echo 'Error: Could not retrieve report data.';
-	exit;
+    http_response_code(500);
+    header('Content-Type: text/plain');
+    echo 'Error: Could not retrieve report data.';
+    exit;
 }
 
 // ---- Parse HTML tables into CSV rows ----
@@ -91,46 +91,46 @@ $tables = $doc->getElementsByTagName('table');
 $csv_rows = array();
 
 foreach ($tables as $table) {
-	$rows = $table->getElementsByTagName('tr');
-	foreach ($rows as $row) {
-		$csv_row = array();
-		// Check both TH and TD cells
-		$cells = $row->getElementsByTagName('th');
-		if ($cells->length == 0) {
-			$cells = $row->getElementsByTagName('td');
-		} else {
-			// Row might have a mix of TH and TD — get all children
-			$all_cells = array();
-			foreach ($row->childNodes as $child) {
-				if ($child->nodeName === 'th' || $child->nodeName === 'td') {
-					$all_cells[] = $child;
-				}
-			}
-			$cells = $all_cells;
-		}
-		foreach ($cells as $cell) {
-			// Get text content, clean whitespace
-			$text = trim(preg_replace('/\s+/', ' ', $cell->textContent));
-			$csv_row[] = $text;
-		}
-		if (!empty($csv_row)) {
-			$csv_rows[] = $csv_row;
-		}
-	}
-	// Add blank row between tables
-	if (!empty($csv_rows)) {
-		$csv_rows[] = array('');
-	}
+    $rows = $table->getElementsByTagName('tr');
+    foreach ($rows as $row) {
+        $csv_row = array();
+        // Check both TH and TD cells
+        $cells = $row->getElementsByTagName('th');
+        if ($cells->length == 0) {
+            $cells = $row->getElementsByTagName('td');
+        } else {
+            // Row might have a mix of TH and TD — get all children
+            $all_cells = array();
+            foreach ($row->childNodes as $child) {
+                if ($child->nodeName === 'th' || $child->nodeName === 'td') {
+                    $all_cells[] = $child;
+                }
+            }
+            $cells = $all_cells;
+        }
+        foreach ($cells as $cell) {
+            // Get text content, clean whitespace
+            $text = trim(preg_replace('/\s+/', ' ', $cell->textContent));
+            $csv_row[] = $text;
+        }
+        if (!empty($csv_row)) {
+            $csv_rows[] = $csv_row;
+        }
+    }
+    // Add blank row between tables
+    if (!empty($csv_rows)) {
+        $csv_rows[] = array('');
+    }
 }
 
 // Remove trailing blank row
 if (!empty($csv_rows) && $csv_rows[count($csv_rows) - 1] === array('')) {
-	array_pop($csv_rows);
+    array_pop($csv_rows);
 }
 
 // Remove leading blank rows
 while (!empty($csv_rows) && (count($csv_rows[0]) === 1 && trim($csv_rows[0][0]) === '')) {
-	array_shift($csv_rows);
+    array_shift($csv_rows);
 }
 
 // ---- Build filename ----
@@ -149,7 +149,7 @@ header('Expires: 0');
 
 $fp = fopen('php://output', 'w');
 foreach ($csv_rows as $row) {
-	fputcsv($fp, $row);
+    fputcsv($fp, $row);
 }
 fclose($fp);
 exit;

@@ -9,7 +9,7 @@
 3/16/09 added updates and auto-refresh if any mobile units
 3/18/09 'aprs_poll' to 'auto_poll'
 4/10/09 frames check for call board
-7/16/09	protocol handling added
+7/16/09    protocol handling added
 4/11/10 poll_id dropped
 6/18/10 timeout test for yg
 7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
@@ -30,28 +30,28 @@ $api_key = get_variable('gmaps_api_key');
 
 //dump($_GET);
 if ((!empty($_GET))&& ((isset($_GET['logout'])) && ($_GET['logout'] == 'true'))) {
-	do_logout();
-	exit();
-	}
+    do_logout();
+    exit();
+    }
 else {
-//	snap(__LINE__, basename(__FILE__));
-	do_login(basename(__FILE__));
-	$do_mu_init = (array_key_exists('log_in', $_GET))? "window.opener.parent.frames['upper'].mu_init();" : "";	// start multi-user function, 3/15/11	
-	}
+//    snap(__LINE__, basename(__FILE__));
+    do_login(basename(__FILE__));
+    $do_mu_init = (array_key_exists('log_in', $_GET))? "window.opener.parent.frames['upper'].mu_init();" : "";    // start multi-user function, 3/15/11
+    }
 if ($istest) {
-	print "GET<BR/>\n";
-	if (!empty($_GET)) {
-		dump ($_GET);
-		}
-	print "POST<BR/>\n";
-	if (!empty($_POST)) {
-		dump ($_POST);
-		}
-	}
+    print "GET<BR/>\n";
+    if (!empty($_GET)) {
+        dump ($_GET);
+        }
+    print "POST<BR/>\n";
+    if (!empty($_POST)) {
+        dump ($_POST);
+        }
+    }
 
 if(($_SESSION['level'] == $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
-	print "Not Authorized";
-	exit();
-	}
+    print "Not Authorized";
+    exit();
+    }
 
 include("./forms/full_screen.php");

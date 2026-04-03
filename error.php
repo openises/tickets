@@ -77,4 +77,4 @@ echo "----\nvector d - fatal error\n";
 /* log(x) for x <= 0 is undefined, you used: scale = $scale" */
 $d = scale_by_log($a, -2.5);
 var_dump($d); // Never reached
-?> 
+?>

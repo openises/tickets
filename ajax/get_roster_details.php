@@ -5,8 +5,8 @@
 require_once('../incs/functions.inc.php');
 
 if(empty($_GET)) {
-	exit();
-	}
+    exit();
+    }
 
 $the_id = sanitize_int($_GET['id']);
 

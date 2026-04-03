@@ -4,38 +4,38 @@ set_time_limit(90);
 @session_start();
 session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
-	exit();
-	}
+    exit();
+    }
 
 $ret_arr = array();
-$status_vals = array();											// build array of $status_vals
+$status_vals = array();                                            // build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `id`";
 $result_st = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 while ($row_st = stripslashes_deep($result_st->fetch_array())) {
-	$temp = $row_st['id'];
-	$status_vals[$temp]['status'] = $row_st['status_val'];
-	$status_vals[$temp]['bg_color'] = $row_st['bg_color'];
-	$status_vals[$temp]['text_color'] = $row_st['text_color'];
-	}
+    $temp = $row_st['id'];
+    $status_vals[$temp]['status'] = $row_st['status_val'];
+    $status_vals[$temp]['bg_color'] = $row_st['bg_color'];
+    $status_vals[$temp]['text_color'] = $row_st['text_color'];
+    }
 
 unset($result_st);
 
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `id` ASC";											// 2/1/10, 3/15/10, 6/10/11
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities` ORDER BY `id` ASC";                                            // 2/1/10, 3/15/10, 6/10/11
 $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-while ($row = stripslashes_deep($result->fetch_assoc())) {			// 7/7/10
-	$status = (valid_fac_status($row['status_id'])) ? get_status_sel($row['id'], $row['status_id'], "f") : "Status Error";		// status
-//	$status = get_status_sel($row['id'], $row['status_id'], "f");		// status
-	if(get_variable('facility_auto_status') == "0") {
-		$ret_arr[$row['id']] = $status;
-		} else {
-		$theStatus = $status_vals[$row['status_id']]['status'];
-		$bgcolor = $status_vals[$row['status_id']]['bg_color'];
-		$textcolor = $status_vals[$row['status_id']]['text_color'];
-		$ret_arr[$row['id']] = "<SPAN style='width: 100%; display: inline-block; background-color: " . $bgcolor . "; color: " . $textcolor . ";'>" . $theStatus . "</SPAN>";	
-		}
-	}				// end  ==========  while() for RESPONDER ==========
+while ($row = stripslashes_deep($result->fetch_assoc())) {            // 7/7/10
+    $status = (valid_fac_status($row['status_id'])) ? get_status_sel($row['id'], $row['status_id'], "f") : "Status Error";        // status
+//    $status = get_status_sel($row['id'], $row['status_id'], "f");        // status
+    if(get_variable('facility_auto_status') == "0") {
+        $ret_arr[$row['id']] = $status;
+        } else {
+        $theStatus = $status_vals[$row['status_id']]['status'];
+        $bgcolor = $status_vals[$row['status_id']]['bg_color'];
+        $textcolor = $status_vals[$row['status_id']]['text_color'];
+        $ret_arr[$row['id']] = "<SPAN style='width: 100%; display: inline-block; background-color: " . $bgcolor . "; color: " . $textcolor . ";'>" . $theStatus . "</SPAN>";
+        }
+    }                // end  ==========  while() for RESPONDER ==========
 
 //dump($ret_arr);
 print json_encode($ret_arr);

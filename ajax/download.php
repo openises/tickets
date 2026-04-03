@@ -1,7 +1,7 @@
 <?php
 if(empty($_GET)) {
-	exit();
-	}
+    exit();
+    }
 require_once('../incs/functions.inc.php');
 
 $filename = "../files/" . sanitize_string($_GET['filename']);

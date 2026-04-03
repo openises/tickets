@@ -9,28 +9,28 @@ chat_messages : // id message  when chat_room_id user_id from
 
 @session_start();
 session_write_close();
-require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
 $last_id = sanitize_int($_REQUEST['last_id']);
 $max_ct = sanitize_int($_REQUEST['max_ct']);
-//	snap(basename(__FILE__),$last_id );
+//    snap(basename(__FILE__),$last_id );
 $query = "DELETE from `{$GLOBALS['mysql_prefix']}chat_messages` WHERE `when` < DATE_SUB(NOW(),INTERVAL 1 DAY )";
 $result = db_query($query);
 
 $query_p1 = "SELECT * FROM (" ;
 $query_p2 = "SELECT `{$GLOBALS['mysql_prefix']}chat_messages`.*, `{$GLOBALS['mysql_prefix']}user`.`user` AS `user_name`,
-	`{$GLOBALS['mysql_prefix']}chat_messages`.`id` AS chat_messages_id
-	FROM `{$GLOBALS['mysql_prefix']}chat_messages`
-	LEFT JOIN `{$GLOBALS['mysql_prefix']}user` ON `{$GLOBALS['mysql_prefix']}chat_messages`.`user_id` = `{$GLOBALS['mysql_prefix']}user`.`id`
-	WHERE `{$GLOBALS['mysql_prefix']}chat_messages`.`id` > ?
-	ORDER BY `chat_messages_id` DESC LIMIT " . intval($max_ct);
+    `{$GLOBALS['mysql_prefix']}chat_messages`.`id` AS chat_messages_id
+    FROM `{$GLOBALS['mysql_prefix']}chat_messages`
+    LEFT JOIN `{$GLOBALS['mysql_prefix']}user` ON `{$GLOBALS['mysql_prefix']}chat_messages`.`user_id` = `{$GLOBALS['mysql_prefix']}user`.`id`
+    WHERE `{$GLOBALS['mysql_prefix']}chat_messages`.`id` > ?
+    ORDER BY `chat_messages_id` DESC LIMIT " . intval($max_ct);
 $query_p3 = ") AS r ORDER BY `chat_messages_id` ASC ";
 
 $query = $query_p1 . $query_p2 . $query_p3;
 $result = db_query($query, [$last_id]);
-//	snap(__LINE__, $query );
+//    snap(__LINE__, $query );
 $return = "";
 while ($row = stripslashes_deep($result->fetch_array())){
-	$return .= $row['user_name'] . "\t" . substr($row['when'], 11,5) . "\t" .$row['message'] . "\t" .$row['chat_messages_id'] . "\t". 0xFF;
-	}
+    $return .= $row['user_name'] . "\t" . substr($row['when'], 11,5) . "\t" .$row['message'] . "\t" .$row['chat_messages_id'] . "\t". 0xFF;
+    }
 print $return;
 ?>

@@ -1,13 +1,13 @@
 <?php
 /*
 */
-error_reporting(E_ALL);	
+error_reporting(E_ALL);
 require_once('../incs/functions.inc.php');
 $id = (array_key_exists('id', $_GET)) ? strip_tags($_GET['id']) : 0;
 
 if($id == 0) {
-	exit();
-	}
+    exit();
+    }
 
 //$ret_arr[0] = get_mdb_email($id);
 //$ret_arr[1] = get_mdb_cellphone($id);

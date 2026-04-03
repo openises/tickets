@@ -6,10 +6,10 @@
 //
 // generic session value writer - note names, method
 //
-error_reporting(E_ALL);	
+error_reporting(E_ALL);
 
 @session_start();
-require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
 $_SESSION[$_GET['f_n']] = $_GET['v_n'];
 //snap(basename(__FILE__),$_GET['f_n') ;
 //snap(basename(__FILE__),$_GET['f_V') ;

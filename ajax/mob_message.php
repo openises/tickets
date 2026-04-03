@@ -8,34 +8,34 @@ require_once('../incs/functions.inc.php');
 include('../incs/html2text.php');
 $ret_arr = array();
 function get_messagetype($id) {
-	if ($id == 1) {
-		$type_flag = "OE";
-		} elseif ($id ==2) {
-		$type_flag = "IE";
-		} elseif ($id ==3) {
-		$type_flag = "OS";
-		} elseif (($id ==4) || ($id ==5) || ($id ==6)) {
-		$type_flag = "IS";	
-		} else {
-		$type_flag = "?";
-		}
-	return $type_flag;
-	}
-	
+    if ($id == 1) {
+        $type_flag = "OE";
+        } elseif ($id ==2) {
+        $type_flag = "IE";
+        } elseif ($id ==3) {
+        $type_flag = "OS";
+        } elseif (($id ==4) || ($id ==5) || ($id ==6)) {
+        $type_flag = "IS";
+        } else {
+        $type_flag = "?";
+        }
+    return $type_flag;
+    }
+
 function get_messagecolor($id) {
-	if ($id == 1) {
-		$color = "background-color: blue; color: white;";
-		} elseif ($id ==2) {
-		$color = "background-color: white; color: blue;";			
-		} elseif ($id ==3) {
-		$color = "background-color: orange; color: white;";			
-		} elseif (($id ==4) || ($id ==5) || ($id ==6)) {
-		$color = "background-color: white; color: orange;";				
-		} else {
-		$color = "";				
-		}
-	return $color;
-	}
+    if ($id == 1) {
+        $color = "background-color: blue; color: white;";
+        } elseif ($id ==2) {
+        $color = "background-color: white; color: blue;";
+        } elseif ($id ==3) {
+        $color = "background-color: orange; color: white;";
+        } elseif (($id ==4) || ($id ==5) || ($id ==6)) {
+        $color = "background-color: white; color: orange;";
+        } else {
+        $color = "";
+        }
+    return $color;
+    }
 
 $message_id = (array_key_exists('message_id', $_GET)) ? sanitize_int($_GET['message_id']) : 0;
 
@@ -43,23 +43,23 @@ $where = ($message_id != 0) ? "WHERE `id` = ?" : "";
 $where_params = ($message_id != 0) ? [$message_id] : [];
 
 $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
-		`m`.`id` AS `message_id`,
-		`m`.`fromname` AS `fromname`,		
-		`m`.`message` AS `message`,
-		`m`.`ticket_id` AS `ticket_id`,
-		`m`.`message_id` AS `msg_id`,
-		`m`.`msg_type` AS `msg_type`,	
-		`m`.`recipients` AS `recipients`,	
-		`m`.`readby` AS `readby`,		
-		`m`.`subject` AS `subject`	
-		FROM `$GLOBALS[mysql_prefix]messages` `m` 
-		{$where}";
+        `m`.`id` AS `message_id`,
+        `m`.`fromname` AS `fromname`,
+        `m`.`message` AS `message`,
+        `m`.`ticket_id` AS `ticket_id`,
+        `m`.`message_id` AS `msg_id`,
+        `m`.`msg_type` AS `msg_type`,
+        `m`.`recipients` AS `recipients`,
+        `m`.`readby` AS `readby`,
+        `m`.`subject` AS `subject`
+        FROM `$GLOBALS[mysql_prefix]messages` `m`
+        {$where}";
 
 $result = db_query($query, $where_params) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 $num=$result->num_rows;
 $msg_row = stripslashes_deep($result->fetch_assoc());
 $fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";
-$ret_arr[0] = $msg_row['id'];	
+$ret_arr[0] = $msg_row['id'];
 $ret_arr[1] = $msg_row['ticket_id'];
 $ret_arr[2] = get_messagetype($msg_row['msg_type']);
 $ret_arr[3] = $fromname;

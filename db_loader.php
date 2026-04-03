@@ -3,7 +3,7 @@ ini_set('memory_limit', '5120M');
 set_time_limit ( 0 );
 error_reporting(E_ALL);
 require_once('./incs/mysql.inc.php');
-require_once('./incs/db.inc.php');		// 3/14/26 - Use db_query() for local DB operations
+require_once('./incs/db.inc.php');        // 3/14/26 - Use db_query() for local DB operations
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 $dir = getcwd() . "/backups";
 // mysql2i shim removed — all code migrated to db_query() and mysqli
@@ -12,230 +12,230 @@ $css = (!empty($_POST) && array_key_exists('css', $_POST)) ? $_POST['css'] : arr
 $css_count = count($css);
 
 if(empty($_POST)) {
-	// 3/14/26 - Migrated from mysql_query to db_query() for local DB operations
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}css_day`";
-	$result = db_query($query);
-	if($result) {
-		while ($row = $result->fetch_assoc()){
-			if($row['name'] == "page_background") {$css[$row['name']] = "#" . $row['value'];}
-			if($row['name'] == "normal_text") {$css[$row['name']] = "#" . $row['value'];}
-			if($row['name'] == "form_input_background") {$css[$row['name']] = "#" . $row['value'];}
-			if($row['name'] == "form_input_text") {$css[$row['name']] = "#" . $row['value'];}
-			if($row['name'] == "row_light") {$css[$row['name']] = "#" . $row['value'];}
-			if($row['name'] == "row_dark") {$css[$row['name']] = "#" . $row['value'];}
-			if($row['name'] == "select_menu_background") {$css[$row['name']] = "#" . $row['value'];}
-			if($row['name'] == "select_menu_text") {$css[$row['name']] = "#" . $row['value'];}
-			if($row['name'] == "links") {$css[$row['name']] = "#" . $row['value'];}
-			}
-		} else {
-		$css['page_background'] = "#CECECE";
-		$css['normal_text'] = "#000000";
-		$css['form_input_background'] = "#FFFFFF";
-		$css['form_input_text'] = "#000000";
-		$css['row_light'] = "#DEE3E7";
-		$css['row_dark'] = "#EFEFEF";
-		$css['select_menu_background'] = "#FFFFFF";
-		$css['select_menu_text'] = "#000000";
-		$css['links'] = "#000099";
-		}
-	extract($css);
-	} else {
-	$page_background = (array_key_exists('page_background', $_POST)) ? $_POST['page_background'] : "#CECECE";
-	$normal_text = (array_key_exists('normal_text', $_POST)) ? $_POST['normal_text'] : "#000000";
-	$form_input_background = (array_key_exists('form_input_background', $_POST)) ? $_POST['form_input_background'] : "#FFFFFF";
-	$form_input_text = (array_key_exists('form_input_text', $_POST)) ? $_POST['form_input_text'] : "#000000";
-	$row_light = (array_key_exists('row_light', $_POST)) ? $_POST['row_light'] : "#DEE3E7";
-	$row_dark = (array_key_exists('row_dark', $_POST)) ? $_POST['row_dark'] : "#EFEFEF";
-	$select_menu_background = (array_key_exists('select_menu_background', $_POST)) ? $_POST['select_menu_background'] : "#FFFFFF";
-	$select_menu_text = (array_key_exists('select_menu_text', $_POST)) ? $_POST['select_menu_text'] : "#000000";
-	$links = (array_key_exists('links', $_POST)) ? $_POST['links'] : "#000099";
-	}
+    // 3/14/26 - Migrated from mysql_query to db_query() for local DB operations
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}css_day`";
+    $result = db_query($query);
+    if($result) {
+        while ($row = $result->fetch_assoc()){
+            if($row['name'] == "page_background") {$css[$row['name']] = "#" . $row['value'];}
+            if($row['name'] == "normal_text") {$css[$row['name']] = "#" . $row['value'];}
+            if($row['name'] == "form_input_background") {$css[$row['name']] = "#" . $row['value'];}
+            if($row['name'] == "form_input_text") {$css[$row['name']] = "#" . $row['value'];}
+            if($row['name'] == "row_light") {$css[$row['name']] = "#" . $row['value'];}
+            if($row['name'] == "row_dark") {$css[$row['name']] = "#" . $row['value'];}
+            if($row['name'] == "select_menu_background") {$css[$row['name']] = "#" . $row['value'];}
+            if($row['name'] == "select_menu_text") {$css[$row['name']] = "#" . $row['value'];}
+            if($row['name'] == "links") {$css[$row['name']] = "#" . $row['value'];}
+            }
+        } else {
+        $css['page_background'] = "#CECECE";
+        $css['normal_text'] = "#000000";
+        $css['form_input_background'] = "#FFFFFF";
+        $css['form_input_text'] = "#000000";
+        $css['row_light'] = "#DEE3E7";
+        $css['row_dark'] = "#EFEFEF";
+        $css['select_menu_background'] = "#FFFFFF";
+        $css['select_menu_text'] = "#000000";
+        $css['links'] = "#000099";
+        }
+    extract($css);
+    } else {
+    $page_background = (array_key_exists('page_background', $_POST)) ? $_POST['page_background'] : "#CECECE";
+    $normal_text = (array_key_exists('normal_text', $_POST)) ? $_POST['normal_text'] : "#000000";
+    $form_input_background = (array_key_exists('form_input_background', $_POST)) ? $_POST['form_input_background'] : "#FFFFFF";
+    $form_input_text = (array_key_exists('form_input_text', $_POST)) ? $_POST['form_input_text'] : "#000000";
+    $row_light = (array_key_exists('row_light', $_POST)) ? $_POST['row_light'] : "#DEE3E7";
+    $row_dark = (array_key_exists('row_dark', $_POST)) ? $_POST['row_dark'] : "#EFEFEF";
+    $select_menu_background = (array_key_exists('select_menu_background', $_POST)) ? $_POST['select_menu_background'] : "#FFFFFF";
+    $select_menu_text = (array_key_exists('select_menu_text', $_POST)) ? $_POST['select_menu_text'] : "#000000";
+    $links = (array_key_exists('links', $_POST)) ? $_POST['links'] : "#000099";
+    }
 
 $directory_separator = DIRECTORY_SEPARATOR;
 $curr_dir = getcwd();
 $backupdir = $curr_dir . DIRECTORY_SEPARATOR . "backups";
-if (!(file_exists($backupdir))) {		
-	if(!(mkdir($backupdir))) {
-		print "Backup Directory doesn't exist and cannot be created. Please contact the developer<BR />"; 
-		exit();
-		}
-	}
-	
+if (!(file_exists($backupdir))) {
+    if(!(mkdir($backupdir))) {
+        print "Backup Directory doesn't exist and cannot be created. Please contact the developer<BR />";
+        exit();
+        }
+    }
+
 function get_css($element, $day_night){
-	global $css;
-	return (array_key_exists($element, $css))? "#" . $css[$element] : FALSE ;
-	}
-	
+    global $css;
+    return (array_key_exists($element, $css))? "#" . $css[$element] : false ;
+    }
+
 function dump($variable) {
-	echo "\n<PRE>\n";				// pretty it a bit - 2/23/2013
-	var_dump($variable) ;
-	echo "</PRE>\n";
-	}
+    echo "\n<PRE>\n";                // pretty it a bit - 2/23/2013
+    var_dump($variable) ;
+    echo "</PRE>\n";
+    }
 
 $variables = array();
 function get_variable($which){
-	// 3/14/26 - Migrated from mysql_query to db_query() for local DB operations
-	global $variables;
-	if (empty($variables)) {
-		$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}settings`");
-		if($result) {
-			while ($row = $result->fetch_assoc()) {
-				$name = $row['name']; $value=$row['value'] ;
-				$variables[$name] = $value;
-				}
-			} else {
-			return FALSE;
-			}
-		}
-	return (array_key_exists($which, $variables))? $variables[$which] : FALSE ;
-	}
-	
+    // 3/14/26 - Migrated from mysql_query to db_query() for local DB operations
+    global $variables;
+    if (empty($variables)) {
+        $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}settings`");
+        if($result) {
+            while ($row = $result->fetch_assoc()) {
+                $name = $row['name']; $value=$row['value'] ;
+                $variables[$name] = $value;
+                }
+            } else {
+            return false;
+            }
+        }
+    return (array_key_exists($which, $variables))? $variables[$which] : false ;
+    }
+
 function get_backups() {
-	global $dir;
-	$backups = array();
-	$theRet = "";
-	$theRet .= "<SELECT NAME='db_schema'>";
-	$theRet .= "\t<OPTION VALUE='0'>Select One</OPTION>";
-	if ($handle = opendir($dir)) {
-		while (false !== ($filename = readdir($handle))) {
-			if ($filename != "." && $filename != "..") {
-				$ext = pathinfo($filename, PATHINFO_EXTENSION);
-				if($ext == "sql" || $ext == "SQL") {
-					$theRet .= "\t<OPTION VALUE='" . $filename . "'>" . $filename . "</OPTION>";
-					}
-				}
-			}
-		}
-	$theRet .= "</SELECT>";
-	return $theRet;
-	}
-	
+    global $dir;
+    $backups = array();
+    $theRet = "";
+    $theRet .= "<SELECT NAME='db_schema'>";
+    $theRet .= "\t<OPTION VALUE='0'>Select One</OPTION>";
+    if ($handle = opendir($dir)) {
+        while (false !== ($filename = readdir($handle))) {
+            if ($filename != "." && $filename != "..") {
+                $ext = pathinfo($filename, PATHINFO_EXTENSION);
+                if($ext == "sql" || $ext == "SQL") {
+                    $theRet .= "\t<OPTION VALUE='" . $filename . "'>" . $filename . "</OPTION>";
+                    }
+                }
+            }
+        }
+    $theRet .= "</SELECT>";
+    return $theRet;
+    }
+
 function get_tables() {
-	$tableList = array();
-	$res = mysqli_query($this->conn,"SHOW TABLES");
-	while($cRow = mysqli_fetch_array($res)) {
-		$tableList[] = $cRow[0];
-		}
-	return $tableList;
-	}
-	
+    $tableList = array();
+    $res = mysqli_query($this->conn,"SHOW TABLES");
+    while($cRow = mysqli_fetch_array($res)) {
+        $tableList[] = $cRow[0];
+        }
+    return $tableList;
+    }
+
 function remove_comments(&$output) {
-	$lines = explode("\n", $output);
-	$output = "";
-	$linecount = count($lines);
-	$in_comment = false;
-	for($i = 0; $i < $linecount; $i++) {
-		if(preg_match("/^\/\*/", preg_quote($lines[$i]))) {
-			$in_comment = true;
-			}
-		if(!$in_comment) {
-			$output .= $lines[$i] . "\n";
-			}
-		if(preg_match("/\*\/$/", preg_quote($lines[$i]))) {
-			$in_comment = false;
-			}
-		}
-	unset($lines);
-	return $output;
-	}
+    $lines = explode("\n", $output);
+    $output = "";
+    $linecount = count($lines);
+    $in_comment = false;
+    for($i = 0; $i < $linecount; $i++) {
+        if(preg_match("/^\/\*/", preg_quote($lines[$i]))) {
+            $in_comment = true;
+            }
+        if(!$in_comment) {
+            $output .= $lines[$i] . "\n";
+            }
+        if(preg_match("/\*\/$/", preg_quote($lines[$i]))) {
+            $in_comment = false;
+            }
+        }
+    unset($lines);
+    return $output;
+    }
 
 function remove_remarks($sql) {
-	$lines = explode("\n", $sql);
-	$sql = "";
-	$linecount = count($lines);
-	$output = "";
-	for ($i = 0; $i < $linecount; $i++)	{
-		if(($i != ($linecount - 1)) || (safe_strlen($lines[$i]) > 0)) {
-			if (isset($lines[$i][0]) && $lines[$i][0] != "#") {
-				$output .= $lines[$i] . "\n";
-				} else {
-				$output .= "\n";
-				}
-			$lines[$i] = "";
-			}
-		}
-	return $output;
-	}
+    $lines = explode("\n", $sql);
+    $sql = "";
+    $linecount = count($lines);
+    $output = "";
+    for ($i = 0; $i < $linecount; $i++)    {
+        if(($i != ($linecount - 1)) || (safe_strlen($lines[$i]) > 0)) {
+            if (isset($lines[$i][0]) && $lines[$i][0] != "#") {
+                $output .= $lines[$i] . "\n";
+                } else {
+                $output .= "\n";
+                }
+            $lines[$i] = "";
+            }
+        }
+    return $output;
+    }
 
 function split_sql_file($sql, $delimiter) {
-	$tokens = explode($delimiter, $sql);
-	$sql = "";
-	$output = array();
-	$matches = array();
-	$token_count = count($tokens);
-	for ($i = 0; $i < $token_count; $i++) {
-		if (($i != ($token_count - 1)) || (safe_strlen($tokens[$i] > 0))) {
-			$total_quotes = preg_match_all("/'/", $tokens[$i], $matches);
-			$escaped_quotes = preg_match_all("/(?<!\\\\)(\\\\\\\\)*\\\\'/", $tokens[$i], $matches);
-			$unescaped_quotes = $total_quotes - $escaped_quotes;
-			if (($unescaped_quotes % 2) == 0) {
-				$output[] = $tokens[$i];
-				$tokens[$i] = "";
-				} else {
-				$temp = $tokens[$i] . $delimiter;
-				$tokens[$i] = "";
-				$complete_stmt = false;
-				for ($j = $i + 1; (!$complete_stmt && ($j < $token_count)); $j++) {
-					$total_quotes = preg_match_all("/'/", $tokens[$j], $matches);
-					$escaped_quotes = preg_match_all("/(?<!\\\\)(\\\\\\\\)*\\\\'/", $tokens[$j], $matches);
-					$unescaped_quotes = $total_quotes - $escaped_quotes;
-					if (($unescaped_quotes % 2) == 1) {
-						$output[] = $temp . $tokens[$j];
-						$tokens[$j] = "";
-						$temp = "";
-						$complete_stmt = true;
-						$i = $j;
-						} else {
-						$temp .= $tokens[$j] . $delimiter;
-						$tokens[$j] = "";
-						}
-					}
-				}
-			}
-		}
-	return $output;
-	}
-	
-function dump_db($host,$user,$passwd,$db,$prefix) {
-	require_once('./incs/MySQLDump.class.php');
-	$delta = (get_variable('delta_mins')) ? get_variable('delta_mins') : 0;
-	$the_now = time() - ($delta * 60);
-	$locale = (get_variable('locale')) ? get_variable('locale') : 0;
-	if(intval($locale == 0)) {
-		$now = date('mdy', $the_now);
-		} else {
-		$now = date('dmy', $the_now);			
-		}
-	$hourmin = date('Hi', $the_now);
-	$backup = new MySQLDump(); //create new instance of MySQLDump
-	$the_db = $prefix . $db;
-	$backup->connect($host,$user,$passwd,$db);		// connect
-	if (!$backup->connected) { die('Error: '.$backup->mysql_error); } 		// MySQL parameters from mysql.inc.php
-	$backup->list_tables(); 												// list all tables
-	$broj = count($backup->tables); 										// count all tables, $backup->tables 
-																			//   will be array of table names
-	$the_db_dump ="\n\n-- start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start \n";
-	$the_db_dump .="\n-- Dumping tables for database: $db\n"; //write "intro" ;)
-	
-	for ($i=0;$i<$broj;$i++) {						//dump all tables:
-		$table_name = $backup->tables[$i]; 			//get table name
-		if(($prefix == "")  || (strrpos($table_name, $prefix) === 0)) {
-			$backup->dump_table($table_name); 			//dump it to output (buffer)
-			$the_db_dump .=htmlspecialchars($backup->output); 	//write output
-			}
-		}
+    $tokens = explode($delimiter, $sql);
+    $sql = "";
+    $output = array();
+    $matches = array();
+    $token_count = count($tokens);
+    for ($i = 0; $i < $token_count; $i++) {
+        if (($i != ($token_count - 1)) || (safe_strlen($tokens[$i] > 0))) {
+            $total_quotes = preg_match_all("/'/", $tokens[$i], $matches);
+            $escaped_quotes = preg_match_all("/(?<!\\\\)(\\\\\\\\)*\\\\'/", $tokens[$i], $matches);
+            $unescaped_quotes = $total_quotes - $escaped_quotes;
+            if (($unescaped_quotes % 2) == 0) {
+                $output[] = $tokens[$i];
+                $tokens[$i] = "";
+                } else {
+                $temp = $tokens[$i] . $delimiter;
+                $tokens[$i] = "";
+                $complete_stmt = false;
+                for ($j = $i + 1; (!$complete_stmt && ($j < $token_count)); $j++) {
+                    $total_quotes = preg_match_all("/'/", $tokens[$j], $matches);
+                    $escaped_quotes = preg_match_all("/(?<!\\\\)(\\\\\\\\)*\\\\'/", $tokens[$j], $matches);
+                    $unescaped_quotes = $total_quotes - $escaped_quotes;
+                    if (($unescaped_quotes % 2) == 1) {
+                        $output[] = $temp . $tokens[$j];
+                        $tokens[$j] = "";
+                        $temp = "";
+                        $complete_stmt = true;
+                        $i = $j;
+                        } else {
+                        $temp .= $tokens[$j] . $delimiter;
+                        $tokens[$j] = "";
+                        }
+                    }
+                }
+            }
+        }
+    return $output;
+    }
 
-	$the_db_dump .="\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end \n";
-	$file = './backups/' . $now . '_' . $hourmin . '_tickets_backup.sql';
-	$fh = fopen($file, 'w');
-	if(!fwrite($fh, $the_db_dump)) {	
-		$thereturn = "<BR /><B><FONT COLOR='red'>DB Backup failed</FONT></B>";
-		fclose($fh);
-		} else {
-		$thereturn = '<BR /><B>Tickets Database backup complete</B>';
-		}
-	return $thereturn;
-	}
+function dump_db($host,$user,$passwd,$db,$prefix) {
+    require_once('./incs/MySQLDump.class.php');
+    $delta = (get_variable('delta_mins')) ? get_variable('delta_mins') : 0;
+    $the_now = time() - ($delta * 60);
+    $locale = (get_variable('locale')) ? get_variable('locale') : 0;
+    if(intval($locale == 0)) {
+        $now = date('mdy', $the_now);
+        } else {
+        $now = date('dmy', $the_now);
+        }
+    $hourmin = date('Hi', $the_now);
+    $backup = new MySQLDump(); //create new instance of MySQLDump
+    $the_db = $prefix . $db;
+    $backup->connect($host,$user,$passwd,$db);        // connect
+    if (!$backup->connected) { die('Error: '.$backup->mysql_error); }         // MySQL parameters from mysql.inc.php
+    $backup->list_tables();                                                 // list all tables
+    $broj = count($backup->tables);                                         // count all tables, $backup->tables
+                                                                            //   will be array of table names
+    $the_db_dump ="\n\n-- start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start  start \n";
+    $the_db_dump .="\n-- Dumping tables for database: $db\n"; //write "intro" ;)
+
+    for ($i=0;$i<$broj;$i++) {                        //dump all tables:
+        $table_name = $backup->tables[$i];             //get table name
+        if(($prefix == "")  || (strrpos($table_name, $prefix) === 0)) {
+            $backup->dump_table($table_name);             //dump it to output (buffer)
+            $the_db_dump .=htmlspecialchars($backup->output);     //write output
+            }
+        }
+
+    $the_db_dump .="\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end  end \n";
+    $file = './backups/' . $now . '_' . $hourmin . '_tickets_backup.sql';
+    $fh = fopen($file, 'w');
+    if(!fwrite($fh, $the_db_dump)) {
+        $thereturn = "<BR /><B><FONT COLOR='red'>DB Backup failed</FONT></B>";
+        fclose($fh);
+        } else {
+        $thereturn = '<BR /><B>Tickets Database backup complete</B>';
+        }
+    return $thereturn;
+    }
 
 $day_night = "Day";
 ?>
@@ -248,24 +248,24 @@ $day_night = "Day";
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<META HTTP-EQUIV="Content-Script-Type"    CONTENT="application/x-javascript">
 <META HTTP-EQUIV="Script-date" CONTENT="<?php print date("n/j/y G:i", filemtime(basename(__FILE__)));?>">
 <STYLE>
 /* Core Elements */
-BODY 	{ background-color: <?php print $page_background;?>; margin:0; font-weight: normal; font-style: normal; 
-		color: <?php print $normal_text;?>; font-family: Arial, Verdana, Geneva, "Trebuchet MS", Tahoma, Helvetica, sans-serif; text-decoration: none;}
-TABLE 	{border-collapse: collapse;}
-INPUT 	{background-color: <?php print $form_input_background;?>; font-weight: normal; color: <?php print $form_input_text;?>;}
+BODY     { background-color: <?php print $page_background;?>; margin:0; font-weight: normal; font-style: normal;
+        color: <?php print $normal_text;?>; font-family: Arial, Verdana, Geneva, "Trebuchet MS", Tahoma, Helvetica, sans-serif; text-decoration: none;}
+TABLE     {border-collapse: collapse;}
+INPUT     {background-color: <?php print $form_input_background;?>; font-weight: normal; color: <?php print $form_input_text;?>;}
 INPUT:focus {background-color: yellow;}
 TEXTAREA {background-color: <?php print $form_input_background;?>; font-weight: normal; color: <?php print $form_input_text;?>;}
 TEXTAREA:focus {background-color: yellow;}
 FIELDSET { margin: 0 0 20px; padding: 0.9em; border: 3px inset #FFFFFF; border-radius: 20px 20px; background-color: <?php print $row_light;?>;}
 LABEL { width: 40%; display: inline-block; vertical-align: top; font-weight: bold; padding: 2px; text-align: left; text-decoration: underline;}
 LEGEND { font-weight: bold; padding: 5px; background: #0000FF; border: 3px inset #FFFFFF; color: #FFFFFF; border-radius: 20px 20px;}
-SELECT 	{background-color: <?php print $select_menu_background;?>; font-weight: normal;; 
-		color: <?php print $select_menu_text;?>; text-decoration: underline;}
-OPTION 	{font-weight: normal;}
-A 		{font-weight: bold; color: <?php print $links;?>;}
+SELECT     {background-color: <?php print $select_menu_background;?>; font-weight: normal;;
+        color: <?php print $select_menu_text;?>; text-decoration: underline;}
+OPTION     {font-weight: normal;}
+A         {font-weight: bold; color: <?php print $links;?>;}
 .even {background-color: <?php print $row_light;?>;}
 .odd {background-color: <?php print $row_dark;?>;}
 
@@ -278,7 +278,7 @@ A 		{font-weight: bold; color: <?php print $links;?>;}
 .text_green {color: #009000;}
 .text_orange {color: #EBA500;}
 .text_blue {color: #0000E0;}
-.text_red {color: #C00000;}	
+.text_red {color: #C00000;}
 .text_black {color: #000000;}
 .text_white {color: #FFFFFF;}
 
@@ -333,624 +333,624 @@ table.fixedheadscrolling th {text-align: left; border-left: 1px solid #999;}
 <SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
 <SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 <SCRIPT type="text/javascript">
-window.onresize=function(){set_size()};	
+window.onresize=function(){set_size()};
 var viewportwidth, viewportheight, outerWidth, outerHeight, colWidth, colHeight;
 
 function set_size() {
-	if (typeof window.innerWidth != 'undefined') {
-		viewportwidth = window.innerWidth,
-		viewportheight = window.innerHeight
-		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-		viewportwidth = document.documentElement.clientWidth,
-		viewportheight = document.documentElement.clientHeight
-		} else {
-		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-		viewportheight = document.getElementsByTagName('body')[0].clientHeight
-		}
-	set_fontsizes(viewportwidth, "fullscreen");
-	}
-	
+    if (typeof window.innerWidth != 'undefined') {
+        viewportwidth = window.innerWidth,
+        viewportheight = window.innerHeight
+        } else if (typeof document.documentElement != 'undefined'    && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+        viewportwidth = document.documentElement.clientWidth,
+        viewportheight = document.documentElement.clientHeight
+        } else {
+        viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+        viewportheight = document.getElementsByTagName('body')[0].clientHeight
+        }
+    set_fontsizes(viewportwidth, "fullscreen");
+    }
+
 function confirm_delete() {
-	if(confirm("Do you really want to delete this backup?")) {
-		document.current_backups_form.submit();
-		} else {
-		return false;
-		}
-	}
+    if(confirm("Do you really want to delete this backup?")) {
+        document.current_backups_form.submit();
+        } else {
+        return false;
+        }
+    }
 
 </SCRIPT>
 </HEAD>
 <?php
 if(empty($_GET)) {
 ?>
-	<BODY>
-		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
-			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
-				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Tickets Database Backups</SPAN>
-				</DIV>
-				<BR />
-				<BR />
-				<FORM METHOD="POST" NAME= "current_backups_form" ACTION="db_loader.php?mode=del_bu">
-				<FIELDSET>
-					<LEGEND class='text_large text_bold'>Tickets Database Backups</LEGEND>
-					<DIV style='position: relative;'>
+    <BODY>
+        <DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
+            <DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
+                <DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
+                    <SPAN ID='theHeading' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Tickets Database Backups</SPAN>
+                </DIV>
+                <BR />
+                <BR />
+                <FORM METHOD="POST" NAME= "current_backups_form" ACTION="db_loader.php?mode=del_bu">
+                <FIELDSET>
+                    <LEGEND class='text_large text_bold'>Tickets Database Backups</LEGEND>
+                    <DIV style='position: relative;'>
 <?php
 
-						$i=1;
-						if ($handle = opendir($dir)) {
-							while (false !== ($filename = readdir($handle))) {
-								if ($filename != "." && $filename != "..") {
-									$ext = pathinfo($filename, PATHINFO_EXTENSION);
-									if($ext == "sql" || $ext == "SQL") {
+                        $i=1;
+                        if ($handle = opendir($dir)) {
+                            while (false !== ($filename = readdir($handle))) {
+                                if ($filename != "." && $filename != "..") {
+                                    $ext = pathinfo($filename, PATHINFO_EXTENSION);
+                                    if($ext == "sql" || $ext == "SQL") {
 
-										print "<label for='backup[]'>" . $filename . "</label><input type='checkbox' name='backup[]' value='" . $filename . "'>";
-										print "<BR />";
-										}
-									}
-								$i++;
-								}
-							}
+                                        print "<label for='backup[]'>" . $filename . "</label><input type='checkbox' name='backup[]' value='" . $filename . "'>";
+                                        print "<BR />";
+                                        }
+                                    }
+                                $i++;
+                                }
+                            }
 ?>
-					</DIV>		
-				</FIELDSET>
-				<INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
-				<INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
-				<INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
-				<INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
-				<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
-				<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
-				<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
-				<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
-				<INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
-				<INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
-				<INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
-				<INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
-				<INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
-				<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
-				</FORM>
-				<CENTER>
-				<SPAN id='del_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='confirm_delete();'>Delete Selected<IMG id='del_img' style='float: right;' SRC='./images/delete.png' /></SPAN>
-				<SPAN id='backup_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.do_backup.submit();'>Backup Database<IMG id='backup_img' style='float: right;' SRC='./images/save.png' /></SPAN>
-				<SPAN id='restore_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.start_restore.submit();'>Restore a Backup<IMG id='restore_img' style='float: right;' SRC='./images/restore_small.png' /></SPAN>
-				</CENTER>
-			</DIV>
-		</DIV>
-		<FORM METHOD="POST" NAME= "start_restore" ACTION="db_loader.php?mode=start">
-		<INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
-		<INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
-		<INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
-		<INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
-		<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
-		<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
-		<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
-		<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
-		<INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
-		<INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
-		<INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
-		<INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
-		<INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
-		<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
-		</FORM>
-		<FORM METHOD="POST" NAME= "do_backup" ACTION="db_loader.php?mode=do_backup">
-		<INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
-		<INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
-		<INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
-		<INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
-		<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
-		<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
-		<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
-		<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
-		<INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
-		<INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
-		<INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
-		<INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
-		<INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
-		<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
-		</FORM>
+                    </DIV>
+                </FIELDSET>
+                <INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
+                <INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
+                <INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
+                <INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
+                <INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
+                <INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
+                <INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
+                <INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
+                <INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
+                <INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
+                <INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
+                <INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
+                <INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
+                <INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
+                </FORM>
+                <CENTER>
+                <SPAN id='del_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='confirm_delete();'>Delete Selected<IMG id='del_img' style='float: right;' SRC='./images/delete.png' /></SPAN>
+                <SPAN id='backup_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.do_backup.submit();'>Backup Database<IMG id='backup_img' style='float: right;' SRC='./images/save.png' /></SPAN>
+                <SPAN id='restore_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.start_restore.submit();'>Restore a Backup<IMG id='restore_img' style='float: right;' SRC='./images/restore_small.png' /></SPAN>
+                </CENTER>
+            </DIV>
+        </DIV>
+        <FORM METHOD="POST" NAME= "start_restore" ACTION="db_loader.php?mode=start">
+        <INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
+        <INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
+        <INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
+        <INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
+        <INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
+        <INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
+        <INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
+        <INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
+        <INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
+        <INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
+        <INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
+        <INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
+        <INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
+        <INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
+        </FORM>
+        <FORM METHOD="POST" NAME= "do_backup" ACTION="db_loader.php?mode=do_backup">
+        <INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
+        <INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
+        <INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
+        <INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
+        <INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
+        <INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
+        <INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
+        <INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
+        <INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
+        <INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
+        <INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
+        <INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
+        <INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
+        <INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
+        </FORM>
 <?php
-	} elseif(array_key_exists('mode', $_GET) && $_GET['mode'] == "do_backup") {
+    } elseif(array_key_exists('mode', $_GET) && $_GET['mode'] == "do_backup") {
 ?>
-		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
-			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%; height: 90%;'>
-				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading_backup' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Backing-up Tickets Database</SPAN>
-				</DIV>
-				<BR />
-				<FIELDSET id='backupstatuswrapper' style='display: none;'>
-					<LEGEND class='text_large text_bold'>Backing Up existing DB</LEGEND>
-					<DIV id='backupstatus' style='width: 100%; height: 30px; overflow-y: auto;'>
-					</DIV>
-					<BR />
-				</FIELDSET>
-				<CENTER>
-				<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.fin_form.submit();'>Finish<IMG id='fin_img_backup' style='float: right;' SRC='./images/finished_small.png' /></SPAN>
-				</CENTER>
-			</DIV>
-		</DIV>
-		<FORM NAME='fin_form' METHOD="post" ACTION = "db_loader.php">
-		<INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
-		<INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
-		<INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
-		<INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
-		<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
-		<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
-		<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
-		<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
-		<INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
-		<INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
-		<INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
-		<INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
-		<INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
-		<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
-		</FORM>	
+        <DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
+            <DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%; height: 90%;'>
+                <DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
+                    <SPAN ID='theHeading_backup' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Backing-up Tickets Database</SPAN>
+                </DIV>
+                <BR />
+                <FIELDSET id='backupstatuswrapper' style='display: none;'>
+                    <LEGEND class='text_large text_bold'>Backing Up existing DB</LEGEND>
+                    <DIV id='backupstatus' style='width: 100%; height: 30px; overflow-y: auto;'>
+                    </DIV>
+                    <BR />
+                </FIELDSET>
+                <CENTER>
+                <SPAN id='fin_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.fin_form.submit();'>Finish<IMG id='fin_img_backup' style='float: right;' SRC='./images/finished_small.png' /></SPAN>
+                </CENTER>
+            </DIV>
+        </DIV>
+        <FORM NAME='fin_form' METHOD="post" ACTION = "db_loader.php">
+        <INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
+        <INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
+        <INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
+        <INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
+        <INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
+        <INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
+        <INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
+        <INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
+        <INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
+        <INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
+        <INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
+        <INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
+        <INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
+        <INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
+        </FORM>
 <?php
-		$output = dump_db($_POST['ticketshost'],$_POST['ticketsuser'],$_POST['ticketspassword'],$_POST['ticketsdb'],$_POST['ticketsprefix']);
+        $output = dump_db($_POST['ticketshost'],$_POST['ticketsuser'],$_POST['ticketspassword'],$_POST['ticketsdb'],$_POST['ticketsprefix']);
 ?>
 <SCRIPT>
-		$('backupstatuswrapper').style.display = "block";
-		$('backupstatus').innerHTML += "<?php print $output;?>";
+        $('backupstatuswrapper').style.display = "block";
+        $('backupstatus').innerHTML += "<?php print $output;?>";
 </SCRIPT>
 <?php
-	} elseif(array_key_exists('mode', $_GET) && $_GET['mode'] == "del_bu") {
+    } elseif(array_key_exists('mode', $_GET) && $_GET['mode'] == "del_bu") {
 ?>
-	<BODY>
-		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
-			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
-				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading_delete' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Tickets Database Backups</SPAN>
-				</DIV>
-				<BR />
-				<BR />
-				<FIELDSET>
-					<LEGEND class='text_large text_bold'>Tickets Database Backups</LEGEND>
-					<DIV style='position: relative;'>
+    <BODY>
+        <DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
+            <DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
+                <DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
+                    <SPAN ID='theHeading_delete' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Tickets Database Backups</SPAN>
+                </DIV>
+                <BR />
+                <BR />
+                <FIELDSET>
+                    <LEGEND class='text_large text_bold'>Tickets Database Backups</LEGEND>
+                    <DIV style='position: relative;'>
 <?php
-						$filestore = getcwd() . "/backups/";
-						foreach($_POST['backup'] as $val) {
-							$file = $filestore . $val;
-							if(unlink($file)) {
-								print $file . " has been deleted<BR />";
-								} else {
-								print $file . " could not be been deleted<BR />";
-								}
-							
-							}
-?>
-					</DIV>		
-				</FIELDSET>		
-				<CENTER>
-				<SPAN id='cont_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.continue_form.submit();'>Continue<IMG id='continue_del_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
-				</CENTER>
-			</DIV>
-		</DIV>
-		<FORM METHOD="POST" NAME= "continue_form" ACTION="db_loader.php">
-		<INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
-		<INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
-		<INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
-		<INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
-		<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
-		<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
-		<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
-		<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
-		<INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
-		<INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
-		<INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
-		<INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
-		<INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
-		<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
-		</FORM>
-<?php
-	} elseif(array_key_exists('mode', $_GET) && $_GET['mode'] == "start") {
-?>
-	<BODY>
-		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
-			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
-				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading_restore' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Restore Tickets DB Backup</SPAN>
-				</DIV>
-				<BR />
-				<BR />
-				<FORM METHOD="POST" NAME= "restore_form" ACTION="db_loader.php?mode=check">
-				<FIELDSET>
-					<LEGEND class='text_large text_bold'>Tickets Database Connection Information</LEGEND>
-					<DIV style='position: relative;'>
-						<LABEL for="ticketshost">Tickets Database Host</LABEL>
-						<INPUT name='ticketshost' type='text' VALUE='<?php print $mysql_host;?>' />
-						<BR />
-						<LABEL for="ticketsdb">Tickets Database Name</LABEL>
-						<INPUT name='ticketsdb' type='text' VALUE='<?php print $mysql_db;?>' />
-						<BR />
-						<LABEL for="ticketsuser">Tickets Database User</LABEL>
-						<INPUT name='ticketsuser' type='text' VALUE='<?php print $mysql_user;?>' />
-						<BR />
-						<LABEL for="ticketspassword">Tickets Database User Password</LABEL>
-						<INPUT name='ticketspassword' type='password' VALUE='<?php print $mysql_passwd;?>' />
-						<BR />
-						<LABEL for="ticketsprefix">Tickets Database Prefix</LABEL>
-						<INPUT name='ticketsprefix' type='text' VALUE='<?php print $mysql_prefix;?>' />
-						<BR />
-						<LABEL for="db_schema">Backup File</LABEL>
-						<?php print get_backups();?>;
-						<BR />
-					</DIV>		
-				</FIELDSET>
-				<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
-				<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
-				<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
-				<INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
-				<INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
-				<INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
-				<INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
-				<INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
-				<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
-				</FORM>
-				<CENTER>
-				<SPAN id='sub_but_restore' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.restore_form.submit();'>Submit<IMG id='sub_img_restore' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
-				<SPAN id='can_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_form.submit();'>Cancel<IMG id='can_img_restore' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
-				</CENTER>
-			</DIV>
-		</DIV>
-		<FORM NAME='can_form' METHOD="post" ACTION = "db_loader.php">
-		<INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
-		<INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
-		<INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
-		<INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
-		<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
-		<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
-		<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
-		<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
-		<INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
-		<INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
-		<INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
-		<INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
-		<INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
-		<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
-		</FORM>	
-<?php
-	} elseif(array_key_exists('mode', $_GET) && $_GET['mode'] == "check") {
-?>
-	<BODY>
-		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
-			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
-				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading_check' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Check existing Data</SPAN>
-				</DIV>
-				<FORM METHOD="POST" NAME= "go_form" ACTION="db_loader.php?mode=go">
-				<FIELDSET>
-					<LEGEND class='text_large text_bold'>Tickets Database</LEGEND>
-					<DIV id='status' style='width: 80%; height: 95%; overflow-y: auto;'>
-					</DIV>
-					<BR />
-					<BR />
-				</FIELDSET>
-				<div style="text-align: center;">
-				<SPAN id='sub_but_check' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.go_form.submit();'>Submit<IMG id='sub_img_check' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
-				</div>
-				<div style="text-align: center;">
-				<SPAN id='restart_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.restart_form.submit();'>Submit<IMG id='restart_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
-				</div>
-			</DIV>
-		</DIV>
+                        $filestore = getcwd() . "/backups/";
+                        foreach($_POST['backup'] as $val) {
+                            $file = $filestore . $val;
+                            if(unlink($file)) {
+                                print $file . " has been deleted<BR />";
+                                } else {
+                                print $file . " could not be been deleted<BR />";
+                                }
 
-		<INPUT name='ticketshost' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketshost'], ENT_QUOTES, 'UTF-8');?>' />
-		<INPUT name='ticketsdb' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketsdb'], ENT_QUOTES, 'UTF-8');?>' />
-		<INPUT name='ticketsuser' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketsuser'], ENT_QUOTES, 'UTF-8');?>' />
-		<INPUT name='ticketspassword' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketspassword'], ENT_QUOTES, 'UTF-8');?>' />
-		<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketsprefix'], ENT_QUOTES, 'UTF-8');?>' />
-		<INPUT name='db_schema' type='hidden' VALUE='<?php print htmlspecialchars($_POST['db_schema'], ENT_QUOTES, 'UTF-8');?>' />
-		<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
-		<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
-		<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
-		<INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
-		<INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
-		<INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
-		<INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
-		<INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
-		<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
-		</FORM>
-		<FORM NAME='restart_form' METHOD="post" ACTION = "db_loader.php">
-		<INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
-		<INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
-		<INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
-		<INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
-		<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
-		<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
-		<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
-		<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
-		<INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
-		<INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
-		<INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
-		<INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
-		<INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
-		<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />	
-		</FORM>		
+                            }
+?>
+                    </DIV>
+                </FIELDSET>
+                <CENTER>
+                <SPAN id='cont_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.continue_form.submit();'>Continue<IMG id='continue_del_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+                </CENTER>
+            </DIV>
+        </DIV>
+        <FORM METHOD="POST" NAME= "continue_form" ACTION="db_loader.php">
+        <INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
+        <INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
+        <INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
+        <INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
+        <INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
+        <INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
+        <INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
+        <INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
+        <INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
+        <INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
+        <INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
+        <INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
+        <INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
+        <INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
+        </FORM>
 <?php
-	// 3/14/26 - Migrated from mysql_* to mysqli with prepared statements for external DB
-	$ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], 'information_schema');
-	if(!$ext_conn->connect_error) {
-		$tables = array();
-		$stmt = $ext_conn->prepare("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?");
-		$stmt->bind_param('s', $_POST['ticketsdb']);
-		$stmt->execute();
-		$result = $stmt->get_result();
-		while($row = $result->fetch_assoc()) {
-			$tables[] = $row['TABLE_NAME'];
-			}
-		$stmt->close();
-		$tableCount = count($tables);
-		$existingDataCount = 0;
-		$ext_conn->select_db($_POST['ticketsdb']);
-		for($i = 0; $i < $tableCount; $i++) {
-			$result = $ext_conn->query("SELECT 1 FROM `" . $ext_conn->real_escape_string($tables[$i]) . "` LIMIT 1"); // NOSONAR - table names from information_schema, escaped with real_escape_string, admin-only tool
-			if($result && $result->num_rows > 0) {
-				$existingDataCount++;
-				}
-			}
-		if($existingDataCount > 0) {
-			$output = "Data already exists in Tickets Database, are you sure you wish to continue?<BR />";
+    } elseif(array_key_exists('mode', $_GET) && $_GET['mode'] == "start") {
+?>
+    <BODY>
+        <DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
+            <DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
+                <DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
+                    <SPAN ID='theHeading_restore' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Restore Tickets DB Backup</SPAN>
+                </DIV>
+                <BR />
+                <BR />
+                <FORM METHOD="POST" NAME= "restore_form" ACTION="db_loader.php?mode=check">
+                <FIELDSET>
+                    <LEGEND class='text_large text_bold'>Tickets Database Connection Information</LEGEND>
+                    <DIV style='position: relative;'>
+                        <LABEL for="ticketshost">Tickets Database Host</LABEL>
+                        <INPUT name='ticketshost' type='text' VALUE='<?php print $mysql_host;?>' />
+                        <BR />
+                        <LABEL for="ticketsdb">Tickets Database Name</LABEL>
+                        <INPUT name='ticketsdb' type='text' VALUE='<?php print $mysql_db;?>' />
+                        <BR />
+                        <LABEL for="ticketsuser">Tickets Database User</LABEL>
+                        <INPUT name='ticketsuser' type='text' VALUE='<?php print $mysql_user;?>' />
+                        <BR />
+                        <LABEL for="ticketspassword">Tickets Database User Password</LABEL>
+                        <INPUT name='ticketspassword' type='password' VALUE='<?php print $mysql_passwd;?>' />
+                        <BR />
+                        <LABEL for="ticketsprefix">Tickets Database Prefix</LABEL>
+                        <INPUT name='ticketsprefix' type='text' VALUE='<?php print $mysql_prefix;?>' />
+                        <BR />
+                        <LABEL for="db_schema">Backup File</LABEL>
+                        <?php print get_backups();?>;
+                        <BR />
+                    </DIV>
+                </FIELDSET>
+                <INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
+                <INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
+                <INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
+                <INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
+                <INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
+                <INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
+                <INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
+                <INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
+                <INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
+                </FORM>
+                <CENTER>
+                <SPAN id='sub_but_restore' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.restore_form.submit();'>Submit<IMG id='sub_img_restore' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+                <SPAN id='can_but' CLASS='plain text' style='float: none; width: 150px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.can_form.submit();'>Cancel<IMG id='can_img_restore' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+                </CENTER>
+            </DIV>
+        </DIV>
+        <FORM NAME='can_form' METHOD="post" ACTION = "db_loader.php">
+        <INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
+        <INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
+        <INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
+        <INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
+        <INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
+        <INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
+        <INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
+        <INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
+        <INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
+        <INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
+        <INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
+        <INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
+        <INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
+        <INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
+        </FORM>
+<?php
+    } elseif(array_key_exists('mode', $_GET) && $_GET['mode'] == "check") {
+?>
+    <BODY>
+        <DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
+            <DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%;'>
+                <DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
+                    <SPAN ID='theHeading_check' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Check existing Data</SPAN>
+                </DIV>
+                <FORM METHOD="POST" NAME= "go_form" ACTION="db_loader.php?mode=go">
+                <FIELDSET>
+                    <LEGEND class='text_large text_bold'>Tickets Database</LEGEND>
+                    <DIV id='status' style='width: 80%; height: 95%; overflow-y: auto;'>
+                    </DIV>
+                    <BR />
+                    <BR />
+                </FIELDSET>
+                <div style="text-align: center;">
+                <SPAN id='sub_but_check' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.go_form.submit();'>Submit<IMG id='sub_img_check' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+                </div>
+                <div style="text-align: center;">
+                <SPAN id='restart_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.restart_form.submit();'>Submit<IMG id='restart_img' style='float: right;' SRC='./images/submit_small.png' /></SPAN>
+                </div>
+            </DIV>
+        </DIV>
+
+        <INPUT name='ticketshost' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketshost'], ENT_QUOTES, 'UTF-8');?>' />
+        <INPUT name='ticketsdb' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketsdb'], ENT_QUOTES, 'UTF-8');?>' />
+        <INPUT name='ticketsuser' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketsuser'], ENT_QUOTES, 'UTF-8');?>' />
+        <INPUT name='ticketspassword' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketspassword'], ENT_QUOTES, 'UTF-8');?>' />
+        <INPUT name='ticketsprefix' type='hidden' VALUE='<?php print htmlspecialchars($_POST['ticketsprefix'], ENT_QUOTES, 'UTF-8');?>' />
+        <INPUT name='db_schema' type='hidden' VALUE='<?php print htmlspecialchars($_POST['db_schema'], ENT_QUOTES, 'UTF-8');?>' />
+        <INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
+        <INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
+        <INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
+        <INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
+        <INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
+        <INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
+        <INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
+        <INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
+        <INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
+        </FORM>
+        <FORM NAME='restart_form' METHOD="post" ACTION = "db_loader.php">
+        <INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
+        <INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
+        <INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
+        <INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
+        <INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
+        <INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
+        <INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
+        <INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
+        <INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
+        <INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
+        <INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
+        <INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
+        <INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
+        <INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
+        </FORM>
+<?php
+    // 3/14/26 - Migrated from mysql_* to mysqli with prepared statements for external DB
+    $ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], 'information_schema');
+    if(!$ext_conn->connect_error) {
+        $tables = array();
+        $stmt = $ext_conn->prepare("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?");
+        $stmt->bind_param('s', $_POST['ticketsdb']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while($row = $result->fetch_assoc()) {
+            $tables[] = $row['TABLE_NAME'];
+            }
+        $stmt->close();
+        $tableCount = count($tables);
+        $existingDataCount = 0;
+        $ext_conn->select_db($_POST['ticketsdb']);
+        for($i = 0; $i < $tableCount; $i++) {
+            $result = $ext_conn->query("SELECT 1 FROM `" . $ext_conn->real_escape_string($tables[$i]) . "` LIMIT 1"); // NOSONAR - table names from information_schema, escaped with real_escape_string, admin-only tool
+            if($result && $result->num_rows > 0) {
+                $existingDataCount++;
+                }
+            }
+        if($existingDataCount > 0) {
+            $output = "Data already exists in Tickets Database, are you sure you wish to continue?<BR />";
 ?>
 <SCRIPT>
-			$('status').innerHTML += "<?php print $output;?><BR />";
-			$('status').innerHTML += "<label for='do_backup'>Backup Database First?</label>";
-			$('status').innerHTML += "<input type='checkbox' name='do_backup' value=1 CHECKED>";
-			$('sub_but_check').innerHTML = "Continue <IMG id='continue_img' style='float: right;' SRC='./images/submit_small.png' />";
-			$('sub_but_check').style.display = "block";
+            $('status').innerHTML += "<?php print $output;?><BR />";
+            $('status').innerHTML += "<label for='do_backup'>Backup Database First?</label>";
+            $('status').innerHTML += "<input type='checkbox' name='do_backup' value=1 CHECKED>";
+            $('sub_but_check').innerHTML = "Continue <IMG id='continue_img' style='float: right;' SRC='./images/submit_small.png' />";
+            $('sub_but_check').style.display = "block";
 </SCRIPT>
 <?php
-			} else {
-			$output = "Database empty, ready to go?";
+            } else {
+            $output = "Database empty, ready to go?";
 ?>
 <SCRIPT>
-			$('status').innerHTML += "<?php print $output;?><BR />";
-			$('sub_but_check').innerHTML = "Go fo it <IMG id='go_img' style='float: right;' SRC='./images/submit_small.png' />";
-			$('sub_but_check').style.display = "block";
-</SCRIPT>
-<?php			
-			}
-		$ext_conn->close();
-		} else {
-		$output = "Error connecting to database, please check your connection details and try again.<BR />";
-?>
-<SCRIPT>
-		$('status').innerHTML += "<?php print $output;?><BR />";
-		$('restart_but').style.display = "block";
+            $('status').innerHTML += "<?php print $output;?><BR />";
+            $('sub_but_check').innerHTML = "Go fo it <IMG id='go_img' style='float: right;' SRC='./images/submit_small.png' />";
+            $('sub_but_check').style.display = "block";
 </SCRIPT>
 <?php
-		}
-	} elseif(array_key_exists('mode', $_GET) && $_GET['mode'] == "go") {
+            }
+        $ext_conn->close();
+        } else {
+        $output = "Error connecting to database, please check your connection details and try again.<BR />";
 ?>
-	<BODY>
-		<DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
-			<DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%; height: 90%;'>
-				<DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
-					<SPAN ID='theHeading_progress' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Restoring Database Backup</SPAN>
-				</DIV>
-				<BR />
-				<FIELDSET id='backupstatuswrapper' style='display: none;'>
-					<LEGEND class='text_large text_bold'>Backing Up existing DB</LEGEND>
-					<DIV id='backupstatus' style='width: 100%; height: 30px; overflow-y: auto;'>
-					</DIV>
-					<BR />
-				</FIELDSET>
-				<FIELDSET id='deletestatuswrapper' style='display: none;'>
-					<LEGEND class='text_large text_bold'>Removing existing tables</LEGEND>
-					<DIV id='deletestatus' style='width: 100%; height: 100px; overflow-y: auto;'>
-					</DIV>
-					<BR />
-				</FIELDSET>
-				<CENTER>
-				<SPAN id='progress_img' style='display: none; z-index: 9999;'><IMG id='loading_img' SRC='./images/owmloading.gif' /></SPAN><BR />
-				</CENTER>
-				<FIELDSET id='statuswrapper' style='display: none;'>
-					<LEGEND class='text_large text_bold'>Restoring Backup</LEGEND>
-					<DIV id='status' style='width: 100%; height: 200px; overflow-y: auto;'>
-					</DIV>
-					<BR />
-					<BR />
-				</FIELDSET>
-				<CENTER>
-				<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.fin_form.submit();'>Finish<IMG id='fin_img_go' style='float: right;' SRC='./images/finished_small.png' /></SPAN>
-				</CENTER>
-			</DIV>
-		</DIV>
-	<FORM NAME='fin_form' METHOD="post" ACTION = "index.php">
-	<INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
-	<INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
-	<INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
-	<INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
-	<INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
-	<INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
-	<INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
-	<INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
-	<INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
-	<INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
-	<INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
-	<INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
-	<INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
-	<INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
-	</FORM>
+<SCRIPT>
+        $('status').innerHTML += "<?php print $output;?><BR />";
+        $('restart_but').style.display = "block";
+</SCRIPT>
+<?php
+        }
+    } elseif(array_key_exists('mode', $_GET) && $_GET['mode'] == "go") {
+?>
+    <BODY>
+        <DIV id = "outer" style='position: absolute; left: 0px; top: 10px; height: 70%; width: 90%;'>
+            <DIV id = 'leftcol' style='position: relative; left: 30px; float: left; width: 60%; height: 90%;'>
+                <DIV CLASS='header' style = "height: 40px; width: 100%; float: none; text-align: center;">
+                    <SPAN ID='theHeading_progress' CLASS='header text_bold text_biggest' STYLE='background-color: inherit;'>Restoring Database Backup</SPAN>
+                </DIV>
+                <BR />
+                <FIELDSET id='backupstatuswrapper' style='display: none;'>
+                    <LEGEND class='text_large text_bold'>Backing Up existing DB</LEGEND>
+                    <DIV id='backupstatus' style='width: 100%; height: 30px; overflow-y: auto;'>
+                    </DIV>
+                    <BR />
+                </FIELDSET>
+                <FIELDSET id='deletestatuswrapper' style='display: none;'>
+                    <LEGEND class='text_large text_bold'>Removing existing tables</LEGEND>
+                    <DIV id='deletestatus' style='width: 100%; height: 100px; overflow-y: auto;'>
+                    </DIV>
+                    <BR />
+                </FIELDSET>
+                <CENTER>
+                <SPAN id='progress_img' style='display: none; z-index: 9999;'><IMG id='loading_img' SRC='./images/owmloading.gif' /></SPAN><BR />
+                </CENTER>
+                <FIELDSET id='statuswrapper' style='display: none;'>
+                    <LEGEND class='text_large text_bold'>Restoring Backup</LEGEND>
+                    <DIV id='status' style='width: 100%; height: 200px; overflow-y: auto;'>
+                    </DIV>
+                    <BR />
+                    <BR />
+                </FIELDSET>
+                <CENTER>
+                <SPAN id='fin_but' CLASS='plain text' style='float: none; width: 150px; display: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='document.fin_form.submit();'>Finish<IMG id='fin_img_go' style='float: right;' SRC='./images/finished_small.png' /></SPAN>
+                </CENTER>
+            </DIV>
+        </DIV>
+    <FORM NAME='fin_form' METHOD="post" ACTION = "index.php">
+    <INPUT name='ticketshost' type='hidden' VALUE='<?php print $mysql_host;?>' />
+    <INPUT name='ticketsdb' type='hidden' VALUE='<?php print $mysql_db;?>' />
+    <INPUT name='ticketsuser' type='hidden' VALUE='<?php print $mysql_user;?>' />
+    <INPUT name='ticketspassword' type='hidden' VALUE='<?php print $mysql_passwd;?>' />
+    <INPUT name='ticketsprefix' type='hidden' VALUE='<?php print $mysql_prefix;?>' />
+    <INPUT name='page_background' type='hidden' VALUE='<?php print $page_background;?>' />
+    <INPUT name='normal_text' type='hidden' VALUE='<?php print $normal_text;?>' />
+    <INPUT name='form_input_background' type='hidden' VALUE='<?php print $form_input_background;?>' />
+    <INPUT name='form_input_text' type='hidden' VALUE='<?php print $form_input_text;?>' />
+    <INPUT name='row_light' type='hidden' VALUE='<?php print $row_light;?>' />
+    <INPUT name='row_dark' type='hidden' VALUE='<?php print $row_dark;?>' />
+    <INPUT name='select_menu_background' type='hidden' VALUE='<?php print $select_menu_background;?>' />
+    <INPUT name='select_menu_text' type='hidden' VALUE='<?php print $select_menu_text;?>' />
+    <INPUT name='links' type='hidden' VALUE='<?php print $links;?>' />
+    </FORM>
 <?php
 
-	// 3/14/26 - Migrated from mysql_* to mysqli with prepared statements for external DB
-	$ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], 'information_schema');
-	if(!$ext_conn->connect_error) {	//	Connected OK to information Schema
-		$tables = array();
-		$stmt = $ext_conn->prepare("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?");
-		$stmt->bind_param('s', $_POST['ticketsdb']);
-		$stmt->execute();
-		$result = $stmt->get_result();
-		while($row = $result->fetch_assoc()) {
-			$tables[] = $row['TABLE_NAME'];
-			}
-		$stmt->close();
-		$ext_conn->close();	
-		$tableCount = count($tables);
-		if($tableCount > 0) {	//	Existing data
+    // 3/14/26 - Migrated from mysql_* to mysqli with prepared statements for external DB
+    $ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], 'information_schema');
+    if(!$ext_conn->connect_error) {    //    Connected OK to information Schema
+        $tables = array();
+        $stmt = $ext_conn->prepare("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?");
+        $stmt->bind_param('s', $_POST['ticketsdb']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while($row = $result->fetch_assoc()) {
+            $tables[] = $row['TABLE_NAME'];
+            }
+        $stmt->close();
+        $ext_conn->close();
+        $tableCount = count($tables);
+        if($tableCount > 0) {    //    Existing data
 ?>
 <SCRIPT>
-			if (typeof window.innerWidth != 'undefined') {
-				viewportwidth = window.innerWidth,
-				viewportheight = window.innerHeight
-				} else if (typeof document.documentElement != 'undefined' && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-				viewportwidth = document.documentElement.clientWidth,
-				viewportheight = document.documentElement.clientHeight
-				} else {
-				viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-				viewportheight = document.getElementsByTagName('body')[0].clientHeight
-				}
-			set_fontsizes(viewportwidth, "fullscreen");
+            if (typeof window.innerWidth != 'undefined') {
+                viewportwidth = window.innerWidth,
+                viewportheight = window.innerHeight
+                } else if (typeof document.documentElement != 'undefined' && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+                viewportwidth = document.documentElement.clientWidth,
+                viewportheight = document.documentElement.clientHeight
+                } else {
+                viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+                viewportheight = document.getElementsByTagName('body')[0].clientHeight
+                }
+            set_fontsizes(viewportwidth, "fullscreen");
 </SCRIPT>
 <?php
-			if(array_key_exists('do_backup', $_POST) && $_POST['do_backup'] == "1") { 
-				$output = dump_db($_POST['ticketshost'],$_POST['ticketsuser'],$_POST['ticketspassword'],$_POST['ticketsdb'],$_POST['ticketsprefix']);
+            if(array_key_exists('do_backup', $_POST) && $_POST['do_backup'] == "1") {
+                $output = dump_db($_POST['ticketshost'],$_POST['ticketsuser'],$_POST['ticketspassword'],$_POST['ticketsdb'],$_POST['ticketsprefix']);
 ?>
 <SCRIPT>
-				$('backupstatuswrapper').style.display = "block";
-				$('backupstatus').innerHTML += "<?php print $output;?>";
+                $('backupstatuswrapper').style.display = "block";
+                $('backupstatus').innerHTML += "<?php print $output;?>";
 </SCRIPT>
 <?php
-				}
+                }
 ?>
 <SCRIPT>
-			$('deletestatuswrapper').style.display = "block";
-			$('progress_img').style.display = "block";
+            $('deletestatuswrapper').style.display = "block";
+            $('progress_img').style.display = "block";
 </SCRIPT>
 <?php
-			$existingDataCount = 0;
-			// 3/14/26 - Migrated from mysql_* to mysqli for external DB
-			$ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], $_POST['ticketsdb']);
-			if(!$ext_conn->connect_error) {
-				for($i = 0; $i < $tableCount; $i++) {
-					$result = $ext_conn->query("DROP TABLE `" . $ext_conn->real_escape_string($tables[$i]) . "`"); // NOSONAR - table names from information_schema, escaped with real_escape_string, admin-only tool
-					if($result) {
-						$output = $_POST['ticketsdb'] . " Database " . $tables[$i] . " Table dropped successfully<BR />";
+            $existingDataCount = 0;
+            // 3/14/26 - Migrated from mysql_* to mysqli for external DB
+            $ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], $_POST['ticketsdb']);
+            if(!$ext_conn->connect_error) {
+                for($i = 0; $i < $tableCount; $i++) {
+                    $result = $ext_conn->query("DROP TABLE `" . $ext_conn->real_escape_string($tables[$i]) . "`"); // NOSONAR - table names from information_schema, escaped with real_escape_string, admin-only tool
+                    if($result) {
+                        $output = $_POST['ticketsdb'] . " Database " . $tables[$i] . " Table dropped successfully<BR />";
 ?>
 <SCRIPT>
-						$('deletestatus').innerHTML += "<?php print $output;?>";
-						$('deletestatus').scrollTop = $('deletestatus').scrollHeight;
+                        $('deletestatus').innerHTML += "<?php print $output;?>";
+                        $('deletestatus').scrollTop = $('deletestatus').scrollHeight;
 </SCRIPT>
 <?php
-						}
-					}
-				$ext_conn->close();
+                        }
+                    }
+                $ext_conn->close();
 ?>
 <SCRIPT>
-				$('deletestatus').innerHTML += "<BR /><b>Previous Data erased completely</B><BR />";
-				$('deletestatus').scrollTop = $('deletestatus').scrollHeight;
-				$('statuswrapper').style.display = "block";
-				$('status').innerHTML += "<B>Restoring previous database backup</B><BR /><BR />";
+                $('deletestatus').innerHTML += "<BR /><b>Previous Data erased completely</B><BR />";
+                $('deletestatus').scrollTop = $('deletestatus').scrollHeight;
+                $('statuswrapper').style.display = "block";
+                $('status').innerHTML += "<B>Restoring previous database backup</B><BR /><BR />";
 </SCRIPT>
 <?php
-				$host = $_POST['ticketshost'];
-				$user = $_POST['ticketsuser'];
-				$pass = $_POST['ticketspassword'];
-				$db = $_POST['ticketsdb'];
-				$dbms_schema = $dir . "/" . $_POST['db_schema'];
-				$sql_query = @fread(@fopen($dbms_schema, 'r'), @filesize($dbms_schema)) or die('problem ');
-				$sql_query = remove_remarks($sql_query);
-				$sql_query = split_sql_file($sql_query, ';');
-				// 3/14/26 - Migrated from mysql_* to mysqli for external DB restore
-				$ext_conn = new mysqli($host, $user, $pass, $db);
-				if(!$ext_conn->connect_error) {
-					$count = count($sql_query);
-					for($i = 0; $i < $count; $i++) {
-						$query = $sql_query[$i];
-						$result = $ext_conn->query($query);
-						if($result) {
+                $host = $_POST['ticketshost'];
+                $user = $_POST['ticketsuser'];
+                $pass = $_POST['ticketspassword'];
+                $db = $_POST['ticketsdb'];
+                $dbms_schema = $dir . "/" . $_POST['db_schema'];
+                $sql_query = @fread(@fopen($dbms_schema, 'r'), @filesize($dbms_schema)) or die('problem ');
+                $sql_query = remove_remarks($sql_query);
+                $sql_query = split_sql_file($sql_query, ';');
+                // 3/14/26 - Migrated from mysql_* to mysqli for external DB restore
+                $ext_conn = new mysqli($host, $user, $pass, $db);
+                if(!$ext_conn->connect_error) {
+                    $count = count($sql_query);
+                    for($i = 0; $i < $count; $i++) {
+                        $query = $sql_query[$i];
+                        $result = $ext_conn->query($query);
+                        if($result) {
 ?>
 <SCRIPT>
-							$('status').innerHTML += "Completed Line " + <?php print $i;?> + "<BR />";
-							$('status').scrollTop = $('status').scrollHeight;
+                            $('status').innerHTML += "Completed Line " + <?php print $i;?> + "<BR />";
+                            $('status').scrollTop = $('status').scrollHeight;
 </SCRIPT>
 <?php
-							}
-						}
-					$ext_conn->close();
+                            }
+                        }
+                    $ext_conn->close();
 ?>
 <SCRIPT>
-					$('progress_img').style.display = "none";
-					$('fin_but').style.display = "block";
+                    $('progress_img').style.display = "none";
+                    $('fin_but').style.display = "block";
 </SCRIPT>
 <?php
-					} else {
+                    } else {
 ?>
 <SCRIPT>
-					$('progress_img').style.display = "none";
-					$('statuswrapper').style.display = "block";
-					$('status').innerHTML += "Problem connecting to database to restore Database<BR /><BR />";
-					$('fin_but').style.display = "block";
-</SCRIPT>
-<?php						
-					}
-				} else {	//	Problem connecting to database to delete existing data
-?>
-<SCRIPT>
-				$('progress_img').style.display = "none";
-				$('statuswrapper').style.display = "block";
-				$('status').innerHTML += "Problem connecting to database to delete existing data<BR /><BR />";
-				$('fin_but').style.display = "block";
-</SCRIPT>
-<?php				
-				}
-			} else {	//	No existing Data, just restore Database
-?>
-<SCRIPT>
-			$('progress_img').style.display = "block";
-			$('status').innerHTML += "Restoring database backup<BR /><BR />";
+                    $('progress_img').style.display = "none";
+                    $('statuswrapper').style.display = "block";
+                    $('status').innerHTML += "Problem connecting to database to restore Database<BR /><BR />";
+                    $('fin_but').style.display = "block";
 </SCRIPT>
 <?php
-			$host = $_POST['ticketshost'];
-			$user = $_POST['ticketsuser'];
-			$pass = $_POST['ticketspassword'];
-			$db = $_POST['ticketsdb'];
-			$dbms_schema = $dir . "/" . $_POST['db_schema'];
-			$sql_query = @fread(@fopen($dbms_schema, 'r'), @filesize($dbms_schema)) or die('problem ');
-			$sql_query = remove_remarks($sql_query);
-			$sql_query = split_sql_file($sql_query, ';');
-			// 3/14/26 - Migrated from mysql_* to mysqli for external DB restore
-			$ext_conn = new mysqli($host, $user, $pass, $db);
-			$count = count($sql_query);
-			for($i = 0; $i < $count; $i++) {
-				$query = $sql_query[$i];
-				$result = $ext_conn->query($query);
-				if($result) {
+                    }
+                } else {    //    Problem connecting to database to delete existing data
 ?>
 <SCRIPT>
-					$('status').innerHTML += "Completed Line " + <?php print $i;?> + "<BR />";
-					$('status').scrollTop = $('status').scrollHeight;
+                $('progress_img').style.display = "none";
+                $('statuswrapper').style.display = "block";
+                $('status').innerHTML += "Problem connecting to database to delete existing data<BR /><BR />";
+                $('fin_but').style.display = "block";
 </SCRIPT>
 <?php
-					}
-				}
+                }
+            } else {    //    No existing Data, just restore Database
 ?>
 <SCRIPT>
-				$('status').innerHTML += "<BR /><B>Database restore successfully</B><BR />";
-				$('status').scrollTop = $('status').scrollHeight;
+            $('progress_img').style.display = "block";
+            $('status').innerHTML += "Restoring database backup<BR /><BR />";
 </SCRIPT>
 <?php
-			$ext_conn->close();
+            $host = $_POST['ticketshost'];
+            $user = $_POST['ticketsuser'];
+            $pass = $_POST['ticketspassword'];
+            $db = $_POST['ticketsdb'];
+            $dbms_schema = $dir . "/" . $_POST['db_schema'];
+            $sql_query = @fread(@fopen($dbms_schema, 'r'), @filesize($dbms_schema)) or die('problem ');
+            $sql_query = remove_remarks($sql_query);
+            $sql_query = split_sql_file($sql_query, ';');
+            // 3/14/26 - Migrated from mysql_* to mysqli for external DB restore
+            $ext_conn = new mysqli($host, $user, $pass, $db);
+            $count = count($sql_query);
+            for($i = 0; $i < $count; $i++) {
+                $query = $sql_query[$i];
+                $result = $ext_conn->query($query);
+                if($result) {
 ?>
 <SCRIPT>
-			$('progress_img').style.display = "none";
-			$('fin_but').style.display = "block";
+                    $('status').innerHTML += "Completed Line " + <?php print $i;?> + "<BR />";
+                    $('status').scrollTop = $('status').scrollHeight;
 </SCRIPT>
-<?php		
-			}
-		}
-	}
+<?php
+                    }
+                }
+?>
+<SCRIPT>
+                $('status').innerHTML += "<BR /><B>Database restore successfully</B><BR />";
+                $('status').scrollTop = $('status').scrollHeight;
+</SCRIPT>
+<?php
+            $ext_conn->close();
+?>
+<SCRIPT>
+            $('progress_img').style.display = "none";
+            $('fin_but').style.display = "block";
+</SCRIPT>
+<?php
+            }
+        }
+    }
 ?>
 <SCRIPT>
 if (typeof window.innerWidth != 'undefined') {
-	viewportwidth = window.innerWidth,
-	viewportheight = window.innerHeight
-	} else if (typeof document.documentElement != 'undefined' && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-	viewportwidth = document.documentElement.clientWidth,
-	viewportheight = document.documentElement.clientHeight
-	} else {
-	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-	viewportheight = document.getElementsByTagName('body')[0].clientHeight
-	}
+    viewportwidth = window.innerWidth,
+    viewportheight = window.innerHeight
+    } else if (typeof document.documentElement != 'undefined' && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+    viewportwidth = document.documentElement.clientWidth,
+    viewportheight = document.documentElement.clientHeight
+    } else {
+    viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+    viewportheight = document.getElementsByTagName('body')[0].clientHeight
+    }
 set_fontsizes(viewportwidth, "fullscreen");
 </SCRIPT>
 </BODY>

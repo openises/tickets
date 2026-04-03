@@ -4,8 +4,8 @@ require_once('../../incs/functions.inc.php');
 require_once('../incs/portal.inc.php');
 
 if(empty($_GET)) {
-	exit();
-	}
+    exit();
+    }
 
 $id = sanitize_int($_GET['id']);
 

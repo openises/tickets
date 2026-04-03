@@ -54,8 +54,8 @@
     function toString() {
       return "(" . $this->lat . ", " . $this->lng . ")";
     }
-    
-    
+
+
     /**
      * Calculate the surface distance between this LatLng object and the one
      * passed in as a parameter.
@@ -80,11 +80,11 @@
       $z2 = $er * cos($latTo);
 
       $d = acos(sin($latFrom)*sin($latTo) + cos($latFrom)*cos($latTo)*cos($lngTo-$lngFrom)) * $er;
-      
+
       return $d;
     }
 
-    
+
     /**
      * Convert this LatLng object from OSGB36 datum to WGS84 datum.
      */
@@ -128,12 +128,12 @@
       }
 
       $phiB = rad2deg($phiN);
-      
+
       $this->lat = $phiB;
       $this->lng = $lambdaB;
     }
-    
-    
+
+
     /**
      * Convert this LatLng object from WGS84 datum to OSGB36 datum.
      */
@@ -175,14 +175,14 @@
         $phiN1 = atan(($zB + ($eSquared * $v * sin($phiN))) / $p);
         $phiN = $phiN1;
       }
- 
+
       $phiB = rad2deg($phiN);
-      
+
       $this->lat = $phiB;
       $this->lng = $lambdaB;
     }
-    
-    
+
+
     /**
      * Convert this LatLng object into an OSGB grid reference. Note that this
      * function does not take into account the bounds of the OSGB grid -
@@ -259,8 +259,8 @@
 
       return new OSRef($E, $N);
     }
-    
-    
+
+
     /**
      * Convert a latitude and longitude to an UTM reference
      *
@@ -356,7 +356,7 @@
       }
 
       return new UTMRef($UTMEasting, $UTMNorthing, $UTMZone, $longitudeZone);
-    }    
+    }
   }
 
 
@@ -376,7 +376,7 @@
      * the whole of the British Grid. For example, to create an OSRef
      * object from the six-figure grid reference TG514131, the easting would
      * be 651400 and the northing would be 313100.
-     * 
+     *
      * Grid references with accuracy greater than 1m can be represented
      * using floating point values for the easting and northing. For example,
      * a value representing an easting or northing accurate to 1mm would be
@@ -405,7 +405,7 @@
     /**
      * Convert this grid reference into a string using a standard six-figure
      * grid reference including the two-character designation for the 100km
-     * square. e.g. TG514131. 
+     * square. e.g. TG514131.
      *
      * @return
      */
@@ -528,7 +528,7 @@
           - ($XI * pow($E - $E0, 3.0))
           + ($XII * pow($E - $E0, 5.0))
           - ($XIIA * pow($E - $E0, 7.0));
- 
+
       return new LatLng(rad2deg($phi), rad2deg($lambda));
     }
   }
@@ -569,8 +569,8 @@
       return $this->lngZone . $this->latZone . " " .
              $this->easting . " " . $this->northing;
     }
-    
-    
+
+
     /**
      * Convert this UTM reference to a latitude and longitude
      *
@@ -660,7 +660,7 @@
           / cos($phi1Rad)) * (180.0 / pi());
 
       return new LatLng($latitude, $longitude);
-    }   
+    }
   }
 
 
@@ -704,8 +704,8 @@
   function sec($x) {
     return 1.0 / cos($x);
   }
-  
-  
+
+
   /**
    * Take a string formatted as a six-figure OS grid reference (e.g.
    * "TG514131") and return a reference to an OSRef object that represents
@@ -738,8 +738,8 @@
     $ny = (4 - floor(($char2ord - 65) / 5)) * 100000;
     return new OSRef($east + $nx, $north + $ny);
   }
-  
-    
+
+
   /**
    *  Work out the UTM latitude zone from the latitude
    *

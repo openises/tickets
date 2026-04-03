@@ -2,599 +2,599 @@
 /*
 6/8/12 initial release
 */
-if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}	
+if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 error_reporting (E_ALL  ^ E_DEPRECATED);
 
 function tz_list() {
     $zones_array = array();
     $timestamp = time();
     foreach(timezone_identifiers_list() as $key => $zone) {
-//		date_default_timezone_set($zone);
-		$zones_array[$key]['zone'] = $zone;
-		$zones_array[$key]['offset'] = (int) ((int) date('O', $timestamp))/100;
-		$zones_array[$key]['diff_from_GMT'] = 'UTC/GMT ' . date('P', $timestamp);
-		}
+//        date_default_timezone_set($zone);
+        $zones_array[$key]['zone'] = $zone;
+        $zones_array[$key]['offset'] = (int) ((int) date('O', $timestamp))/100;
+        $zones_array[$key]['diff_from_GMT'] = 'UTC/GMT ' . date('P', $timestamp);
+        }
     return $zones_array;
-	}
-	
+    }
+
 $theTimezones = tz_list();
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator`";
-$result	= db_query($query);
+$result    = db_query($query);
 while ($row = stripslashes_deep($result->fetch_assoc())){
-	$states[$row['name']] = $row['code'];
-	}
+    $states[$row['name']] = $row['code'];
+    }
 $mapzooms = array();
 $dir = './_osm/tiles';
 $mapdir = is_dir($dir) ? scandir($dir) : [];
 foreach($mapdir as $val) {
-	if($val <> "." && $val <> "..") {
-		if(is_dir('./_osm/tiles/' . $val)) {
-			$mapzooms[] = intval($val);
-			}
-		}
-	}
+    if($val <> "." && $val <> "..") {
+        if(is_dir('./_osm/tiles/' . $val)) {
+            $mapzooms[] = intval($val);
+            }
+        }
+    }
 if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($mapzooms);} else {$localZoomMin = 0; $localZoomMax = 0;}
 ?>
 
-		<STYLE> label, input[type="radio"]{font-size:10px; vertical-align:bottom;} 
-		</STYLE> 
-		</HEAD> 
-		
-		<BODY onLoad = "ck_frames();" >  		<!-- <?php echo __LINE__;?> -->
+        <STYLE> label, input[type="radio"]{font-size:10px; vertical-align:bottom;}
+        </STYLE>
+        </HEAD>
+
+        <BODY onLoad = "ck_frames();" >          <!-- <?php echo __LINE__;?> -->
 <?php
-		if (array_key_exists ( 'update', $_GET )) {
-			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_lat'";
-			$result = db_query($query, [sanitize_string($_POST['frm_lat'])]);
-			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_lng'";
-			$result = db_query($query, [sanitize_string($_POST['frm_lng'])]);
-			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_zoom'";
-			$result = db_query($query, [sanitize_string($_POST['frm_zoom'])]);
-			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='map_caption'";
-			$result = db_query($query, [sanitize_string($_POST['frm_map_caption'])]);
-			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_zoom_fixed'";
-			$result = db_query($query, [sanitize_string($_POST['frm_dfz'])]);
-			if($_POST['frm_timezone'] == "") {$_POST['frm_timezone'] = "America/New_York";}
-			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='timezone'";
-			$result = db_query($query, [sanitize_string($_POST['frm_timezone'])]);
-			// 3/14/26 - Save tile settings (consolidated from config.tiles.inc.php)
-			$new_mode = isset($_POST['frm_tile_mode']) ? sanitize_string($_POST['frm_tile_mode']) : 'online';
-			if (!in_array($new_mode, array('online', 'proxy', 'offline'))) { $new_mode = 'online'; }
-			$existing = get_variable('tile_mode');
-			if ($existing === FALSE) {
-				$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}settings` (`name`, `value`) VALUES ('tile_mode', ?)";
-				db_query($query, [$new_mode]);
-			} else {
-				$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='tile_mode'";
-				db_query($query, [$new_mode]);
-			}
+        if (array_key_exists ( 'update', $_GET )) {
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_lat'";
+            $result = db_query($query, [sanitize_string($_POST['frm_lat'])]);
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_lng'";
+            $result = db_query($query, [sanitize_string($_POST['frm_lng'])]);
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_zoom'";
+            $result = db_query($query, [sanitize_string($_POST['frm_zoom'])]);
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='map_caption'";
+            $result = db_query($query, [sanitize_string($_POST['frm_map_caption'])]);
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='def_zoom_fixed'";
+            $result = db_query($query, [sanitize_string($_POST['frm_dfz'])]);
+            if($_POST['frm_timezone'] == "") {$_POST['frm_timezone'] = "America/New_York";}
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='timezone'";
+            $result = db_query($query, [sanitize_string($_POST['frm_timezone'])]);
+            // 3/14/26 - Save tile settings (consolidated from config.tiles.inc.php)
+            $new_mode = isset($_POST['frm_tile_mode']) ? sanitize_string($_POST['frm_tile_mode']) : 'online';
+            if (!in_array($new_mode, array('online', 'proxy', 'offline'))) { $new_mode = 'online'; }
+            $existing = get_variable('tile_mode');
+            if ($existing === false) {
+                $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}settings` (`name`, `value`) VALUES ('tile_mode', ?)";
+                db_query($query, [$new_mode]);
+            } else {
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='tile_mode'";
+                db_query($query, [$new_mode]);
+            }
 
-			$new_url = isset($_POST['frm_tile_server_url']) ? trim(sanitize_string($_POST['frm_tile_server_url'])) : '';
-			if ($new_url === '') { $new_url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'; }
-			$existing_url = get_variable('tile_server_url');
-			if ($existing_url === FALSE) {
-				$query = "INSERT INTO `{$GLOBALS['mysql_prefix']}settings` (`name`, `value`) VALUES ('tile_server_url', ?)";
-				db_query($query, [$new_url]);
-			} else {
-				$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='tile_server_url'";
-				db_query($query, [$new_url]);
-			}
+            $new_url = isset($_POST['frm_tile_server_url']) ? trim(sanitize_string($_POST['frm_tile_server_url'])) : '';
+            if ($new_url === '') { $new_url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'; }
+            $existing_url = get_variable('tile_server_url');
+            if ($existing_url === false) {
+                $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}settings` (`name`, `value`) VALUES ('tile_server_url', ?)";
+                db_query($query, [$new_url]);
+            } else {
+                $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='tile_server_url'";
+                db_query($query, [$new_url]);
+            }
 
-			// Sync local_maps for backward compat with 60+ files that read it
-			$local_maps_val = ($new_mode === 'offline') ? '1' : '0';
-			$query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='local_maps'";
-			db_query($query, [$local_maps_val]);
+            // Sync local_maps for backward compat with 60+ files that read it
+            $local_maps_val = ($new_mode === 'offline') ? '1' : '0';
+            $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`=? WHERE `name`='local_maps'";
+            db_query($query, [$local_maps_val]);
 
-			$GLOBALS['variables'] = array();  // clear cached settings so get_variable() re-reads
+            $GLOBALS['variables'] = array();  // clear cached settings so get_variable() re-reads
 
-			$top_notice = "Settings saved to database.";
-			}
-		else {
+            $top_notice = "Settings saved to database.";
+            }
+        else {
 ?>
-		<script>
-//										some globals		
-	var map = null;				// the map object - note GLOBAL
-	var OSM;
-	var localMap
-	var myMarker;					// the marker object
-	var lat_var;					// see init.js
-	var lng_var;
-	var zoom;
-	var bounds;
-	var states_arr = <?php echo json_encode($states); ?>;
-	var geo_provider = <?php print get_variable('geocoding_provider');?>;
-	var BingKey = "<?php print get_variable('bing_api_key');?>";
-	var GoogleKey = "<?php print get_variable('gmaps_api_key');?>";
-	var localZoomMin = <?php print $localZoomMin;?>;
-	var localZoomMax = <?php print $localZoomMax;?>;
-	
-	function do_point_stuff(lat, lng) {
-		if(myMarker) {map.removeLayer(myMarker);}			// destroy predecessor
-		lat_var = lat;
-		lng_var = lng;
-		do_lat (lat_var);
-		do_lng (lng_var);
-		do_grids(document.cen_Form);			// 9/16/08
+        <script>
+//                                        some globals
+    var map = null;                // the map object - note GLOBAL
+    var OSM;
+    var localMap
+    var myMarker;                    // the marker object
+    var lat_var;                    // see init.js
+    var lng_var;
+    var zoom;
+    var bounds;
+    var states_arr = <?php echo json_encode($states); ?>;
+    var geo_provider = <?php print get_variable('geocoding_provider');?>;
+    var BingKey = "<?php print get_variable('bing_api_key');?>";
+    var GoogleKey = "<?php print get_variable('gmaps_api_key');?>";
+    var localZoomMin = <?php print $localZoomMin;?>;
+    var localZoomMax = <?php print $localZoomMax;?>;
 
-		var dp_latlng = new L.LatLng(lat_var, lng_var);
-		map.setView(dp_latlng, <?php echo get_variable('def_zoom'); ?>);		
+    function do_point_stuff(lat, lng) {
+        if(myMarker) {map.removeLayer(myMarker);}            // destroy predecessor
+        lat_var = lat;
+        lng_var = lng;
+        do_lat (lat_var);
+        do_lng (lng_var);
+        do_grids(document.cen_Form);            // 9/16/08
 
-		var iconurl = "./markers/crosshair.png";
-		icon = new baseIcon({iconUrl: iconurl});	
-		myMarker = L.marker([lat, lng], {icon: icon}).addTo(map);
-		}				// end function do point stuff()
-	
-	function ll2dms(inval) {				// lat/lng to degr, mins, sec's - 9/9/08
-		var d = new Number(Math.abs(inval));
-		d  = Math.floor(d);
-		var mi = (Math.abs(inval)-d)*60;	// fraction * 60
-		var m = Math.floor(mi)				// min's as fraction
-		var si = (mi-m)*60;					// to sec's
-		var s = si.toFixed(1);
-		return d + '\260 ' + Math.abs(m) +"' " + Math.abs(s) + '"';
-		}
+        var dp_latlng = new L.LatLng(lat_var, lng_var);
+        map.setView(dp_latlng, <?php echo get_variable('def_zoom'); ?>);
 
-	function lat2ddm(inlat) {				//  lat to degr, dec.min's - 9/9/089/7/08
-		var x = new Number(Math.abs(inlat));
-		var degs  = Math.floor(x);				// degrees
-		var mins = ((Math.abs(x-degs)*60).toFixed(1));
-		var nors = (inlat>0.0)? " N":" S";
-		return degs + '\260'  + mins +"'" + nors;
-		}
-	
-	function lng2ddm(inlng) {				//  lng to degr, dec.min's - 9/9/089/7/08
-		var x = new Number(Math.abs(inlng));
-		var degs  = Math.floor(x);				// degrees
-		var mins = ((Math.abs(x-degs)*60).toFixed(1));
-		var eorw = (inlng>0.0)? " E":" W";
-		return degs + '\260' + mins +"'" + eorw;
-		}
+        var iconurl = "./markers/crosshair.png";
+        icon = new baseIcon({iconUrl: iconurl});
+        myMarker = L.marker([lat, lng], {icon: icon}).addTo(map);
+        }                // end function do point stuff()
 
-	var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;				// 9/9/08		
+    function ll2dms(inval) {                // lat/lng to degr, mins, sec's - 9/9/08
+        var d = new Number(Math.abs(inval));
+        d  = Math.floor(d);
+        var mi = (Math.abs(inval)-d)*60;    // fraction * 60
+        var m = Math.floor(mi)                // min's as fraction
+        var si = (mi-m)*60;                    // to sec's
+        var s = si.toFixed(1);
+        return d + '\260 ' + Math.abs(m) +"' " + Math.abs(s) + '"';
+        }
 
-	function do_lat_fmt(inlat) {				// 9/9/08
-		switch(lat_lng_frmt) {
-			case 0:		return inlat;			break;
-			case 1:		return ll2dms(inlat);  	break;
-			case 2:		return lat2ddm(inlat); 	break;
-			default:	alert ("error " + <?php echo __LINE__;?>);
-			}	
-		}
+    function lat2ddm(inlat) {                //  lat to degr, dec.min's - 9/9/089/7/08
+        var x = new Number(Math.abs(inlat));
+        var degs  = Math.floor(x);                // degrees
+        var mins = ((Math.abs(x-degs)*60).toFixed(1));
+        var nors = (inlat>0.0)? " N":" S";
+        return degs + '\260'  + mins +"'" + nors;
+        }
 
-	function do_lng_fmt(inlng) {
-		switch(lat_lng_frmt) {
-			case 0:		return inlng;  			break;
-			case 1:		return ll2dms(inlng);	break;
-			case 2:		return lng2ddm(inlng); 	break;
-			default:	alert ("error " + <?php echo __LINE__;?>);
-			}	
-		}
+    function lng2ddm(inlng) {                //  lng to degr, dec.min's - 9/9/089/7/08
+        var x = new Number(Math.abs(inlng));
+        var degs  = Math.floor(x);                // degrees
+        var mins = ((Math.abs(x-degs)*60).toFixed(1));
+        var eorw = (inlng>0.0)? " E":" W";
+        return degs + '\260' + mins +"'" + eorw;
+        }
 
-	function usng_to_map(){			// usng to LL array			- 5/4/09
-		tolatlng = new Array();
-		USNGtoLL(document.cen_Form.frm_ngs.value, tolatlng);
-		var point = new L.LatLng(tolatlng[0].toFixed(6) ,tolatlng[1].toFixed(6));
-		var theLat = tolatlng[0].toFixed(6);
-		var theLng = tolatlng[1].toFixed(6)
-		map.setView([theLat, theLng], <?php echo get_variable('def_zoom'); ?>);
-		var iconurl = "./markers/crosshair.png";
-		icon = new baseIcon({iconUrl: iconurl});	
-		myMarker = L.marker([lat, lng], {icon: icon}).addTo(map);
-		do_lat (theLat);
-		do_lng (theLng);
-		}				// end function
+    var lat_lng_frmt = <?php print get_variable('lat_lng'); ?>;                // 9/9/08
+
+    function do_lat_fmt(inlat) {                // 9/9/08
+        switch(lat_lng_frmt) {
+            case 0:        return inlat;            break;
+            case 1:        return ll2dms(inlat);      break;
+            case 2:        return lat2ddm(inlat);     break;
+            default:    alert ("error " + <?php echo __LINE__;?>);
+            }
+        }
+
+    function do_lng_fmt(inlng) {
+        switch(lat_lng_frmt) {
+            case 0:        return inlng;              break;
+            case 1:        return ll2dms(inlng);    break;
+            case 2:        return lng2ddm(inlng);     break;
+            default:    alert ("error " + <?php echo __LINE__;?>);
+            }
+        }
+
+    function usng_to_map(){            // usng to LL array            - 5/4/09
+        tolatlng = new Array();
+        USNGtoLL(document.cen_Form.frm_ngs.value, tolatlng);
+        var point = new L.LatLng(tolatlng[0].toFixed(6) ,tolatlng[1].toFixed(6));
+        var theLat = tolatlng[0].toFixed(6);
+        var theLng = tolatlng[1].toFixed(6)
+        map.setView([theLat, theLng], <?php echo get_variable('def_zoom'); ?>);
+        var iconurl = "./markers/crosshair.png";
+        icon = new baseIcon({iconUrl: iconurl});
+        myMarker = L.marker([lat, lng], {icon: icon}).addTo(map);
+        do_lat (theLat);
+        do_lng (theLng);
+        }                // end function
 
 
-	function map_cen_reset() {	do_map(<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, 10, theSource); }			// reset map center icon
+    function map_cen_reset() {    do_map(<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, 10, theSource); }            // reset map center icon
 
-	var markersArray = [];
-	
-	function addrlkup() {
-		var myAddress = document.forms[0].frm_city.value.trim() + " " + document.forms[0].frm_st.value.trim();
-		control.options.geocoder.geocode(myAddress, function(results) {
-			var r = results[0]['center'];
-			var theLat = r.lat;
-			var theLng = r.lng;
-			do_point_stuff (theLat, theLng);
-			});
-		}				// end function addrlkup()
-		
-	function GetAddress(latlng) {
-		var popup = L.popup();
-		var loc = <?php print get_variable('locale');?>;
-		control.options.geocoder.reverse(latlng, 20, function(results) {
-		if(window.geo_provider == 0){
-			var r1 = results[0];
-			var r = r1['properties']['address'];
-			if(loc == "1") { r.state = "UK";}
-			} else if(window.geo_provider == 1) {
-			var r = results[0];
-			if(loc == "1") { r.state = "UK";}
-			} else if(window.geo_provider == 2) {
-			var r1 = results[0];
-			var r = {city: r1.city, house_number: "", road: r1.street, state: r1.state};
-			if(loc == "1") { r.state = "UK";}
-			}
+    var markersArray = [];
 
-		var lat = parseFloat(latlng.lat.toFixed(6));
-		var lng = parseFloat(latlng.lng.toFixed(6));
-		var theCity = "";
-		if(!r.city) {
-			if(r.suburb && (r.suburb != "")) {
-				theCity = r.suburb;
-				} else if(r.locality && (r.locality != "")) {
-				theCity = r.locality;
-				} else {
-				theCity = "";
-				}
-			} else {
-			theCity = r.city;
-			}
-		if(!r.state || r.state == "") {
-			if(r.county) {
-				var state = r.county;
-				} else {
-				var state = "";
-				}
-			} else {
-			var state = r.state;
-			}
+    function addrlkup() {
+        var myAddress = document.forms[0].frm_city.value.trim() + " " + document.forms[0].frm_st.value.trim();
+        control.options.geocoder.geocode(myAddress, function(results) {
+            var r = results[0]['center'];
+            var theLat = r.lat;
+            var theLng = r.lng;
+            do_point_stuff (theLat, theLng);
+            });
+        }                // end function addrlkup()
 
-		if (r) {
-			document.cen_Form.frm_city.value = theCity;
-			if(states_arr[state]){
-				document.cen_Form.frm_st.value = states_arr[state];
-				var theState = states_arr[state];
-				} else {
-				document.cen_Form.frm_st.value = r.state;
-				var theState = r.state;
-				}
-			document.cen_Form.show_lat.value = lat; 
-			document.cen_Form.show_lng.value = lng;
-			document.cen_Form.frm_lat.value = lat; 
-			document.cen_Form.frm_lng.value = lng; 
-			if(theCity != "" && theCity != "Unknown" && theState != "") {
-				var theContent = theCity + ", " + theState;
-				popup.setLatLng(latlng).setContent(theContent).openOn(map);
-				}
-			}
-			});
-		}
-		
-	function swap_source(the_source) {
-		if(the_source == 1) {
-			map.removeLayer(OSM);
-			map.addLayer(localMap);
-			map.options.maxZoom = localZoomMax;
-			map.options.minZoom = localZoomMin;			
-			} else {
-			map.removeLayer(localMap);
-			map.addLayer(OSM);
-			map.options.maxZoom = 20;
-			map.options.minZoom = 1;						
-			}
-		}
+    function GetAddress(latlng) {
+        var popup = L.popup();
+        var loc = <?php print get_variable('locale');?>;
+        control.options.geocoder.reverse(latlng, 20, function(results) {
+        if(window.geo_provider == 0){
+            var r1 = results[0];
+            var r = r1['properties']['address'];
+            if(loc == "1") { r.state = "UK";}
+            } else if(window.geo_provider == 1) {
+            var r = results[0];
+            if(loc == "1") { r.state = "UK";}
+            } else if(window.geo_provider == 2) {
+            var r1 = results[0];
+            var r = {city: r1.city, house_number: "", road: r1.street, state: r1.state};
+            if(loc == "1") { r.state = "UK";}
+            }
 
-	// 3/14/26 - Show/hide OSM policy warning based on tile server URL
-	function updateTileWarning() {
-		var url = document.getElementById('frm_tile_server_url');
-		var warning = document.getElementById('osm_tile_warning');
-		if (url && warning) {
-			if (url.value.toLowerCase().indexOf('openstreetmap.org') !== -1) {
-				warning.style.display = '';
-			} else {
-				warning.style.display = 'none';
-			}
-		}
-	}
+        var lat = parseFloat(latlng.lat.toFixed(6));
+        var lng = parseFloat(latlng.lng.toFixed(6));
+        var theCity = "";
+        if(!r.city) {
+            if(r.suburb && (r.suburb != "")) {
+                theCity = r.suburb;
+                } else if(r.locality && (r.locality != "")) {
+                theCity = r.locality;
+                } else {
+                theCity = "";
+                }
+            } else {
+            theCity = r.city;
+            }
+        if(!r.state || r.state == "") {
+            if(r.county) {
+                var state = r.county;
+                } else {
+                var state = "";
+                }
+            } else {
+            var state = r.state;
+            }
+
+        if (r) {
+            document.cen_Form.frm_city.value = theCity;
+            if(states_arr[state]){
+                document.cen_Form.frm_st.value = states_arr[state];
+                var theState = states_arr[state];
+                } else {
+                document.cen_Form.frm_st.value = r.state;
+                var theState = r.state;
+                }
+            document.cen_Form.show_lat.value = lat;
+            document.cen_Form.show_lng.value = lng;
+            document.cen_Form.frm_lat.value = lat;
+            document.cen_Form.frm_lng.value = lng;
+            if(theCity != "" && theCity != "Unknown" && theState != "") {
+                var theContent = theCity + ", " + theState;
+                popup.setLatLng(latlng).setContent(theContent).openOn(map);
+                }
+            }
+            });
+        }
+
+    function swap_source(the_source) {
+        if(the_source == 1) {
+            map.removeLayer(OSM);
+            map.addLayer(localMap);
+            map.options.maxZoom = localZoomMax;
+            map.options.minZoom = localZoomMin;
+            } else {
+            map.removeLayer(localMap);
+            map.addLayer(OSM);
+            map.options.maxZoom = 20;
+            map.options.minZoom = 1;
+            }
+        }
+
+    // 3/14/26 - Show/hide OSM policy warning based on tile server URL
+    function updateTileWarning() {
+        var url = document.getElementById('frm_tile_server_url');
+        var warning = document.getElementById('osm_tile_warning');
+        if (url && warning) {
+            if (url.value.toLowerCase().indexOf('openstreetmap.org') !== -1) {
+                warning.style.display = '';
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+    }
 
     </SCRIPT>
 <?php
-			$st_size = (get_variable("locale") ==0)?  2: 4;			
-			$lat = get_variable('def_lat');
-			$lng = get_variable('def_lng');
-			$checks_ar = array("","","","");
-			$which = get_variable('def_zoom_fixed');
-			$checks_ar[$which] = " CHECKED ";
+            $st_size = (get_variable("locale") ==0)?  2: 4;
+            $lat = get_variable('def_lat');
+            $lng = get_variable('def_lng');
+            $checks_ar = array("","","","");
+            $which = get_variable('def_zoom_fixed');
+            $checks_ar[$which] = " CHECKED ";
 ?>
-			<FORM METHOD="POST" NAME= "cen_Form"  onSubmit="return validate_cen(document.cen_Form);" ACTION="config.php?func=center&update=true">
-			<TABLE BORDER=0 ID='outer' style='width: 100%; table-layout: fixed;'>
-				<TR>
-					<TD style='vertical-align: top; width: 50%;'>
-						<TABLE BORDER="0" style='width: 100%;'>
-							<COL style='width: 25%;' />
-							<COL style='width: 75%;' />
-							<TR CLASS='even'>
-								<TD ALIGN='center' COLSPAN=2>
-									<SPAN CLASS='text_green text_biggest'>Select Map Center/Zoom, Caption and Timezone</SPAN>
-									<BR />
-									<SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
-									<BR /><BR />
-								</TD>
-							</TR>
-							<TR class='spacer'><TD CLASS="spacer" COLSPAN=2></TD></TR>
-							<TR class='odd' VALIGN='baseline'>
-								<TD CLASS='td_label'>Timezone:</TD>
-								<TD>
-									<SELECT name="frm_timezone" CLASS='text'>
-										<OPTION value="">Select a time zone</OPTION>
+            <FORM METHOD="POST" NAME= "cen_Form"  onSubmit="return validate_cen(document.cen_Form);" ACTION="config.php?func=center&update=true">
+            <TABLE BORDER=0 ID='outer' style='width: 100%; table-layout: fixed;'>
+                <TR>
+                    <TD style='vertical-align: top; width: 50%;'>
+                        <TABLE BORDER="0" style='width: 100%;'>
+                            <COL style='width: 25%;' />
+                            <COL style='width: 75%;' />
+                            <TR CLASS='even'>
+                                <TD ALIGN='center' COLSPAN=2>
+                                    <SPAN CLASS='text_green text_biggest'>Select Map Center/Zoom, Caption and Timezone</SPAN>
+                                    <BR />
+                                    <SPAN CLASS='text_white'>(mouseover caption for help information)</SPAN>
+                                    <BR /><BR />
+                                </TD>
+                            </TR>
+                            <TR class='spacer'><TD CLASS="spacer" COLSPAN=2></TD></TR>
+                            <TR class='odd' VALIGN='baseline'>
+                                <TD CLASS='td_label'>Timezone:</TD>
+                                <TD>
+                                    <SELECT name="frm_timezone" CLASS='text'>
+                                        <OPTION value="">Select a time zone</OPTION>
 <?php
-										$currentTZ = date_default_timezone_get();
-										foreach($theTimezones as $t) {
-											$sel = ($t['zone'] == $currentTZ) ? "SELECTED" : "";
+                                        $currentTZ = date_default_timezone_get();
+                                        foreach($theTimezones as $t) {
+                                            $sel = ($t['zone'] == $currentTZ) ? "SELECTED" : "";
 ?>
-											<OPTION value="<?php print $t['zone'];?>" <?php print $sel;?>><?php echo $t['zone'];?></OPTION>
+                                            <OPTION value="<?php print $t['zone'];?>" <?php print $sel;?>><?php echo $t['zone'];?></OPTION>
 <?php
-											}
+                                            }
 ?>
-									</SELECT>
-								</TD>
-							</TR>
-							<TR class='spacer'><TD CLASS="spacer" COLSPAN=2></TD></TR>
-							<TR CLASS = "even">
-								<TD CLASS="td_label">Lookup:</TD>
-								<TD>
-									<button type="button" onClick="addrlkup()"><img src="./markers/glasses.png" alt="Lookup location." /></BUTTON>&nbsp;City:&nbsp;
-									<INPUT MAXLENGTH="24" SIZE="16" TYPE="text" NAME="frm_city" VALUE="" />&nbsp;&nbsp;
-									State:&nbsp;<INPUT MAXLENGTH="<?php print $st_size;?>" SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_st" VALUE="" />
-								</TD>
-							</TR>
-							<TR CLASS = "even">
-								<TD CLASS="td_label">Caption:</TD>
-								<TD><INPUT MAXLENGTH="48" SIZE="30" TYPE="text" NAME="frm_map_caption" VALUE="<?php print get_variable('map_caption');?>" onChange = "document.getElementById('caption').innerHTML=this.value "/></TD>
-							</TR>
-							<TR CLASS = "odd" VALIGN='baseline'>
-								<TD CLASS="td_label">Lat / Long:</TD>
-								<TD><INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=10 DISABLED />
-								&nbsp;&nbsp;<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=10 DISABLED /></TD>
-							</TR>
+                                    </SELECT>
+                                </TD>
+                            </TR>
+                            <TR class='spacer'><TD CLASS="spacer" COLSPAN=2></TD></TR>
+                            <TR CLASS = "even">
+                                <TD CLASS="td_label">Lookup:</TD>
+                                <TD>
+                                    <button type="button" onClick="addrlkup()"><img src="./markers/glasses.png" alt="Lookup location." /></BUTTON>&nbsp;City:&nbsp;
+                                    <INPUT MAXLENGTH="24" SIZE="16" TYPE="text" NAME="frm_city" VALUE="" />&nbsp;&nbsp;
+                                    State:&nbsp;<INPUT MAXLENGTH="<?php print $st_size;?>" SIZE="<?php print $st_size;?>" TYPE="text" NAME="frm_st" VALUE="" />
+                                </TD>
+                            </TR>
+                            <TR CLASS = "even">
+                                <TD CLASS="td_label">Caption:</TD>
+                                <TD><INPUT MAXLENGTH="48" SIZE="30" TYPE="text" NAME="frm_map_caption" VALUE="<?php print get_variable('map_caption');?>" onChange = "document.getElementById('caption').innerHTML=this.value "/></TD>
+                            </TR>
+                            <TR CLASS = "odd" VALIGN='baseline'>
+                                <TD CLASS="td_label">Lat / Long:</TD>
+                                <TD><INPUT TYPE="text" NAME="show_lat" VALUE="<?php print get_lat($lat);?>" SIZE=10 DISABLED />
+                                &nbsp;&nbsp;<INPUT TYPE="text" NAME="show_lng" VALUE="<?php print get_lng($lng);?>" SIZE=10 DISABLED /></TD>
+                            </TR>
 <?php
-								$coords = "{$lat},{$lng}";
+                                $coords = "{$lat},{$lng}";
 ?>
-							<TR CLASS = "odd">
-								<TD CLASS="td_label" onClick="usng_to_map()">USNG:</TD>
-								<TD><INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($lat, $lng) ;?>" SIZE=20 DISABLED /></TD>
-							</TR>
-							<TR CLASS = "odd">
-								<TD CLASS="td_label" onClick="utm_to_map()">OSGB:</TD>
-								<TD><INPUT TYPE="text" NAME="frm_osgb" VALUE="<?php print LLtoOSGB($lat,$lng);?>" SIZE=20 DISABLED /></TD>
-							</TR>
-							<TR CLASS = "odd">
-								<TD CLASS="td_label" onClick="utm_to_map()">UTM:</TD>
-								<TD><INPUT TYPE="text" NAME="frm_utm" VALUE="<?php print toUTM($coords);?>" SIZE=20 DISABLED /></TD>
-							</TR>
-							<TR CLASS = "odd">
-								<TD CLASS="td_label">Zoom:</TD>
-								<TD><INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4/></TD>
-							</TR>
-							<TR CLASS='even' VALIGN='baseline'>
-								<TD CLASS="td_label">Dynamic zoom:</TD>
-								<TD>
-									Yes&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='0' <?php print $checks_ar[0]; ?> onClick = "document.cen_Form.frm_dfz.value=0">&nbsp;&nbsp;
-									<B>Situation</B>&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='1' <?php print $checks_ar[1]; ?> onClick = "document.cen_Form.frm_dfz.value=1">&nbsp;&nbsp;
-									<B>Units</B>&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='2' <?php print $checks_ar[2]; ?> onClick = "document.cen_Form.frm_dfz.value=2">&nbsp;&nbsp;
-									<B>Both</B>&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='3' <?php print $checks_ar[3]; ?> onClick = "document.cen_Form.frm_dfz.value=3">
-								</TD>
-							</TR>
-							<!-- 3/14/26 - Tile settings consolidated into this page -->
-							<TR>
-								<TD COLSPAN=2 style="padding: 10px 0 4px 0;">
-									<hr style="border: none; border-top: 1px solid #999; margin: 0;" />
-									<strong style="font-size: 12px; color: #555;">Tile Configuration</strong>
-								</TD>
-							</TR>
+                            <TR CLASS = "odd">
+                                <TD CLASS="td_label" onClick="usng_to_map()">USNG:</TD>
+                                <TD><INPUT TYPE="text" NAME="frm_ngs" VALUE="<?php print LLtoUSNG($lat, $lng) ;?>" SIZE=20 DISABLED /></TD>
+                            </TR>
+                            <TR CLASS = "odd">
+                                <TD CLASS="td_label" onClick="utm_to_map()">OSGB:</TD>
+                                <TD><INPUT TYPE="text" NAME="frm_osgb" VALUE="<?php print LLtoOSGB($lat,$lng);?>" SIZE=20 DISABLED /></TD>
+                            </TR>
+                            <TR CLASS = "odd">
+                                <TD CLASS="td_label" onClick="utm_to_map()">UTM:</TD>
+                                <TD><INPUT TYPE="text" NAME="frm_utm" VALUE="<?php print toUTM($coords);?>" SIZE=20 DISABLED /></TD>
+                            </TR>
+                            <TR CLASS = "odd">
+                                <TD CLASS="td_label">Zoom:</TD>
+                                <TD><INPUT TYPE="text" NAME="frm_zoom" VALUE="<?php print get_variable('def_zoom');?>" SIZE=4/></TD>
+                            </TR>
+                            <TR CLASS='even' VALIGN='baseline'>
+                                <TD CLASS="td_label">Dynamic zoom:</TD>
+                                <TD>
+                                    Yes&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='0' <?php print $checks_ar[0]; ?> onClick = "document.cen_Form.frm_dfz.value=0">&nbsp;&nbsp;
+                                    <B>Situation</B>&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='1' <?php print $checks_ar[1]; ?> onClick = "document.cen_Form.frm_dfz.value=1">&nbsp;&nbsp;
+                                    <B>Units</B>&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='2' <?php print $checks_ar[2]; ?> onClick = "document.cen_Form.frm_dfz.value=2">&nbsp;&nbsp;
+                                    <B>Both</B>&nbsp;<INPUT TYPE='radio' NAME='frm_zoom_fixed' VALUE='3' <?php print $checks_ar[3]; ?> onClick = "document.cen_Form.frm_dfz.value=3">
+                                </TD>
+                            </TR>
+                            <!-- 3/14/26 - Tile settings consolidated into this page -->
+                            <TR>
+                                <TD COLSPAN=2 style="padding: 10px 0 4px 0;">
+                                    <hr style="border: none; border-top: 1px solid #999; margin: 0;" />
+                                    <strong style="font-size: 12px; color: #555;">Tile Configuration</strong>
+                                </TD>
+                            </TR>
 <?php
-									$tile_mode = get_tile_mode();
-									$tile_url = get_variable('tile_server_url');
-									if ($tile_url === FALSE || trim($tile_url) === '') {
-										$tile_url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-									}
-									$is_osm_url = (stripos($tile_url, 'openstreetmap.org') !== false);
+                                    $tile_mode = get_tile_mode();
+                                    $tile_url = get_variable('tile_server_url');
+                                    if ($tile_url === false || trim($tile_url) === '') {
+                                        $tile_url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+                                    }
+                                    $is_osm_url = (stripos($tile_url, 'openstreetmap.org') !== false);
 ?>
-							<TR class='odd' VALIGN='top'>
-								<TD CLASS="td_label">Tile Source:</TD>
-								<TD>
-									<label style="display: block; margin: 2px 0;">
-										<input type="radio" name="frm_tile_mode" value="online"
-											<?php if ($tile_mode == 'online') echo 'checked'; ?>
-											onchange="updateTileWarning();" />
-										<strong>Online Direct</strong>
-										<span style="font-size: 10px; color: #666;">&mdash; Browser fetches tiles directly. Requires internet.</span>
-									</label>
-									<label style="display: block; margin: 2px 0;">
-										<input type="radio" name="frm_tile_mode" value="proxy"
-											<?php if ($tile_mode == 'proxy') echo 'checked'; ?>
-											onchange="updateTileWarning();" />
-										<strong>Proxy Cache</strong> <span style="font-size: 10px; color: #228822;">(recommended)</span>
-										<span style="font-size: 10px; color: #666;">&mdash; Server caches tiles locally.</span>
-									</label>
-									<label style="display: block; margin: 2px 0;">
-										<input type="radio" name="frm_tile_mode" value="offline"
-											<?php if ($tile_mode == 'offline') echo 'checked'; ?>
-											onchange="updateTileWarning();" />
-										<strong>Offline Local</strong>
-										<span style="font-size: 10px; color: #666;">&mdash; Local files only. No internet.</span>
-									</label>
-								</TD>
-							</TR>
-							<TR class='even' VALIGN='baseline'>
-								<TD CLASS="td_label">Tile Server URL:</TD>
-								<TD>
-									<input type="text" name="frm_tile_server_url" id="frm_tile_server_url"
-										value="<?php echo htmlspecialchars($tile_url); ?>"
-										style="width: 90%; font-size: 11px; padding: 3px 5px; font-family: monospace;"
-										oninput="updateTileWarning();" />
-									<br />
-									<span style="font-size: 10px; color: #666;">
-										Use <code>{z}/{x}/{y}</code> for tile coordinates.
-									</span>
-								</TD>
-							</TR>
-							<TR id="osm_tile_warning" style="<?php echo $is_osm_url ? '' : 'display:none;'; ?>">
-								<TD COLSPAN=2 style="padding: 4px 6px;">
-									<div style="background: #FFF3CD; border: 1px solid #FFC107; padding: 6px 10px; font-size: 11px; color: #856404;">
-										<strong>Note:</strong> OSM's
-										<a href="https://operations.osmfoundation.org/policies/tiles/" target="_blank" style="color: #533f03;">tile policy</a>
-										prohibits bulk downloading.
-										<strong>Proxy Cache</strong> is recommended.
-										<strong>Offline Local</strong> and
-										<a href="get_tiles.php">Download Maps</a>
-										should only be used with your own tile server.
-										For offline systems, use a self-hosted server
-										(<a href="https://switch2osm.org/" target="_blank" style="color: #533f03;">Switch2OSM</a>,
-										<a href="https://github.com/Overv/openstreetmap-tile-server" target="_blank" style="color: #533f03;">Docker OSM</a>).
-									</div>
-								</TD>
-							</TR>
-							<TR class='odd' VALIGN='baseline'>
-								<TD CLASS="td_label">Preview source:</TD>
-								<TD>
-									<label>Network <INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' CHECKED onClick="swap_source(0);"></label>&nbsp;&nbsp;
-									<label>Local <INPUT TYPE='radio' NAME='frm_mapsource' VALUE='1' onClick="swap_source(1);"></label>
-									&nbsp;<SPAN style='font-size: 10px; color: #888;'>(preview only)</SPAN>
-								</TD>
-							</TR>
-							<TR><TD COLSPAN=2>&nbsp;</TD></TR>
-							<TR>
-								<TD COLSPAN=2 ALIGN="center">
-									<SPAN id='can_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="history.back();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
-									<SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="map_cen_reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
-									<SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.cen_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
-								</TD>
-							</TR>
-						</TABLE>
+                            <TR class='odd' VALIGN='top'>
+                                <TD CLASS="td_label">Tile Source:</TD>
+                                <TD>
+                                    <label style="display: block; margin: 2px 0;">
+                                        <input type="radio" name="frm_tile_mode" value="online"
+                                            <?php if ($tile_mode == 'online') echo 'checked'; ?>
+                                            onchange="updateTileWarning();" />
+                                        <strong>Online Direct</strong>
+                                        <span style="font-size: 10px; color: #666;">&mdash; Browser fetches tiles directly. Requires internet.</span>
+                                    </label>
+                                    <label style="display: block; margin: 2px 0;">
+                                        <input type="radio" name="frm_tile_mode" value="proxy"
+                                            <?php if ($tile_mode == 'proxy') echo 'checked'; ?>
+                                            onchange="updateTileWarning();" />
+                                        <strong>Proxy Cache</strong> <span style="font-size: 10px; color: #228822;">(recommended)</span>
+                                        <span style="font-size: 10px; color: #666;">&mdash; Server caches tiles locally.</span>
+                                    </label>
+                                    <label style="display: block; margin: 2px 0;">
+                                        <input type="radio" name="frm_tile_mode" value="offline"
+                                            <?php if ($tile_mode == 'offline') echo 'checked'; ?>
+                                            onchange="updateTileWarning();" />
+                                        <strong>Offline Local</strong>
+                                        <span style="font-size: 10px; color: #666;">&mdash; Local files only. No internet.</span>
+                                    </label>
+                                </TD>
+                            </TR>
+                            <TR class='even' VALIGN='baseline'>
+                                <TD CLASS="td_label">Tile Server URL:</TD>
+                                <TD>
+                                    <input type="text" name="frm_tile_server_url" id="frm_tile_server_url"
+                                        value="<?php echo htmlspecialchars($tile_url); ?>"
+                                        style="width: 90%; font-size: 11px; padding: 3px 5px; font-family: monospace;"
+                                        oninput="updateTileWarning();" />
+                                    <br />
+                                    <span style="font-size: 10px; color: #666;">
+                                        Use <code>{z}/{x}/{y}</code> for tile coordinates.
+                                    </span>
+                                </TD>
+                            </TR>
+                            <TR id="osm_tile_warning" style="<?php echo $is_osm_url ? '' : 'display:none;'; ?>">
+                                <TD COLSPAN=2 style="padding: 4px 6px;">
+                                    <div style="background: #FFF3CD; border: 1px solid #FFC107; padding: 6px 10px; font-size: 11px; color: #856404;">
+                                        <strong>Note:</strong> OSM's
+                                        <a href="https://operations.osmfoundation.org/policies/tiles/" target="_blank" style="color: #533f03;">tile policy</a>
+                                        prohibits bulk downloading.
+                                        <strong>Proxy Cache</strong> is recommended.
+                                        <strong>Offline Local</strong> and
+                                        <a href="get_tiles.php">Download Maps</a>
+                                        should only be used with your own tile server.
+                                        For offline systems, use a self-hosted server
+                                        (<a href="https://switch2osm.org/" target="_blank" style="color: #533f03;">Switch2OSM</a>,
+                                        <a href="https://github.com/Overv/openstreetmap-tile-server" target="_blank" style="color: #533f03;">Docker OSM</a>).
+                                    </div>
+                                </TD>
+                            </TR>
+                            <TR class='odd' VALIGN='baseline'>
+                                <TD CLASS="td_label">Preview source:</TD>
+                                <TD>
+                                    <label>Network <INPUT TYPE='radio' NAME='frm_mapsource' VALUE='0' CHECKED onClick="swap_source(0);"></label>&nbsp;&nbsp;
+                                    <label>Local <INPUT TYPE='radio' NAME='frm_mapsource' VALUE='1' onClick="swap_source(1);"></label>
+                                    &nbsp;<SPAN style='font-size: 10px; color: #888;'>(preview only)</SPAN>
+                                </TD>
+                            </TR>
+                            <TR><TD COLSPAN=2>&nbsp;</TD></TR>
+                            <TR>
+                                <TD COLSPAN=2 ALIGN="center">
+                                    <SPAN id='can_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="history.back();"><SPAN STYLE='float: left;'><?php print get_text("Cancel");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+                                    <SPAN id='reset_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="map_cen_reset();"><SPAN STYLE='float: left;'><?php print get_text("Reset");?></SPAN><IMG STYLE='float: right;' SRC='./images/restore_small.png' BORDER=0></SPAN>
+                                    <SPAN id='sub_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.cen_Form.submit();"><SPAN STYLE='float: left;'><?php print get_text("Submit");?></SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>
+                                </TD>
+                            </TR>
+                        </TABLE>
 
-					</TD>
-					<TD style='vertical-align: top; width: 50%; padding-left: 10px;'>
-						<DIV id='map_outer'>
-							<DIV ID='map_canvas' style='width: 100%; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
-						</DIV>
-						<BR />
-						<CENTER>
-							<FONT CLASS="header"><SPAN ID="caption">Click/Zoom to new default position</SPAN></FONT>
-						</CENTER>
-					</TD>
-				</TR>
-			</TABLE>
-			<INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $lat;?>">				<!-- // 9/16/08 -->
-			<INPUT TYPE="hidden" NAME="frm_lng" VALUE="<?php print $lng;?>">
-			<INPUT TYPE="hidden" NAME="frm_dfz" VALUE="<?php print $which;?>">
-			</FORM>
-			<FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>		
+                    </TD>
+                    <TD style='vertical-align: top; width: 50%; padding-left: 10px;'>
+                        <DIV id='map_outer'>
+                            <DIV ID='map_canvas' style='width: 100%; height: <?php print get_variable('map_height');?>px; border-style: outset'></DIV>
+                        </DIV>
+                        <BR />
+                        <CENTER>
+                            <FONT CLASS="header"><SPAN ID="caption">Click/Zoom to new default position</SPAN></FONT>
+                        </CENTER>
+                    </TD>
+                </TR>
+            </TABLE>
+            <INPUT TYPE="hidden" NAME="frm_lat" VALUE="<?php print $lat;?>">                <!-- // 9/16/08 -->
+            <INPUT TYPE="hidden" NAME="frm_lng" VALUE="<?php print $lng;?>">
+            <INPUT TYPE="hidden" NAME="frm_dfz" VALUE="<?php print $which;?>">
+            </FORM>
+            <FORM NAME='can_Form' METHOD="post" ACTION = "<?php print basename(__FILE__); ?>"></FORM>
 <SCRIPT>
-			var baseIcon = L.Icon.extend({options: {iconSize: [32, 32],	iconAnchor: [16, 16], popupAnchor: [6, -5]
-				}
-				});
-			var iconurl = "./markers/crosshair.png";	
-			function do_map(lat, lng, zoom, sourcemap) {
-				// Use server-configured tile URL; fallback for legacy installs
-				var cfgTileMode = "<?php print get_tile_mode(); ?>";
-				var cfgTileUrl = "<?php print get_tile_url(); ?>";
-				var osmUrl = cfgTileUrl;
-				var localUrl = "./_osm/tiles/{z}/{x}/{y}.png";
-				var	cmAttr = '';
-				// Provide transparent placeholder for missing local tiles to prevent 404 log flooding  3/14/26
-				var localErrorTile = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQrkJggg==';
-				var osmOpts = {attribution: cmAttr};
-				if (cfgTileMode == "offline") { osmOpts.errorTileUrl = localErrorTile; }
-				OSM = L.tileLayer(osmUrl, osmOpts);
-				localMap = L.tileLayer(localUrl, {attribution: cmAttr, errorTileUrl: localErrorTile});
-				if (map) { map.remove(); map = null;} 
-				map = L.map('map_canvas',
-					{
-					maxZoom: 20,
-					minZoom: 1,
-					zoom: zoom,
-					layers: [OSM],
-					zoomControl: true,
-					attributionControl: false,
-					},
-					geocoders = {
-						'Nominatim': L.Control.Geocoder.nominatim(),
-						'Bing': L.Control.Geocoder.bing('AoArA0sD6eBGZyt5PluxhuN7N7X1vloSEIhzaKVkBBGL37akEVbrr0wn17hoYAMy'),
-						'MapQuest': L.Control.Geocoder.mapQuest('Fmjtd%7Cluur2l6825%2Crn%3Do5-90125r')
-					},
-					control = new L.Control.Geocoder()
-					);
+            var baseIcon = L.Icon.extend({options: {iconSize: [32, 32],    iconAnchor: [16, 16], popupAnchor: [6, -5]
+                }
+                });
+            var iconurl = "./markers/crosshair.png";
+            function do_map(lat, lng, zoom, sourcemap) {
+                // Use server-configured tile URL; fallback for legacy installs
+                var cfgTileMode = "<?php print get_tile_mode(); ?>";
+                var cfgTileUrl = "<?php print get_tile_url(); ?>";
+                var osmUrl = cfgTileUrl;
+                var localUrl = "./_osm/tiles/{z}/{x}/{y}.png";
+                var    cmAttr = '';
+                // Provide transparent placeholder for missing local tiles to prevent 404 log flooding  3/14/26
+                var localErrorTile = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQrkJggg==';
+                var osmOpts = {attribution: cmAttr};
+                if (cfgTileMode == "offline") { osmOpts.errorTileUrl = localErrorTile; }
+                OSM = L.tileLayer(osmUrl, osmOpts);
+                localMap = L.tileLayer(localUrl, {attribution: cmAttr, errorTileUrl: localErrorTile});
+                if (map) { map.remove(); map = null;}
+                map = L.map('map_canvas',
+                    {
+                    maxZoom: 20,
+                    minZoom: 1,
+                    zoom: zoom,
+                    layers: [OSM],
+                    zoomControl: true,
+                    attributionControl: false,
+                    },
+                    geocoders = {
+                        'Nominatim': L.Control.Geocoder.nominatim(),
+                        'Bing': L.Control.Geocoder.bing('AoArA0sD6eBGZyt5PluxhuN7N7X1vloSEIhzaKVkBBGL37akEVbrr0wn17hoYAMy'),
+                        'MapQuest': L.Control.Geocoder.mapQuest('Fmjtd%7Cluur2l6825%2Crn%3Do5-90125r')
+                    },
+                    control = new L.Control.Geocoder()
+                    );
 
-				if(window.geo_provider == 1) {
-					geocoder = L.Control.Geocoder.google(window.GoogleKey), 
-					control = L.Control.geocoder({
-						showResultIcons: false,
-						collapsed: true,
-						expand: 'click',
-						position: 'topleft',
-						placeholder: 'Search...',
-						errorMessage: 'Nothing found.',
-						geocoder: geocoder
-						});
-					} else if(window.geo_provider == 2) {
-					geocoder = L.Control.Geocoder.bing(window.BingKey), 
-					control = L.Control.geocoder({
-						showResultIcons: false,
-						collapsed: true,
-						expand: 'click',
-						position: 'topleft',
-						placeholder: 'Search...',
-						errorMessage: 'Nothing found.',
-						geocoder: geocoder
-						});				
-					} else {
-					geocoder = L.Control.Geocoder.nominatim(), 
-					control = L.Control.geocoder({
-						showResultIcons: false,
-						collapsed: true,
-						expand: 'click',
-						position: 'topleft',
-						placeholder: 'Search...',
-						errorMessage: 'Nothing found.',
-						geocoder: geocoder
-						});
-					}
-				if(!isIE()) {
-					control.addTo(map);
-					}
-	
-				icon = new baseIcon({iconUrl: iconurl});	
-				myMarker = L.marker([lat, lng], {icon: icon}).addTo(map);					
-				return map;
-				}
-				
-			function onMapClick(e) {
-				if(myMarker) {map.removeLayer(myMarker); }
-				icon = new baseIcon({iconUrl: iconurl});
-				myMarker = new L.marker(e.latlng, {id:1, icon:icon});
-				myMarker.addTo(map);
-				// 3/14/26 - Update lat/lng/zoom directly so they save even if geocoder fails
-				var clickLat = e.latlng.lat.toFixed(6);
-				var clickLng = e.latlng.lng.toFixed(6);
-				document.cen_Form.frm_lat.value = clickLat;
-				document.cen_Form.frm_lng.value = clickLng;
-				document.cen_Form.show_lat.value = do_lat_fmt(clickLat);
-				document.cen_Form.show_lng.value = do_lng_fmt(clickLng);
-				var zoom = map.getZoom();
-				document.cen_Form.frm_zoom.value = zoom;
-				// Reverse geocode for city/state (updates fields in callback if successful)
-				GetAddress(e.latlng);
-				};
-				
-			function getZoomLevel() {
-				var zoom = map.getZoom();
-				document.cen_Form.frm_zoom.value = zoom;
-				}
-			
-			do_map(<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, 10, 0);
-			map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 10);
-			map.on('click', onMapClick);
-			map.on('zoomend', getZoomLevel);
-			var bounds = map.getBounds();	
-			var zoom = map.getZoom();
-			
+                if(window.geo_provider == 1) {
+                    geocoder = L.Control.Geocoder.google(window.GoogleKey),
+                    control = L.Control.geocoder({
+                        showResultIcons: false,
+                        collapsed: true,
+                        expand: 'click',
+                        position: 'topleft',
+                        placeholder: 'Search...',
+                        errorMessage: 'Nothing found.',
+                        geocoder: geocoder
+                        });
+                    } else if(window.geo_provider == 2) {
+                    geocoder = L.Control.Geocoder.bing(window.BingKey),
+                    control = L.Control.geocoder({
+                        showResultIcons: false,
+                        collapsed: true,
+                        expand: 'click',
+                        position: 'topleft',
+                        placeholder: 'Search...',
+                        errorMessage: 'Nothing found.',
+                        geocoder: geocoder
+                        });
+                    } else {
+                    geocoder = L.Control.Geocoder.nominatim(),
+                    control = L.Control.geocoder({
+                        showResultIcons: false,
+                        collapsed: true,
+                        expand: 'click',
+                        position: 'topleft',
+                        placeholder: 'Search...',
+                        errorMessage: 'Nothing found.',
+                        geocoder: geocoder
+                        });
+                    }
+                if(!isIE()) {
+                    control.addTo(map);
+                    }
+
+                icon = new baseIcon({iconUrl: iconurl});
+                myMarker = L.marker([lat, lng], {icon: icon}).addTo(map);
+                return map;
+                }
+
+            function onMapClick(e) {
+                if(myMarker) {map.removeLayer(myMarker); }
+                icon = new baseIcon({iconUrl: iconurl});
+                myMarker = new L.marker(e.latlng, {id:1, icon:icon});
+                myMarker.addTo(map);
+                // 3/14/26 - Update lat/lng/zoom directly so they save even if geocoder fails
+                var clickLat = e.latlng.lat.toFixed(6);
+                var clickLng = e.latlng.lng.toFixed(6);
+                document.cen_Form.frm_lat.value = clickLat;
+                document.cen_Form.frm_lng.value = clickLng;
+                document.cen_Form.show_lat.value = do_lat_fmt(clickLat);
+                document.cen_Form.show_lng.value = do_lng_fmt(clickLng);
+                var zoom = map.getZoom();
+                document.cen_Form.frm_zoom.value = zoom;
+                // Reverse geocode for city/state (updates fields in callback if successful)
+                GetAddress(e.latlng);
+                };
+
+            function getZoomLevel() {
+                var zoom = map.getZoom();
+                document.cen_Form.frm_zoom.value = zoom;
+                }
+
+            do_map(<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>, 10, 0);
+            map.setView([<?php print get_variable('def_lat');?>, <?php print get_variable('def_lng');?>], 10);
+            map.on('click', onMapClick);
+            map.on('zoomend', getZoomLevel);
+            var bounds = map.getBounds();
+            var zoom = map.getZoom();
+
 
 </SCRIPT>
-			</BODY>
-			</HTML> <!-- <?php echo __LINE__;?>  -->
-<?php		
-			exit();
-			}		// end if/else ($_GET['update'] 	
+            </BODY>
+            </HTML> <!-- <?php echo __LINE__;?>  -->
+<?php
+            exit();
+            }        // end if/else ($_GET['update']
 

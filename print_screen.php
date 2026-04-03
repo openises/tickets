@@ -1,7 +1,7 @@
 <?php
 
 error_reporting(E_ALL);
-session_start();						// 
+session_start();                        //
 session_write_close();
 require_once('./incs/functions.inc.php');
 require_once('./incs/functions_major.inc.php');

@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL);		// 10/1/08
+error_reporting(E_ALL);        // 10/1/08
 
 /*
 8/21/10 initial version
@@ -8,7 +8,7 @@ error_reporting(E_ALL);		// 10/1/08
 12/3/10 get_text functions added
 2/9/12 get_text functions removed, list lengthened with Patient, etc., strings
 3/2/12 corrected "Full name" array element punctuation
-3/4/12 corrected line 73 missing comma, {} 
+3/4/12 corrected line 73 missing comma, {}
 */
 
 $capts = array(

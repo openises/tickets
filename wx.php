@@ -2,17 +2,17 @@
 /*
 7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
 */
-error_reporting(E_ALL);	
+error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
 
-function between ($in_str, $start_str, $end_str, $begin = 0) {		// returns string between two given values
-	$temp1 = stripos ( $in_str, $start_str , $begin);				// position of start_str
-	$temp2 = stripos ($in_str, $end_str, $temp1);					// position of end_str
- 	return (!$temp1 || !$temp2)? FALSE: substr ($in_str, ($temp1 + safe_strlen($start_str)), $temp2 - $temp1 - safe_strlen($start_str));
-	}
+function between ($in_str, $start_str, $end_str, $begin = 0) {        // returns string between two given values
+    $temp1 = stripos ( $in_str, $start_str , $begin);                // position of start_str
+    $temp2 = stripos ($in_str, $end_str, $temp1);                    // position of end_str
+     return (!$temp1 || !$temp2)? false: substr ($in_str, ($temp1 + safe_strlen($start_str)), $temp2 - $temp1 - safe_strlen($start_str));
+    }
 
 $note_lhe = "<note>";
 $note_rhe = "</note>";
@@ -29,4 +29,4 @@ $description = between ($wx_data, $description_lhe, $description_rhe);
 dump($description);
 
 ?>
- 
+

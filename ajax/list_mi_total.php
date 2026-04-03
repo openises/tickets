@@ -4,8 +4,8 @@ set_time_limit(90);
 @session_start();
 session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
-	exit();
-	}
+    exit();
+    }
 $ret_arr = array();
 $i = 0;
 

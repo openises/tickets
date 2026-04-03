@@ -8,10 +8,10 @@ session_write_close();
 $sess_id = $_SESSION['id'];
 $ret_arr = array();
 if(!array_key_exists('q', $_GET) || $_GET['q'] != $_SESSION['id']) {
-	$ret_arr[0] = "Error calling form";
-	print json_encode($ret_arr);
-	exit();
-	}
+    $ret_arr[0] = "Error calling form";
+    print json_encode($ret_arr);
+    exit();
+    }
 $ticket_id = sanitize_int($_GET['ticket_id']);
 $disposition = get_text("Disposition");
 $output = "<BR /><BR />";
@@ -24,8 +24,8 @@ $output .= "<OPTION VALUE=0 SELECTED>Select</OPTION>";
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}codes` ORDER BY `sort` ASC, `code` ASC";
 $result = db_query($query);
 while ($row_sig = stripslashes_deep($result->fetch_assoc())) {
-	$output .= "\t<OPTION VALUE='" . e($row_sig['code']) . "'>" . e($row_sig['code']) . "|" . e($row_sig['text']) . "</OPTION>\n";
-	}
+    $output .= "\t<OPTION VALUE='" . e($row_sig['code']) . "'>" . e($row_sig['code']) . "|" . e($row_sig['text']) . "</OPTION>\n";
+    }
 $output .= "</SELECT>";
 $output .= "<B>Apply to</B>&nbsp;:&nbsp;&nbsp;";
 $output .= "Description &raquo; <INPUT TYPE = 'radio' NAME='frm_add_to' value='0' CHECKED />&nbsp;&nbsp;&nbsp;&nbsp;";

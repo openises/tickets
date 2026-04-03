@@ -7,10 +7,10 @@ session_write_close();
 $sess_id = $_SESSION['id'];
 $ret_arr = array();
 if(!array_key_exists('q', $_GET) || $_GET['q'] != $_SESSION['id']) {
-	$ret_arr[0] = "Error calling form";
-	print json_encode($ret_arr);
-	exit();
-	}
+    $ret_arr[0] = "Error calling form";
+    print json_encode($ret_arr);
+    exit();
+    }
 
 $ticket_id = sanitize_int($_GET['ticket_id']);
 $addrs = sanitize_string($_GET['addrs']);
@@ -25,7 +25,7 @@ $title = (isset($row)) ? substr(stripslashes($row['scope']), 0, 60): sanitize_st
 $smsg_provider = return_provider_name(get_msg_variable('smsg_provider'));
 $use_messaging = get_variable('use_messaging');
 $using_smsg = (($use_messaging) || ($use_messaging)) ? true : false;
-$text = mail_it($addrs, $smsgaddrs, "", $ticket_id, 1, TRUE) ;
+$text = mail_it($addrs, $smsgaddrs, "", $ticket_id, 1, true) ;
 $temp = explode("\n", $text);
 
 $output = "<FORM NAME=dispatchmail_frm' METHOD='post' ACTION='./ajax/form_post.php?q=". e($sess_id) . "&function=dispatchmail'>";
@@ -53,30 +53,30 @@ $output .= "<TD CLASS='td_data text text_left'>";
 $output .= "<INPUT TYPE='text' NAME='frm_addrs' size='60' VALUE='" . e($addrs) . "'>";
 $output .= "</TD>";
 $output .= "</TR>";
-if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {	//	10/23/12
-	$output .= "<TR CLASS='even'>";
-	$output .= "<TD CLASS='td_label text'>" . e($smsg_provider) . " Addresses: ";
-	$output .= "</TD>";
-	$output .= "<TD CLASS='td_data text text_left'>";
-	$output .= "<INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='" . e($smsgaddrs) . "' />";
-	$output .= "</TD>";
-	$output .= "</TR>";
-	$output .= "<TR CLASS='even'>";
-	$output .= "<TD CLASS='td_label text'>";
-	$output .= "Use " . e($smsg_provider) . "?: ";
-	$output .= "</TD>";
-	$output .= "<TD CLASS='td_data text text_left'>";
-	if(($addrs == "" && $smsgaddrs != "") || ($smsgaddrs != "" && get_msg_variable('default_sms') == "1")) { print "checked"; }
-		$checked = "checked";
-		$output .= "<INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE='1' " . $checked . " />";
-		$output .= "</TD>";
-		$output .= "</TR>";
-		$output .= "<INPUT TYPE='hidden' NAME = 'frm_theothers' VALUE='" . e($the_other) . "'/>";
-	} else {
-	$output .= "<INPUT TYPE='hidden' NAME = 'frm_smsgaddrs' VALUE=''/>";
-	$output .= "<INPUT TYPE='hidden' NAME = 'frm_use_smsg' VALUE = '0'>";
-	$output .= "<INPUT TYPE='hidden' NAME = 'frm_theothers' VALUE='" . e($the_other) . "'/>";
-	}
+if((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) {    //    10/23/12
+    $output .= "<TR CLASS='even'>";
+    $output .= "<TD CLASS='td_label text'>" . e($smsg_provider) . " Addresses: ";
+    $output .= "</TD>";
+    $output .= "<TD CLASS='td_data text text_left'>";
+    $output .= "<INPUT TYPE='text' NAME='frm_smsgaddrs' size='60' VALUE='" . e($smsgaddrs) . "' />";
+    $output .= "</TD>";
+    $output .= "</TR>";
+    $output .= "<TR CLASS='even'>";
+    $output .= "<TD CLASS='td_label text'>";
+    $output .= "Use " . e($smsg_provider) . "?: ";
+    $output .= "</TD>";
+    $output .= "<TD CLASS='td_data text text_left'>";
+    if(($addrs == "" && $smsgaddrs != "") || ($smsgaddrs != "" && get_msg_variable('default_sms') == "1")) { print "checked"; }
+        $checked = "checked";
+        $output .= "<INPUT TYPE='checkbox' NAME='frm_use_smsg' VALUE='1' " . $checked . " />";
+        $output .= "</TD>";
+        $output .= "</TR>";
+        $output .= "<INPUT TYPE='hidden' NAME = 'frm_theothers' VALUE='" . e($the_other) . "'/>";
+    } else {
+    $output .= "<INPUT TYPE='hidden' NAME = 'frm_smsgaddrs' VALUE=''/>";
+    $output .= "<INPUT TYPE='hidden' NAME = 'frm_use_smsg' VALUE = '0'>";
+    $output .= "<INPUT TYPE='hidden' NAME = 'frm_theothers' VALUE='" . e($the_other) . "'/>";
+    }
 $output .= "<TR CLASS='odd'>";
 $output .= "<TD COLSPAN=99 ALIGN = 'center'><BR /><BR />";
 $output .= "<SPAN ID='send_but' class='plain text' style='float: right; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_val(document.mail_frm);'><SPAN STYLE='float: left;'>OK - mail this</SPAN><IMG STYLE='float: right;' SRC='./images/send_small.png' BORDER=0></SPAN>";

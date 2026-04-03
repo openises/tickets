@@ -1,6 +1,6 @@
 <?php
     $stem = PorterStemmer::Stem("nationalize");
-?> 
+?>
 
 <?php
     /**
@@ -21,7 +21,7 @@
     * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     * GNU General Public License for more details.
     */
-    
+
     /**
     * PHP5 Implementation of the Porter Stemmer algorithm. Certain elements
     * were borrowed from the (broken) implementation by Jon Abernathy.
@@ -32,7 +32,7 @@
     *
     * How easy is that?
     */
-    
+
     class PorterStemmer
     {
         /**
@@ -40,8 +40,8 @@
         * @var string
         */
         private static $regex_consonant = '(?:[bcdfghjklmnpqrstvwxz]|(?<=[aeiou])y|^y)';
-    
-    
+
+
         /**
         * Regex for matching a vowel
         * @var string
@@ -74,7 +74,7 @@
             if ($cache AND !empty(self::$cache[$word])) {
                 return self::$cache[$word];
             }
-            
+
             /**
             * Remove: 've, n't, 'd
             */
@@ -94,8 +94,8 @@
 
             return $stem;
         }
-    
-    
+
+
         /**
         * Step 1
         */
@@ -128,9 +128,9 @@
                             AND substr($word, -2) != 'll'
                             AND substr($word, -2) != 'ss'
                             AND substr($word, -2) != 'zz') {
-                            
+
                             $word = substr($word, 0, -1);
-                        
+
                         } else if (self::m($word) == 1 AND self::cvc($word)) {
                             $word .= 'e';
                         }
@@ -140,8 +140,8 @@
 
             return $word;
         }
-    
-    
+
+
         /**
         * Step 1c
         *
@@ -216,7 +216,7 @@
             return $word;
         }
 
-    
+
         /**
         * Step 3
         *
@@ -228,34 +228,34 @@
                 case 'a':
                     self::replace($word, 'ical', 'ic', 0);
                     break;
-                    
+
                 case 's':
                        self::replace($word, 'alise', 'al', 0)
                     OR self::replace($word, 'ness', '', 0);
                     break;
-                    
+
                 case 't':
                        self::replace($word, 'icate', 'ic', 0)
                     OR self::replace($word, 'iciti', 'ic', 0);
                     break;
-                    
+
                 case 'u':
                     self::replace($word, 'ful', '', 0);
                     break;
-                    
+
                 case 'v':
                     self::replace($word, 'ative', '', 0);
                     break;
-                    
+
                 case 'z':
                     self::replace($word, 'alize', 'al', 0);
                     break;
             }
-            
+
             return $word;
         }
-    
-    
+
+
         /**
         * Step 4
         *
@@ -322,11 +322,11 @@
                     self::replace($word, 'ize', '', 1);
                     break;
             }
-            
+
             return $word;
         }
 
-    
+
         /**
         * Step 5
         *
@@ -338,7 +338,7 @@
             if (substr($word, -1) == 'e') {
                 if (self::m(substr($word, 0, -1)) > 1) {
                     self::replace($word, 'e', '');
-    
+
                 } else if (self::m(substr($word, 0, -1)) == 1) {
 
                     if (!self::cvc(substr($word, 0, -1))) {
@@ -354,8 +354,8 @@
 
             return $word;
         }
-    
-    
+
+
         /**
         * Replaces the first string with the second, at the end of the string. If third
         * arg is given, then the preceding string must match that m count at least.
@@ -371,7 +371,7 @@
         private static function replace(&$str, $check, $repl, $m = null)
         {
             $len = 0 - strlen($check);
-    
+
             if (substr($str, $len) == $check) {
                 $substr = substr($str, 0, $len);
                 if (is_null($m) OR self::m($substr) > $m) {
@@ -380,11 +380,11 @@
 
                 return true;
             }
-    
+
             return false;
         }
-    
-    
+
+
         /**
         * What, you mean it's not obvious from the name?
         *
@@ -407,13 +407,13 @@
 
             $str = preg_replace("#^$c+#", '', $str);
             $str = preg_replace("#$v+$#", '', $str);
-    
+
             preg_match_all("#($v+$c+)#", $str, $matches);
 
             return count($matches[1]);
         }
 
-    
+
         /**
         * Returns true/false as to whether the given string contains two
         * of the same consonant next to each other at the end of the string.
@@ -424,7 +424,7 @@
         private static function doubleConsonant($str)
         {
             $c = self::$regex_consonant;
-            
+
             return preg_match("#$c{2}$#", $str, $matches) AND $matches[0][0] == $matches[0][1];
         }
 
@@ -447,4 +447,4 @@
                    AND $matches[1][2] != 'y';
         }
     }
-?> 
+?>

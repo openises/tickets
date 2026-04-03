@@ -3,12 +3,12 @@
 require_once('../../incs/functions.inc.php');
 require_once('../incs/portal.inc.php');
 
-//	requests not yet accepted
+//    requests not yet accepted
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE (`accepted_date` = '' OR `accepted_date` IS NULL) AND `status` != 'Cancelled' AND (`closed` = '' OR `closed` IS NULL)";
 $result = db_query($query);
 $requests_na = $result->num_rows;
 
-//	requests accepted and not resourced
+//    requests accepted and not resourced
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `accepted_date` <> '' AND (`resourced_date` = '' OR `resourced_date` IS NULL) AND (`closed` = '' OR `closed` IS NULL)";
 $result = db_query($query);
 $requests_nr = $result->num_rows;

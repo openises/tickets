@@ -8,10 +8,10 @@ require_once('../incs/functions.inc.php');
 $query = "TRUNCATE TABLE `$GLOBALS[mysql_prefix]messages_bin`";
 $result = db_query($query) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
 if($result) {
-	$ret_arr[0] = 100;
-	} else {
-	$ret_arr[0] = 200;
-	}
+    $ret_arr[0] = 100;
+    } else {
+    $ret_arr[0] = 200;
+    }
 print json_encode($ret_arr);
 exit();
 ?>

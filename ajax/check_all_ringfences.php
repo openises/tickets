@@ -9,97 +9,97 @@ $lng = sanitize_string($_GET['lng']);
 $ret_arr = array();
 
 function get_ringfence($id) {
-	$ring_fence = 0;
-	$id = sanitize_int($id);
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
-	$result = db_query($query, [$id]);
-	if($result->num_rows > 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		if(intval($row['ring_fence']) > 0) {
-			$ring_fence = intval($row['ring_fence']);
-			}
-		}
-	return $ring_fence;
-	}
+    $ring_fence = 0;
+    $id = sanitize_int($id);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
+    $result = db_query($query, [$id]);
+    if($result->num_rows > 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        if(intval($row['ring_fence']) > 0) {
+            $ring_fence = intval($row['ring_fence']);
+            }
+        }
+    return $ring_fence;
+    }
 
 function get_fencetype($id) {
-	$id = sanitize_int($id);
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
-	$result = db_query($query, [$id]);
-	if($result->num_rows != 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		return $row['line_type'];
-		} else {
-		return false;
-		}
-	}
+    $id = sanitize_int($id);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
+    $result = db_query($query, [$id]);
+    if($result->num_rows != 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        return $row['line_type'];
+        } else {
+        return false;
+        }
+    }
 
 function get_circlecenter($id) {
-	$id = sanitize_int($id);
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
-	$result = db_query($query, [$id]);
-	if($result->num_rows != 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		$temp = explode(":", $row['line_data']);
-		$center = explode(",", $temp[0]);
-		return $center;
-		} else {
-		return false;
-		}
-	}
+    $id = sanitize_int($id);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
+    $result = db_query($query, [$id]);
+    if($result->num_rows != 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        $temp = explode(":", $row['line_data']);
+        $center = explode(",", $temp[0]);
+        return $center;
+        } else {
+        return false;
+        }
+    }
 
 function get_circleradius($id) {
-	$id = sanitize_int($id);
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
-	$result = db_query($query, [$id]);
-	if($result->num_rows != 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		$temp = explode(";", $row['line_data']);
-		$radius = $temp[1];
-		return $radius;
-		} else {
-		return false;
-		}
-	}
+    $id = sanitize_int($id);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
+    $result = db_query($query, [$id]);
+    if($result->num_rows != 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        $temp = explode(";", $row['line_data']);
+        $radius = $temp[1];
+        return $radius;
+        } else {
+        return false;
+        }
+    }
 
 function get_points($theZone) {
-	$theZone = sanitize_int($theZone);
-	$ret_arr =array();
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
-	$result = db_query($query, [$theZone]);
-	if($result->num_rows != 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		return $row['line_data'];
-		} else {
-		return false;
-		}
-	}
+    $theZone = sanitize_int($theZone);
+    $ret_arr =array();
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
+    $result = db_query($query, [$theZone]);
+    if($result->num_rows != 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        return $row['line_data'];
+        } else {
+        return false;
+        }
+    }
 
-function distance($lat1, $lon1, $lat2, $lon2, $unit) { //	unit - M = miles, K = Kilometers, N = Nautical Miles
-	$theta = $lon1 - $lon2;
-	$dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
-	$dist = acos($dist);
-	$dist = rad2deg($dist);
-	$miles = $dist * 60 * 1.1515;
-	$unit = strtoupper($unit);
-	if ($unit == "K") {
-		return ($miles * 1.609344);
-		} else if ($unit == "N") {
-		return ($miles * 0.8684);
-		} else {
-		return $miles;
-		}
-	}
+function distance($lat1, $lon1, $lat2, $lon2, $unit) { //    unit - M = miles, K = Kilometers, N = Nautical Miles
+    $theta = $lon1 - $lon2;
+    $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+    $dist = acos($dist);
+    $dist = rad2deg($dist);
+    $miles = $dist * 60 * 1.1515;
+    $unit = strtoupper($unit);
+    if ($unit == "K") {
+        return ($miles * 1.609344);
+        } else if ($unit == "N") {
+        return ($miles * 0.8684);
+        } else {
+        return $miles;
+        }
+    }
 
 function inCircle($lat1, $lng1, $lat2, $lng2, $unit, $id) {
-	$dist = distance($lat1, $lng1, $lat2, $lng2, $unit);
-	$radius = get_circleradius($id);
-	if($dist < $radius) {
-		return 0;
-		} else {
-		return 1;
-		}
-	}
+    $dist = distance($lat1, $lng1, $lat2, $lng2, $unit);
+    $radius = get_circleradius($id);
+    if($dist < $radius) {
+        return 0;
+        } else {
+        return 1;
+        }
+    }
 
 /*
 Description: The point-in-polygon algorithm allows you to check if a point is
@@ -186,48 +186,48 @@ $thepoints = get_points($thezone);
 $theType = get_fencetype($thezone);
 
 if($theType == "p") {
-	if($thepoints != "") {
-		$thepointarray = explode(";", $thepoints);
-		$polygon = array();
-		$lastlat = "";
-		$lastlng = "";
-		$i=0;
-		foreach($thepointarray as $var) {
-			$thelatlng = explode(',', $var);
-			$theLat = $thelatlng[0];
-			$theLng = $thelatlng[1];
-			if($i==0) {$firstlat = $theLat; $firstlng = $theLng;}
-			$lastlat = $theLat;
-			$lastlng = $theLng;
-			$polygon[] = $theLat . " " . $theLng;
-			$i++;
-			}
+    if($thepoints != "") {
+        $thepointarray = explode(";", $thepoints);
+        $polygon = array();
+        $lastlat = "";
+        $lastlng = "";
+        $i=0;
+        foreach($thepointarray as $var) {
+            $thelatlng = explode(',', $var);
+            $theLat = $thelatlng[0];
+            $theLng = $thelatlng[1];
+            if($i==0) {$firstlat = $theLat; $firstlng = $theLng;}
+            $lastlat = $theLat;
+            $lastlng = $theLng;
+            $polygon[] = $theLat . " " . $theLng;
+            $i++;
+            }
 
-		if(($lastlat != $firstlat) && ($lastlng != $firstlng)) {
-			$polygon[] = $firstlat . " " . $firstlng;
-			}
+        if(($lastlat != $firstlat) && ($lastlng != $firstlng)) {
+            $polygon[] = $firstlat . " " . $firstlng;
+            }
 
-		$pointLocation = new pointLocation();
-		$points = array($lat . " " . $lng);
+        $pointLocation = new pointLocation();
+        $points = array($lat . " " . $lng);
 
-		// The last point's coordinates must be the same as the first one's, to "close the loop"
-		foreach($points as $key => $point) {
-			if($pointLocation->pointInPolygon($point, $polygon) == "outside") {
-				$ret_arr[0] = 1;
-				} else {
-				$ret_arr[0] = 0;
-				}
-			}
-		} else {
-		$ret_arr[0] = 99;
-		}
-	} elseif($theType == "c") {
-	$coords = get_circlecenter($thezone);
-	$lat1 = $coords[0];
-	$lng1 = $coords[1];
-	$ret_arr[0] = inCircle($lat1, $lng1, $lat, $lng, "K", $thezone);
-	} else {
-	$ret_arr[0] = 99;
-	}
+        // The last point's coordinates must be the same as the first one's, to "close the loop"
+        foreach($points as $key => $point) {
+            if($pointLocation->pointInPolygon($point, $polygon) == "outside") {
+                $ret_arr[0] = 1;
+                } else {
+                $ret_arr[0] = 0;
+                }
+            }
+        } else {
+        $ret_arr[0] = 99;
+        }
+    } elseif($theType == "c") {
+    $coords = get_circlecenter($thezone);
+    $lat1 = $coords[0];
+    $lng1 = $coords[1];
+    $ret_arr[0] = inCircle($lat1, $lng1, $lat, $lng, "K", $thezone);
+    } else {
+    $ret_arr[0] = 99;
+    }
 
 print json_encode($ret_arr);

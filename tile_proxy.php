@@ -82,7 +82,7 @@ if (get_tile_mode() !== 'proxy') {
 // ---- Read configurable cache duration ----
 
 $cache_days_raw = get_variable('tile_cache_days');
-if ($cache_days_raw === FALSE || trim($cache_days_raw) === '') {
+if ($cache_days_raw === false || trim($cache_days_raw) === '') {
     $tile_cache_seconds = TILE_CACHE_FALLBACK_SECONDS;
 } else {
     $cache_days = intval($cache_days_raw);
@@ -108,7 +108,7 @@ if ($tile_cache_seconds > 0 && file_exists($cache_file)) {
 // ---- Fetch from upstream ----
 
 $tile_server_url = get_variable('tile_server_url');
-if ($tile_server_url === FALSE || trim($tile_server_url) === '') {
+if ($tile_server_url === false || trim($tile_server_url) === '') {
     $tile_server_url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 }
 

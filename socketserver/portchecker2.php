@@ -23,9 +23,9 @@ function server_report() {
 }
 
 function check_other($port) {
-	$ret = check_port($port);
-	return $ret;
-	}
+    $ret = check_port($port);
+    return $ret;
+    }
 
 $report = server_report();
 $other = (check_other($_GET['port']) == 1) ? "Open" : "Closed";

@@ -3,7 +3,7 @@
 09/02/2015 - New File
 */
 
-$from_top = 20;				// buttons alignment, user-reviseable as needed
+$from_top = 20;                // buttons alignment, user-reviseable as needed
 $from_left = 300;
 
 error_reporting(E_ALL);
@@ -13,405 +13,405 @@ session_write_close();
 require_once('./incs/functions.inc.php');
 do_login(basename(__FILE__));
 if($istest) {
-	print "GET<br />\n";
-	dump($_GET);
-	print "POST<br />\n";
-	dump($_POST);
-	}
+    print "GET<br />\n";
+    dump($_GET);
+    print "POST<br />\n";
+    dump($_POST);
+    }
 
-function get_ticket_id () {				// 5/4/11
-	if (array_key_exists('ticket_id', ($_REQUEST))) {
-		@session_start();
-		$_SESSION['active_ticket'] = $_REQUEST['ticket_id'];
-		session_write_close();
-		return (integer) $_REQUEST['ticket_id'];
-		}
-	elseif (array_key_exists('active_ticket', $_SESSION)) {
-		return (integer) $_SESSION['active_ticket'];	
-		}
-	else {
-		echo "error at "	 . __LINE__;
-		}								// end if/else
-	}				// end function	
+function get_ticket_id () {                // 5/4/11
+    if (array_key_exists('ticket_id', ($_REQUEST))) {
+        @session_start();
+        $_SESSION['active_ticket'] = $_REQUEST['ticket_id'];
+        session_write_close();
+        return (integer) $_REQUEST['ticket_id'];
+        }
+    elseif (array_key_exists('active_ticket', $_SESSION)) {
+        return (integer) $_SESSION['active_ticket'];
+        }
+    else {
+        echo "error at "     . __LINE__;
+        }                                // end if/else
+    }                // end function
 
 function isempty($arg) {
-	return (bool) (safe_strlen($arg) == 0) ;
-	}
-	
+    return (bool) (safe_strlen($arg) == 0) ;
+    }
+
 function fac_cat($id) {
-	$id = sanitize_int($id);
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` WHERE `id` = ?";	// all dispatches this unit
-	$result = db_query($query, [$id]);
-	$row = stripslashes_deep($result->fetch_array());
-	return $row['name'];
-	}
-	
+    $id = sanitize_int($id);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` WHERE `id` = ?";    // all dispatches this unit
+    $result = db_query($query, [$id]);
+    $row = stripslashes_deep($result->fetch_array());
+    return $row['name'];
+    }
+
 function get_day() {
-	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-	if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
-	return date('l',$timestamp);
-	}
-	
+    $timestamp = (time() - (intval(get_variable('delta_mins'))*60));
+    if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
+    return date('l',$timestamp);
+    }
+
 
 function valid_facstatus($id) {
-	$id = sanitize_int($id);
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` WHERE `id` = ?";
-	$result = db_query($query, [$id]);
-	if($result->num_rows > 0) {
-		return true;
-		} else {
-		return false;
-		}
-	}	
+    $id = sanitize_int($id);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` WHERE `id` = ?";
+    $result = db_query($query, [$id]);
+    if($result->num_rows > 0) {
+        return true;
+        } else {
+        return false;
+        }
+    }
 
-$the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;	
-$conversion = get_dist_factor();				// KM vs mi - 11/23/10
+$the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
+$conversion = get_dist_factor();                // KM vs mi - 11/23/10
 $_GET = stripslashes_deep($_GET);
 $eol = "< br />\n";
-$fac_order_values = array(1 => "`handle`,`fac_type_name` ASC", 2 => "`fac_type_name`,`handle` ASC",  3 => "`fac_status_val`,`fac_type_name` ASC");		// 3/15/11
-if (array_key_exists ('forder' , $_POST))	{$_SESSION['fac_flag_2'] =  $_POST['forder'];}		// 3/15/11
-elseif (empty ($_SESSION['fac_flag_2'])) 	{$_SESSION['fac_flag_2'] = 2;}		// 3/15/11
+$fac_order_values = array(1 => "`handle`,`fac_type_name` ASC", 2 => "`fac_type_name`,`handle` ASC",  3 => "`fac_status_val`,`fac_type_name` ASC");        // 3/15/11
+if (array_key_exists ('forder' , $_POST))    {$_SESSION['fac_flag_2'] =  $_POST['forder'];}        // 3/15/11
+elseif (empty ($_SESSION['fac_flag_2']))     {$_SESSION['fac_flag_2'] = 2;}        // 3/15/11
 
-$status_vals = array();											// build array of $status_vals
+$status_vals = array();                                            // build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` ORDER BY `id`";
 $result_st = db_query($query);
 while ($row_st = stripslashes_deep($result_st->fetch_array())) {
-	$temp = $row_st['id'];
-	$status_vals[$temp] = $row_st['status_val'];
-	}
+    $temp = $row_st['id'];
+    $status_vals[$temp] = $row_st['status_val'];
+    }
 
-$fac_order_str = $fac_order_values[$_SESSION['fac_flag_2']];		// 3/15/11	
+$fac_order_str = $fac_order_values[$_SESSION['fac_flag_2']];        // 3/15/11
 
 $f_types = array();
-$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` ORDER BY `id`";		// types in use
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` ORDER BY `id`";        // types in use
 $result = db_query($query);
 while ($row = stripslashes_deep($result->fetch_assoc())) {
-	$f_types [$row['id']] = array ($row['name'], $row['icon']);
-	}
-unset($result);	
+    $f_types [$row['id']] = array ($row['name'], $row['icon']);
+    }
+unset($result);
 
-$icons = $GLOBALS['icons'];	
+$icons = $GLOBALS['icons'];
 $sm_icons = $GLOBALS['sm_icons'];
 $fac_icons = $GLOBALS['fac_icons'];
 
 function get_unit_name($id) {
-	$id = sanitize_int($id);
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
-	$result = db_query($query, [$id]);
-	if($result->num_rows > 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		$ret = $row['name'];
-		} else {
-		$ret = "Unk?";
-		}
-	return $ret;
-	}
+    $id = sanitize_int($id);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+    $result = db_query($query, [$id]);
+    if($result->num_rows > 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        $ret = $row['name'];
+        } else {
+        $ret = "Unk?";
+        }
+    return $ret;
+    }
 
 function get_unit_status($id) {
-	$id = sanitize_int($id);
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
-	$result = db_query($query, [$id]);
-	if($result->num_rows > 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		$ret = $row['un_status_id'];
-		} else {
-		$ret = false;
-		}
-	return $ret;
-	}
-	
+    $id = sanitize_int($id);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+    $result = db_query($query, [$id]);
+    if($result->num_rows > 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        $ret = $row['un_status_id'];
+        } else {
+        $ret = false;
+        }
+    return $ret;
+    }
+
 function get_fac_name($id) {
-	$id = sanitize_int($id);
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ?";
-	$result = db_query($query, [$id]);
-	if($result->num_rows > 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		$ret = $row['name'];
-		} else {
-		$ret = "Unk?";
-		}
-	return $ret;
-	}
+    $id = sanitize_int($id);
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ?";
+    $result = db_query($query, [$id]);
+    if($result->num_rows > 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        $ret = $row['name'];
+        } else {
+        $ret = "Unk?";
+        }
+    return $ret;
+    }
 
 function get_unit_coords($id) {
-	$id = sanitize_int($id);
-	$ret_array = array();
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
-	$result = db_query($query, [$id]);
-	if($result->num_rows > 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		$ret_arr[0] = $row['lat'];
-		$ret_arr[1] = $row['lng'];
-		} else {
-		$ret_arr[0] = 0.999999;
-		$ret_arr[1] = 0.999999;
-		}
-	return $ret_arr;
-	}
+    $id = sanitize_int($id);
+    $ret_array = array();
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
+    $result = db_query($query, [$id]);
+    if($result->num_rows > 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        $ret_arr[0] = $row['lat'];
+        $ret_arr[1] = $row['lng'];
+        } else {
+        $ret_arr[0] = 0.999999;
+        $ret_arr[1] = 0.999999;
+        }
+    return $ret_arr;
+    }
 
 function get_fac_coords($id) {
-	$id = sanitize_int($id);
-	$ret_array = array();
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ?";
-	$result = db_query($query, [$id]);
-	if($result->num_rows > 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		$ret_arr[0] = $row['lat'];
-		$ret_arr[1] = $row['lng'];
-		} else {
-		$ret_arr[0] = 0.999999;
-		$ret_arr[1] = 0.999999;
-		}
-	return $ret_arr;
-	}
+    $id = sanitize_int($id);
+    $ret_array = array();
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ?";
+    $result = db_query($query, [$id]);
+    if($result->num_rows > 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        $ret_arr[0] = $row['lat'];
+        $ret_arr[1] = $row['lng'];
+        } else {
+        $ret_arr[0] = 0.999999;
+        $ret_arr[1] = 0.999999;
+        }
+    return $ret_arr;
+    }
 
 function get_icon_legend (){
-	global $u_types, $sm_icons;
-	$query = "SELECT DISTINCT `type` FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `name`";
-	$result = db_query($query);
-	$print = "";											// output string
-	while ($row = stripslashes_deep($result->fetch_assoc())) {
-		$type_data = $u_types[$row['type']];
-		$print .= "\t\t" .$type_data[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$type_data[1]] . "' BORDER=0>&nbsp;&nbsp;&nbsp;\n";
-		}
-	return $print;
-	}			// end function get_icon_legend ()
-	
+    global $u_types, $sm_icons;
+    $query = "SELECT DISTINCT `type` FROM `{$GLOBALS['mysql_prefix']}responder` ORDER BY `name`";
+    $result = db_query($query);
+    $print = "";                                            // output string
+    while ($row = stripslashes_deep($result->fetch_assoc())) {
+        $type_data = $u_types[$row['type']];
+        $print .= "\t\t" .$type_data[0] . " &raquo; <IMG SRC = './our_icons/" . $sm_icons[$type_data[1]] . "' BORDER=0>&nbsp;&nbsp;&nbsp;\n";
+        }
+    return $print;
+    }            // end function get_icon_legend ()
+
 function do_fac($id) {
-	$id = sanitize_int($id);
-	$query = "SELECT *,`{$GLOBALS['mysql_prefix']}facilities`.`updated` AS `updated`,
-		`{$GLOBALS['mysql_prefix']}facilities`.`id` 						AS `fac_id`,
-		`{$GLOBALS['mysql_prefix']}facilities`.`name` 						AS `fac_name`,
-		`{$GLOBALS['mysql_prefix']}fac_types`.`id` 							AS `type_id`,
-		`{$GLOBALS['mysql_prefix']}facilities`.`description` 				AS `facility_description`,
-		`{$GLOBALS['mysql_prefix']}facilities`.`boundary` 					AS `boundary`,
-		`{$GLOBALS['mysql_prefix']}fac_types`.`name` 						AS `fac_type_name`,
-		`{$GLOBALS['mysql_prefix']}fac_types`.`icon` 						AS `icon`,
-		`{$GLOBALS['mysql_prefix']}facilities`.`name` 						AS `facility_name`,
-		`{$GLOBALS['mysql_prefix']}fac_status`.`status_val` 				AS `fac_status_val`,
-		`{$GLOBALS['mysql_prefix']}facilities`.`status_id` 					AS `fac_status_id`
-		FROM `{$GLOBALS['mysql_prefix']}facilities`
-		LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` 	ON ( `{$GLOBALS['mysql_prefix']}facilities`.`id` = 			`{$GLOBALS['mysql_prefix']}allocates`.`resource_id` )
-		LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types` 	ON (`{$GLOBALS['mysql_prefix']}facilities`.`type` = 		`{$GLOBALS['mysql_prefix']}fac_types`.`id` )
-		LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_status` 	ON (`{$GLOBALS['mysql_prefix']}facilities`.`status_id` = 	`{$GLOBALS['mysql_prefix']}fac_status`.`id` )
-		WHERE `{$GLOBALS['mysql_prefix']}facilities`.`id` = ?";
-	$result = db_query($query, [$id]);
-	if($result->num_rows > 0) {
-		$row = stripslashes_deep($result->fetch_assoc());
-		$print = "<TABLE ID='fac_inner_table' BORDER='0'ID='left' width='60%'>\n";		//
-		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Description:</TD><TD CLASS='td_data'>" . $row['facility_description'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Capability:</TD><TD CLASS='td_data'>" . nl2br($row['capab']) . "</TD></TR>\n";
-		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Status:</TD><TD CLASS='td_data'>" . $row['status_val'] . "</TD></TR>\n";
-		$print .= "<TR CLASS = 'even'><TD CLASS='td_label'><A CLASS='td_label' HREF='#' TITLE='Facility opening hours - e.g. 24x7x365, 8 - 5 mon to sat etc.'>Opening hours</A>:&nbsp;</TD>";
-		$print .= "<TD><TABLE style='width: 100%;'><TR>";
-		$print .= "<TH style='text-align: left;'><A CLASS='td_label' HREF='#' TITLE='Day of the Week'>" . get_text("Day") . "</A></TH>";
-		$print .= "<TH style='text-align: left;'><A CLASS='td_label' HREF='#' TITLE='Opening Time'>" . get_text("Opening") . "</A></TH>";
-		$print .= "<TH style='text-align: left;'><A CLASS='td_label' HREF='#' TITLE='Closing Time'>" . get_text("Closing") . "</A></TH>";
-		$print .= "</TR>";
-		$opening_arr_serial = base64_decode($row['opening_hours']);
-		$opening_arr = unserialize($opening_arr_serial);
-		$z=0;
-		foreach($opening_arr as $val) {
-			switch($z) {
-				case 0:
-				$dayname = "Monday";
-				break;
-				case 1:
-				$dayname = "Tuesday";
-				break;
-				case 2:
-				$dayname = "Wednesday";
-				break;
-				case 3:
-				$dayname = "Thursday";
-				break;
-				case 4:
-				$dayname = "Friday";
-				break;
-				case 5:
-				$dayname = "Saturday";
-				break;
-				case 6:
-				$dayname = "Sunday";
-				break;
-				}
-			if($val[0] == "on") {
-				$print .= "<TR>";
-				$print .= "<TD style='text-align: left;'><SPAN CLASS='td_data'>" . $dayname . "</SPAN></TD>";
-				$print .= "<TD style='text-align: left;'><SPAN CLASS='td_data'>" . $val[1] . "</SPAN></TD>";
-				$print .= "<TD style='text-align: left;'><SPAN CLASS='td_data'>" . $val[2] . "</SPAN></TD>";
-				$print .= "</TR>";
-				}
-			$z++;
-			}
-		$print .= "</TABLE>";
-		$print .= "</TD>";			
-		$print .= "</TR>";
-		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Access Rules:</TD><TD CLASS='td_data'>" . $row['access_rules'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Sec Reqs:</TD><TD CLASS='td_data'>" . $row['security_reqs'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Cont name:</TD><TD CLASS='td_data'>" . $row['contact_name'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Cont email:</TD><TD CLASS='td_data'>" . $row['contact_email'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Cont phone:</TD><TD CLASS='td_data'>" . $row['contact_phone'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Sec contact:</TD><TD CLASS='td_data'>" . $row['security_contact'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Sec email:</TD><TD CLASS='td_data'>" . $row['security_email'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Sec phone:</TD><TD CLASS='td_data'>" . $row['security_phone'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Prim pager:</TD><TD CLASS='td_data'>" . $row['pager_p'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Sec pager:</TD><TD CLASS='td_data'>" . $row['pager_s'] . "</TD></TR>\n";
-		$print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Updated:</TD><TD CLASS='td_data'>" . format_date($row['updated']) . "</TD></TR>\n";
-		$print .= "<TR STYLE = 'display:none;'><TD colspan=2><SPAN ID='oldlat'>" . $row['lat'] . "</SPAN><SPAN ID='oldlng'>" . $row['lng'] . "</SPAN></TD></TR>";
-		$print .= "</TABLE>\n";
-		return $print;
-		} else {
-		return "Error";
-		}
-	}		// end function do_fac(
+    $id = sanitize_int($id);
+    $query = "SELECT *,`{$GLOBALS['mysql_prefix']}facilities`.`updated` AS `updated`,
+        `{$GLOBALS['mysql_prefix']}facilities`.`id`                         AS `fac_id`,
+        `{$GLOBALS['mysql_prefix']}facilities`.`name`                         AS `fac_name`,
+        `{$GLOBALS['mysql_prefix']}fac_types`.`id`                             AS `type_id`,
+        `{$GLOBALS['mysql_prefix']}facilities`.`description`                 AS `facility_description`,
+        `{$GLOBALS['mysql_prefix']}facilities`.`boundary`                     AS `boundary`,
+        `{$GLOBALS['mysql_prefix']}fac_types`.`name`                         AS `fac_type_name`,
+        `{$GLOBALS['mysql_prefix']}fac_types`.`icon`                         AS `icon`,
+        `{$GLOBALS['mysql_prefix']}facilities`.`name`                         AS `facility_name`,
+        `{$GLOBALS['mysql_prefix']}fac_status`.`status_val`                 AS `fac_status_val`,
+        `{$GLOBALS['mysql_prefix']}facilities`.`status_id`                     AS `fac_status_id`
+        FROM `{$GLOBALS['mysql_prefix']}facilities`
+        LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates`     ON ( `{$GLOBALS['mysql_prefix']}facilities`.`id` =             `{$GLOBALS['mysql_prefix']}allocates`.`resource_id` )
+        LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types`     ON (`{$GLOBALS['mysql_prefix']}facilities`.`type` =         `{$GLOBALS['mysql_prefix']}fac_types`.`id` )
+        LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_status`     ON (`{$GLOBALS['mysql_prefix']}facilities`.`status_id` =     `{$GLOBALS['mysql_prefix']}fac_status`.`id` )
+        WHERE `{$GLOBALS['mysql_prefix']}facilities`.`id` = ?";
+    $result = db_query($query, [$id]);
+    if($result->num_rows > 0) {
+        $row = stripslashes_deep($result->fetch_assoc());
+        $print = "<TABLE ID='fac_inner_table' BORDER='0'ID='left' width='60%'>\n";        //
+        $print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Description:</TD><TD CLASS='td_data'>" . $row['facility_description'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Capability:</TD><TD CLASS='td_data'>" . nl2br($row['capab']) . "</TD></TR>\n";
+        $print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Status:</TD><TD CLASS='td_data'>" . $row['status_val'] . "</TD></TR>\n";
+        $print .= "<TR CLASS = 'even'><TD CLASS='td_label'><A CLASS='td_label' HREF='#' TITLE='Facility opening hours - e.g. 24x7x365, 8 - 5 mon to sat etc.'>Opening hours</A>:&nbsp;</TD>";
+        $print .= "<TD><TABLE style='width: 100%;'><TR>";
+        $print .= "<TH style='text-align: left;'><A CLASS='td_label' HREF='#' TITLE='Day of the Week'>" . get_text("Day") . "</A></TH>";
+        $print .= "<TH style='text-align: left;'><A CLASS='td_label' HREF='#' TITLE='Opening Time'>" . get_text("Opening") . "</A></TH>";
+        $print .= "<TH style='text-align: left;'><A CLASS='td_label' HREF='#' TITLE='Closing Time'>" . get_text("Closing") . "</A></TH>";
+        $print .= "</TR>";
+        $opening_arr_serial = base64_decode($row['opening_hours']);
+        $opening_arr = unserialize($opening_arr_serial);
+        $z=0;
+        foreach($opening_arr as $val) {
+            switch($z) {
+                case 0:
+                $dayname = "Monday";
+                break;
+                case 1:
+                $dayname = "Tuesday";
+                break;
+                case 2:
+                $dayname = "Wednesday";
+                break;
+                case 3:
+                $dayname = "Thursday";
+                break;
+                case 4:
+                $dayname = "Friday";
+                break;
+                case 5:
+                $dayname = "Saturday";
+                break;
+                case 6:
+                $dayname = "Sunday";
+                break;
+                }
+            if($val[0] == "on") {
+                $print .= "<TR>";
+                $print .= "<TD style='text-align: left;'><SPAN CLASS='td_data'>" . $dayname . "</SPAN></TD>";
+                $print .= "<TD style='text-align: left;'><SPAN CLASS='td_data'>" . $val[1] . "</SPAN></TD>";
+                $print .= "<TD style='text-align: left;'><SPAN CLASS='td_data'>" . $val[2] . "</SPAN></TD>";
+                $print .= "</TR>";
+                }
+            $z++;
+            }
+        $print .= "</TABLE>";
+        $print .= "</TD>";
+        $print .= "</TR>";
+        $print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Access Rules:</TD><TD CLASS='td_data'>" . $row['access_rules'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Sec Reqs:</TD><TD CLASS='td_data'>" . $row['security_reqs'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Cont name:</TD><TD CLASS='td_data'>" . $row['contact_name'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Cont email:</TD><TD CLASS='td_data'>" . $row['contact_email'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Cont phone:</TD><TD CLASS='td_data'>" . $row['contact_phone'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Sec contact:</TD><TD CLASS='td_data'>" . $row['security_contact'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Sec email:</TD><TD CLASS='td_data'>" . $row['security_email'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Sec phone:</TD><TD CLASS='td_data'>" . $row['security_phone'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Prim pager:</TD><TD CLASS='td_data'>" . $row['pager_p'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Sec pager:</TD><TD CLASS='td_data'>" . $row['pager_s'] . "</TD></TR>\n";
+        $print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Updated:</TD><TD CLASS='td_data'>" . format_date($row['updated']) . "</TD></TR>\n";
+        $print .= "<TR STYLE = 'display:none;'><TD colspan=2><SPAN ID='oldlat'>" . $row['lat'] . "</SPAN><SPAN ID='oldlng'>" . $row['lng'] . "</SPAN></TD></TR>";
+        $print .= "</TABLE>\n";
+        return $print;
+        } else {
+        return "Error";
+        }
+    }        // end function do_fac(
 
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML>
 
-	<HEAD><TITLE>Tickets - Main Module</TITLE>
-	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
-	<META HTTP-EQUIV="Expires" CONTENT="0" />
-	<META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
-	<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript" />
-	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
-	<link rel="stylesheet" href="./js/leaflet/leaflet.css" />
-	<!--[if lte IE 8]>
-		 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
-	<![endif]-->
-	<link rel="stylesheet" href="./js/leaflet/leaflet-routing-machine_2.css" />
-	<link rel="stylesheet" href="./js/Control.Geocoder.css" />
-	<link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
-	<STYLE>
-		body 				{font-family: Verdana, Arial, sans serif;font-size: 11px;margin: 2px;}
-		table 				{border-collapse: collapse; }
-		table.directions th {background-color:#EEEEEE;}	  
-		img 				{color: #000000;}
-		span.even 			{background-color: #DEE3E7;}
-		span.warn			{display:none; background-color: #FF0000; color: #FFFFFF; font-weight: bold; font-family: Verdana, Arial, sans serif; }
+    <HEAD><TITLE>Tickets - Main Module</TITLE>
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
+    <META HTTP-EQUIV="Expires" CONTENT="0" />
+    <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE" />
+    <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE" />
+    <META HTTP-EQUIV="Content-Script-Type"    CONTENT="application/x-javascript" />
+    <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
+    <link rel="stylesheet" href="./js/leaflet/leaflet.css" />
+    <!--[if lte IE 8]>
+         <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+    <![endif]-->
+    <link rel="stylesheet" href="./js/leaflet/leaflet-routing-machine_2.css" />
+    <link rel="stylesheet" href="./js/Control.Geocoder.css" />
+    <link rel="stylesheet" href="./js/leaflet-openweathermap.css" />
+    <STYLE>
+        body                 {font-family: Verdana, Arial, sans serif;font-size: 11px;margin: 2px;}
+        table                 {border-collapse: collapse; }
+        table.directions th {background-color:#EEEEEE;}
+        img                 {color: #000000;}
+        span.even             {background-color: #DEE3E7;}
+        span.warn            {display:none; background-color: #FF0000; color: #FFFFFF; font-weight: bold; font-family: Verdana, Arial, sans serif; }
 
-		span.mylink			{margin-right: 32PX; text-decoration:underline; font-weight: bold; font-family: Verdana, Arial, sans serif;}
-		span.other_1		{margin-right: 32PX; text-decoration:none; font-weight: bold; font-family: Verdana, Arial, sans serif;}
-		span.other_2		{margin-right: 8PX;  text-decoration:none; font-weight: bold; font-family: Verdana, Arial, sans serif;}
-		.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
+        span.mylink            {margin-right: 32PX; text-decoration:underline; font-weight: bold; font-family: Verdana, Arial, sans serif;}
+        span.other_1        {margin-right: 32PX; text-decoration:none; font-weight: bold; font-family: Verdana, Arial, sans serif;}
+        span.other_2        {margin-right: 8PX;  text-decoration:none; font-weight: bold; font-family: Verdana, Arial, sans serif;}
+        .disp_stat    { FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
 
-		.box { background-color: transparent; border: none; color: #000000; padding: 0px; position: absolute; }
-		.bar { background-color: transparent; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em; }
-		.bar_header { height: 20px; background-color: #CECECE; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; text-align: center;}			
-		
-		.box2 { background-color: #DEE3E7; border: 2px outset #606060; color: #000000; padding: 0px; position: absolute; z-index:10000; width: 180px; }
-		.bar2 { background-color: #FFFFFF; border-bottom: 2px solid #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:10000; text-align: center;}
-		.content { padding: 1em; text-align: center; }
-		table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
-		table.cruises td {overflow: hidden; }
-		div.scrollableContainer { position: relative; padding-top: 1.5em; border: 1px solid #999; }
-		div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
-		div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-		div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
-		table.scrollable thead tr { position: absolute; left: -1px; top: 0px; }
-		table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
-		div.tabBox {}
-		div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
-		span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
-				padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
-		span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
-				border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
-		span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
-		div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
-				position: relative;	z-index: 101; cursor: normal; height: 300px;}
-		div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
-		#directions { background-color: white;}
-		#fac_table { overflow-y: auto; }
-	</STYLE>
-	<SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
-	<SCRIPT TYPE="application/x-javascript" SRC="./js/json2.js"></SCRIPT>
-	<SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
-	<SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
-	<script src="./js/proj4js.js"></script>
-	<script src="./js/proj4-compressed.js"></script>
-	<script src="./js/leaflet/leaflet.js"></script>
-	<script src="./js/leaflet/leaflet-routing-machine_2.js"></script>
-	<script src="./js/proj4leaflet.js"></script>
-	<script src="./js/leaflet/KML.js"></script>
-	<script src="./js/leaflet/gpx.js"></script>  
-	<script src="./js/osopenspace.js"></script>
-	<script src="./js/leaflet-openweathermap.js"></script>
-	<script src="./js/esri-leaflet.js"></script>
-	<script src="./js/Control.Geocoder.js"></script>
+        .box { background-color: transparent; border: none; color: #000000; padding: 0px; position: absolute; }
+        .bar { background-color: transparent; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em; }
+        .bar_header { height: 20px; background-color: #CECECE; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:1000; text-align: center;}
+
+        .box2 { background-color: #DEE3E7; border: 2px outset #606060; color: #000000; padding: 0px; position: absolute; z-index:10000; width: 180px; }
+        .bar2 { background-color: #FFFFFF; border-bottom: 2px solid #000000; cursor: move; font-weight: bold; padding: 2px 1em 2px 1em;  z-index:10000; text-align: center;}
+        .content { padding: 1em; text-align: center; }
+        table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
+        table.cruises td {overflow: hidden; }
+        div.scrollableContainer { position: relative; padding-top: 1.5em; border: 1px solid #999; }
+        div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
+        div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
+        div.scrollingArea2 { max-height: 400px; overflow: auto; overflow-x: hidden; }
+        table.scrollable thead tr { position: absolute; left: -1px; top: 0px; }
+        table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
+        div.tabBox {}
+        div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
+        span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;    border-radius-topleft: .75em; border-radius-topright: .75em;
+                padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
+        span.tabinuse {    background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;    border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
+                border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;    z-index: 100;}
+        span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
+        div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;    border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
+                position: relative;    z-index: 101; cursor: normal; height: 300px;}
+        div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
+        #directions { background-color: white;}
+        #fac_table { overflow-y: auto; }
+    </STYLE>
+    <SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
+    <SCRIPT TYPE="application/x-javascript" SRC="./js/json2.js"></SCRIPT>
+    <SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
+    <SCRIPT SRC="./js/messaging.js" TYPE="application/x-javascript"></SCRIPT>
+    <script src="./js/proj4js.js"></script>
+    <script src="./js/proj4-compressed.js"></script>
+    <script src="./js/leaflet/leaflet.js"></script>
+    <script src="./js/leaflet/leaflet-routing-machine_2.js"></script>
+    <script src="./js/proj4leaflet.js"></script>
+    <script src="./js/leaflet/KML.js"></script>
+    <script src="./js/leaflet/gpx.js"></script>
+    <script src="./js/osopenspace.js"></script>
+    <script src="./js/leaflet-openweathermap.js"></script>
+    <script src="./js/esri-leaflet.js"></script>
+    <script src="./js/Control.Geocoder.js"></script>
 <?php
-	if ($_SESSION['internet']) {
-		$api_key = get_variable('gmaps_api_key');
-		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
-		if($key_str) {
-			if($https) {
+    if ($_SESSION['internet']) {
+        $api_key = get_variable('gmaps_api_key');
+        $key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
+        if($key_str) {
+            if($https) {
 ?>
-				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-				<script src="./js/Google.js"></script>
+                <script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+                <script src="./js/Google.js"></script>
 <?php
-				} else {
+                } else {
 ?>
-				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-				<script src="./js/Google.js"></script>
-<?php				
-				}
-			}
-		}
+                <script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+                <script src="./js/Google.js"></script>
+<?php
+                }
+            }
+        }
 ?>
-	<script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
-	<script type="application/x-javascript" src="./js/L.Graticule.js"></script>
-	<script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
-	<script type="application/x-javascript" src="./js/usng.js"></script>
-	<script type="application/x-javascript" src="./js/osgb.js"></script>
-	<script type="application/x-javascript" src="./js/geotools2.js"></script>
+    <script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
+    <script type="application/x-javascript" src="./js/L.Graticule.js"></script>
+    <script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
+    <script type="application/x-javascript" src="./js/usng.js"></script>
+    <script type="application/x-javascript" src="./js/osgb.js"></script>
+    <script type="application/x-javascript" src="./js/geotools2.js"></script>
 <SCRIPT>
 var map;
 var minimap;
 var thelevel = '<?php print $the_level;?>';
-var fmarkers = [];			//	Facilities Markers array
-var boundary = [];			//	exclusion zones array
+var fmarkers = [];            //    Facilities Markers array
+var boundary = [];            //    exclusion zones array
 var bound_names = [];
 var latLng;
 var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',
-	iconSize: [20, 32],	shadowSize: [37, 34], iconAnchor: [10, 31],	shadowAnchor: [10, 32], popupAnchor: [0, -20]
-	}
-	});
+    iconSize: [20, 32],    shadowSize: [37, 34], iconAnchor: [10, 31],    shadowAnchor: [10, 32], popupAnchor: [0, -20]
+    }
+    });
 var baseFacIcon = L.Icon.extend({options: {iconSize: [28, 28], iconAnchor: [14, 29], popupAnchor: [0, -20]
-	}
-	});
+    }
+    });
 var baseSqIcon = L.Icon.extend({options: {iconSize: [20, 20], iconAnchor: [10, 21], popupAnchor: [0, -20]
-	}
-	});
+    }
+    });
 var basecrossIcon = L.Icon.extend({options: {iconSize: [40, 40], iconAnchor: [20, 41], popupAnchor: [0, -41]
-	}
-	});
+    }
+    });
 var fac_icons=[];
 fac_icons[0] = 1;
 fac_icons[1] = 2;
 fac_icons[2] = 3;
-fac_icons[3] = 4;	
+fac_icons[3] = 4;
 fac_icons[4] = 5;
 fac_icons[5] = 6;
 fac_icons[6] = 7;
 fac_icons[7] = 8;
-			
+
 var colors = new Array ('odd', 'even');
 
-try {	
-	parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
-	parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
-	parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
-	}
+try {
+    parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
+    parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
+    parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
+    }
 catch(e) {
-	}
+    }
 
 function isNull(arg) {
-	return arg===null;
-	}
-</SCRIPT>	
+    return arg===null;
+    }
+</SCRIPT>
 <script type="application/x-javascript">//<![CDATA[
 //*****************************************************************************
 // Do not remove this notice.
@@ -421,561 +421,561 @@ function isNull(arg) {
 //*****************************************************************************
 // Determine browser and version.
 function Browser() {
-	var ua, s, i;
-	this.isIE		= false;
-	this.isNS		= false;
-	this.version = null;
-	ua = navigator.userAgent;
-	s = "MSIE";
-	if ((i = ua.indexOf(s)) >= 0) {
-		this.isIE = true;
-		this.version = parseFloat(ua.substr(i + s.length));
-		return;
-		}
-	s = "Netscape6/";
-	if ((i = ua.indexOf(s)) >= 0) {
-		this.isNS = true;
-		this.version = parseFloat(ua.substr(i + s.length));
-		return;
-		}
-	// Treat any other "Gecko" browser as NS 6.1.
-	s = "Gecko";
-	if ((i = ua.indexOf(s)) >= 0) {
-		this.isNS = true;
-		this.version = 6.1;
-		return;
-		}
-	}
+    var ua, s, i;
+    this.isIE        = false;
+    this.isNS        = false;
+    this.version = null;
+    ua = navigator.userAgent;
+    s = "MSIE";
+    if ((i = ua.indexOf(s)) >= 0) {
+        this.isIE = true;
+        this.version = parseFloat(ua.substr(i + s.length));
+        return;
+        }
+    s = "Netscape6/";
+    if ((i = ua.indexOf(s)) >= 0) {
+        this.isNS = true;
+        this.version = parseFloat(ua.substr(i + s.length));
+        return;
+        }
+    // Treat any other "Gecko" browser as NS 6.1.
+    s = "Gecko";
+    if ((i = ua.indexOf(s)) >= 0) {
+        this.isNS = true;
+        this.version = 6.1;
+        return;
+        }
+    }
 var browser = new Browser();
-var dragObj = new Object();		// Global object to hold drag information.
+var dragObj = new Object();        // Global object to hold drag information.
 dragObj.zIndex = 0;
 function dragStart(event, id) {
-	var el;
-	var x, y;
-	if (id)										// If an element id was given, find it. Otherwise use the element being
-		dragObj.elNode = document.getElementById(id);	// clicked on.
-	else {
-		if (browser.isIE)
-			dragObj.elNode = window.event.srcElement;
-		if (browser.isNS)
-			dragObj.elNode = event.target;
-		if (dragObj.elNode.nodeType == 3)		// If this is a text node, use its parent element.
-			dragObj.elNode = dragObj.elNode.parentNode;
-		}
-	if (browser.isIE) {			// Get cursor position with respect to the page.
-		x = window.event.clientX + document.documentElement.scrollLeft
-			+ document.body.scrollLeft;
-		y = window.event.clientY + document.documentElement.scrollTop
-			+ document.body.scrollTop;
-		}
-	if (browser.isNS) {
-		x = event.clientX + window.scrollX;
-		y = event.clientY + window.scrollY;
-		}
-	dragObj.cursorStartX = x;		// Save starting positions of cursor and element.
-	dragObj.cursorStartY = y;
-	dragObj.elStartLeft	= parseInt(dragObj.elNode.style.left, 10);
-	dragObj.elStartTop	 = parseInt(dragObj.elNode.style.top,	10);
-	if (isNaN(dragObj.elStartLeft)) dragObj.elStartLeft = 0;
-	if (isNaN(dragObj.elStartTop))	dragObj.elStartTop	= 0;
-	dragObj.elNode.style.zIndex = ++dragObj.zIndex;		// Update element's z-index.
-	if (browser.isIE) {									// Capture mousemove and mouseup events on the page.
-		document.attachEvent("onmousemove", dragGo);
-		document.attachEvent("onmouseup",	 dragStop);
-		window.event.cancelBubble = true;
-		window.event.returnValue = false;
-		}
-	if (browser.isNS) {
-		document.addEventListener("mousemove", dragGo,	 true);
-		document.addEventListener("mouseup",	 dragStop, true);
-		event.preventDefault();
-		}
-	}
+    var el;
+    var x, y;
+    if (id)                                        // If an element id was given, find it. Otherwise use the element being
+        dragObj.elNode = document.getElementById(id);    // clicked on.
+    else {
+        if (browser.isIE)
+            dragObj.elNode = window.event.srcElement;
+        if (browser.isNS)
+            dragObj.elNode = event.target;
+        if (dragObj.elNode.nodeType == 3)        // If this is a text node, use its parent element.
+            dragObj.elNode = dragObj.elNode.parentNode;
+        }
+    if (browser.isIE) {            // Get cursor position with respect to the page.
+        x = window.event.clientX + document.documentElement.scrollLeft
+            + document.body.scrollLeft;
+        y = window.event.clientY + document.documentElement.scrollTop
+            + document.body.scrollTop;
+        }
+    if (browser.isNS) {
+        x = event.clientX + window.scrollX;
+        y = event.clientY + window.scrollY;
+        }
+    dragObj.cursorStartX = x;        // Save starting positions of cursor and element.
+    dragObj.cursorStartY = y;
+    dragObj.elStartLeft    = parseInt(dragObj.elNode.style.left, 10);
+    dragObj.elStartTop     = parseInt(dragObj.elNode.style.top,    10);
+    if (isNaN(dragObj.elStartLeft)) dragObj.elStartLeft = 0;
+    if (isNaN(dragObj.elStartTop))    dragObj.elStartTop    = 0;
+    dragObj.elNode.style.zIndex = ++dragObj.zIndex;        // Update element's z-index.
+    if (browser.isIE) {                                    // Capture mousemove and mouseup events on the page.
+        document.attachEvent("onmousemove", dragGo);
+        document.attachEvent("onmouseup",     dragStop);
+        window.event.cancelBubble = true;
+        window.event.returnValue = false;
+        }
+    if (browser.isNS) {
+        document.addEventListener("mousemove", dragGo,     true);
+        document.addEventListener("mouseup",     dragStop, true);
+        event.preventDefault();
+        }
+    }
 function dragGo(event) {
-	var x, y;
-	if (browser.isIE) {	// Get cursor position with respect to the page.
-		x = window.event.clientX + document.documentElement.scrollLeft
-			+ document.body.scrollLeft;
-		y = window.event.clientY + document.documentElement.scrollTop
-			+ document.body.scrollTop;
-		}
-	if (browser.isNS) {
-		x = event.clientX + window.scrollX;
-		y = event.clientY + window.scrollY;
-		}
-	dragObj.elNode.style.left = (dragObj.elStartLeft + x - dragObj.cursorStartX) + "px";	// Move drag element by the same amount the cursor has moved.
-	dragObj.elNode.style.top	= (dragObj.elStartTop	+ y - dragObj.cursorStartY) + "px";
-	if (browser.isIE) {
-		window.event.cancelBubble = true;
-		window.event.returnValue = false;
-		}
-	if (browser.isNS)
-		event.preventDefault();
-	}
+    var x, y;
+    if (browser.isIE) {    // Get cursor position with respect to the page.
+        x = window.event.clientX + document.documentElement.scrollLeft
+            + document.body.scrollLeft;
+        y = window.event.clientY + document.documentElement.scrollTop
+            + document.body.scrollTop;
+        }
+    if (browser.isNS) {
+        x = event.clientX + window.scrollX;
+        y = event.clientY + window.scrollY;
+        }
+    dragObj.elNode.style.left = (dragObj.elStartLeft + x - dragObj.cursorStartX) + "px";    // Move drag element by the same amount the cursor has moved.
+    dragObj.elNode.style.top    = (dragObj.elStartTop    + y - dragObj.cursorStartY) + "px";
+    if (browser.isIE) {
+        window.event.cancelBubble = true;
+        window.event.returnValue = false;
+        }
+    if (browser.isNS)
+        event.preventDefault();
+    }
 function dragStop(event) {
-	if (browser.isIE) {	// Stop capturing mousemove and mouseup events.
-		document.detachEvent("onmousemove", dragGo);
-		document.detachEvent("onmouseup",	 dragStop);
-		}
-	if (browser.isNS) {
-		document.removeEventListener("mousemove", dragGo,	 true);
-		document.removeEventListener("mouseup",	 dragStop, true);
-		}
-	}
+    if (browser.isIE) {    // Stop capturing mousemove and mouseup events.
+        document.detachEvent("onmousemove", dragGo);
+        document.detachEvent("onmouseup",     dragStop);
+        }
+    if (browser.isNS) {
+        document.removeEventListener("mousemove", dragGo,     true);
+        document.removeEventListener("mouseup",     dragStop, true);
+        }
+    }
 //]]></script>
 <SCRIPT>
-function checkArray(form, arrayName)	{	//	5/3/11
-	var retval = new Array();
-	for(var i=0; i < form.elements.length; i++) {
-		var el = form.elements[i];
-		if(el.type == "checkbox" && el.name == arrayName && el.checked) {
-			retval.push(el.value);
-		}
-	}
+function checkArray(form, arrayName)    {    //    5/3/11
+    var retval = new Array();
+    for(var i=0; i < form.elements.length; i++) {
+        var el = form.elements[i];
+        if(el.type == "checkbox" && el.name == arrayName && el.checked) {
+            retval.push(el.value);
+        }
+    }
 return retval;
-}	
-	
-function checkForm(form) {
-	var errmsg="";
-	var itemsChecked = checkArray(form, "frm_group[]");
-	if(itemsChecked.length > 0) {
-		var params = "f_n=viewed_groups&v_n=" +itemsChecked+ "&sess_id=<?php print get_sess_key(__LINE__); ?>";	//	3/15/11
-		var url = "persist3.php";	//	3/15/11	
-		sendRequest (url, fvg_handleResult, params);				
-	} else {
-		errmsg+= "\tYou cannot Hide all the regions\n";
-		if (errmsg!="") {
-			alert ("Please correct the following and re-submit:\n\n" + errmsg);
-			return false;
-			}
-		}
-	}
+}
 
-function fvg_handleResult(req) {	// 6/10/11	The persist callback function for viewed groups.
-	document.region_form.submit();
-	}
-	
+function checkForm(form) {
+    var errmsg="";
+    var itemsChecked = checkArray(form, "frm_group[]");
+    if(itemsChecked.length > 0) {
+        var params = "f_n=viewed_groups&v_n=" +itemsChecked+ "&sess_id=<?php print get_sess_key(__LINE__); ?>";    //    3/15/11
+        var url = "persist3.php";    //    3/15/11
+        sendRequest (url, fvg_handleResult, params);
+    } else {
+        errmsg+= "\tYou cannot Hide all the regions\n";
+        if (errmsg!="") {
+            alert ("Please correct the following and re-submit:\n\n" + errmsg);
+            return false;
+            }
+        }
+    }
+
+function fvg_handleResult(req) {    // 6/10/11    The persist callback function for viewed groups.
+    document.region_form.submit();
+    }
+
 function update_location(fac_id, unit_id) {
-	var randomnumber=Math.floor(Math.random()*99999999);
-	var sessID = "<?php print $_SESSION['id'];?>";
-	var status_val = $('frm_status_sel').value;
-	var url = './ajax/update_responder_location.php?fac_id=' + fac_id + '&resp_id=' + unit_id + '&status=' + status_val + '&version=' + randomnumber+'&q='+sessID;
-	sendRequest (url,updateRespCB, "");
-	function updateRespCB(req) {
-		var theResponse = JSON.decode(req.responseText);
-		if(theResponse[0] == 1) {
-			$('outer').style.display='none';
-			$('finished').style.display='block';
-			} else {
-			alert("failed");	
-			}
-		}
-	}
-	
-function form_validate(theForm) {	//	6/10/11
-	checkForm(theForm);
-	}				// end function validate(theForm)
-	
-function handleResult(req) {				// the 'called-back' function
-	}
+    var randomnumber=Math.floor(Math.random()*99999999);
+    var sessID = "<?php print $_SESSION['id'];?>";
+    var status_val = $('frm_status_sel').value;
+    var url = './ajax/update_responder_location.php?fac_id=' + fac_id + '&resp_id=' + unit_id + '&status=' + status_val + '&version=' + randomnumber+'&q='+sessID;
+    sendRequest (url,updateRespCB, "");
+    function updateRespCB(req) {
+        var theResponse = JSON.decode(req.responseText);
+        if(theResponse[0] == 1) {
+            $('outer').style.display='none';
+            $('finished').style.display='block';
+            } else {
+            alert("failed");
+            }
+        }
+    }
+
+function form_validate(theForm) {    //    6/10/11
+    checkForm(theForm);
+    }                // end function validate(theForm)
+
+function handleResult(req) {                // the 'called-back' function
+    }
 
 var starting = false;
 
-function do_mail_win(addrs, fac_id) {	
-	if(starting) {return;}					// dbl-click catcher
-	starting=true;	
-	var url = "mail_edit.php?fac_id=" + fac_id + "&addrs=" + addrs + "&text=";	// no text
-	newwindow_mail=window.open(url, "mail_edit",  "titlebar, location=0, resizable=1, scrollbars, height=360,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
-	if (isNull(newwindow_mail)) {
-		alert ("Email edit operation requires popups to be enabled -- please adjust your browser options.");
-		return;
-		}
-	newwindow_mail.focus();
-	starting = false;
-	}		// end function do mail_win()
+function do_mail_win(addrs, fac_id) {
+    if(starting) {return;}                    // dbl-click catcher
+    starting=true;
+    var url = "mail_edit.php?fac_id=" + fac_id + "&addrs=" + addrs + "&text=";    // no text
+    newwindow_mail=window.open(url, "mail_edit",  "titlebar, location=0, resizable=1, scrollbars, height=360,width=600,status=0,toolbar=0,menubar=0,location=0, left=100,top=300,screenX=100,screenY=300");
+    if (isNull(newwindow_mail)) {
+        alert ("Email edit operation requires popups to be enabled -- please adjust your browser options.");
+        return;
+        }
+    newwindow_mail.focus();
+    starting = false;
+    }        // end function do mail_win()
 
-<?php 
-	if(get_variable('call_board')==2) {
-		print "\n\tparent.top.calls.location.reload(true);\n";
-		}
+<?php
+    if(get_variable('call_board')==2) {
+        print "\n\tparent.top.calls.location.reload(true);\n";
+        }
 ?>
 parent.frames["upper"].document.getElementById("whom").innerHTML  = "<?php print $_SESSION['user'];?>";
 parent.frames["upper"].document.getElementById("level").innerHTML = "<?php print get_level_text($_SESSION['level']);?>";
 parent.frames["upper"].document.getElementById("script").innerHTML  = "<?php print LessExtension(basename( __FILE__));?>";
 
 String.prototype.parseDeg = function() {
-	if (!isNaN(this)) return Number(this);								// signed decimal degrees without NSEW
-	
-	var degLL = this.replace(/^-/,'').replace(/[NSEW]/i,'');			// strip off any sign or compass dir'n
-	var dms = degLL.split(/[^0-9.,]+/);									// split out separate d/m/s
-	for (var i in dms) if (dms[i]=='') dms.splice(i,1);					// remove empty elements (see note below)
-	switch (dms.length) {												// convert to decimal degrees...
-		case 3:															// interpret 3-part result as d/m/s
-			var deg = dms[0]/1 + dms[1]/60 + dms[2]/3600; break;
-		case 2:															// interpret 2-part result as d/m
-			var deg = dms[0]/1 + dms[1]/60; break;
-		case 1:															// decimal or non-separated dddmmss
-			if (/[NS]/i.test(this)) degLL = '0' + degLL;	// - normalise N/S to 3-digit degrees
-			var deg = dms[0].slice(0,3)/1 + dms[0].slice(3,5)/60 + dms[0].slice(5)/3600; break;
-		default: return NaN;
-		}
-	if (/^-/.test(this) || /[WS]/i.test(this)) deg = -deg; // take '-', west and south as -ve
-	return deg;
-	}
+    if (!isNaN(this)) return Number(this);                                // signed decimal degrees without NSEW
+
+    var degLL = this.replace(/^-/,'').replace(/[NSEW]/i,'');            // strip off any sign or compass dir'n
+    var dms = degLL.split(/[^0-9.,]+/);                                    // split out separate d/m/s
+    for (var i in dms) if (dms[i]=='') dms.splice(i,1);                    // remove empty elements (see note below)
+    switch (dms.length) {                                                // convert to decimal degrees...
+        case 3:                                                            // interpret 3-part result as d/m/s
+            var deg = dms[0]/1 + dms[1]/60 + dms[2]/3600; break;
+        case 2:                                                            // interpret 2-part result as d/m
+            var deg = dms[0]/1 + dms[1]/60; break;
+        case 1:                                                            // decimal or non-separated dddmmss
+            if (/[NS]/i.test(this)) degLL = '0' + degLL;    // - normalise N/S to 3-digit degrees
+            var deg = dms[0].slice(0,3)/1 + dms[0].slice(3,5)/60 + dms[0].slice(5)/3600; break;
+        default: return NaN;
+        }
+    if (/^-/.test(this) || /[WS]/i.test(this)) deg = -deg; // take '-', west and south as -ve
+    return deg;
+    }
 
 Number.prototype.toRad = function() {  // convert degrees to radians
-	return this * Math.PI / 180;
-	}
+    return this * Math.PI / 180;
+    }
 
 Number.prototype.toDeg = function() {  // convert radians to degrees (signed)
-	return this * 180 / Math.PI;
-	}
+    return this * 180 / Math.PI;
+    }
 
 Number.prototype.toBrng = function() {  // convert radians to degrees (as bearing: 0...360)
-	return (this.toDeg()+360) % 360;
-	}
+    return (this.toDeg()+360) % 360;
+    }
 
 function brng(lat1, lon1, lat2, lon2) {
-	lat1 = lat1.toRad(); lat2 = lat2.toRad();
-	var dLon = (lon2-lon1).toRad();
+    lat1 = lat1.toRad(); lat2 = lat2.toRad();
+    var dLon = (lon2-lon1).toRad();
 
-	var y = Math.sin(dLon) * Math.cos(lat2);
-	var x = Math.cos(lat1)*Math.sin(lat2) -
-					Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
-	return Math.atan2(y, x).toBrng();
-	}
+    var y = Math.sin(dLon) * Math.cos(lat2);
+    var x = Math.cos(lat1)*Math.sin(lat2) -
+                    Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+    return Math.atan2(y, x).toBrng();
+    }
 
 distCosineLaw = function(lat1, lon1, lat2, lon2) {
-	var R = 6371; // earth's mean radius in km
-	var d = Math.acos(Math.sin(lat1.toRad())*Math.sin(lat2.toRad()) +
-			Math.cos(lat1.toRad())*Math.cos(lat2.toRad())*Math.cos((lon2-lon1).toRad())) * R;
-	return d;
-	}
+    var R = 6371; // earth's mean radius in km
+    var d = Math.acos(Math.sin(lat1.toRad())*Math.sin(lat2.toRad()) +
+            Math.cos(lat1.toRad())*Math.cos(lat2.toRad())*Math.cos((lon2-lon1).toRad())) * R;
+    return d;
+    }
 var km2feet = 3280.83;
 
-function min(inArray) {				// returns index of least float value in inArray
-	var minsofar =  40076.0;		// initialize to earth circumference (km)
-	var j=-1;
-	for (var i=0; i< inArray.length; i++){
-		if (parseFloat(inArray[i]) < parseFloat(minsofar)) {
-			j=i;
-			minsofar=inArray[i];
-			}
-		}
-	return j;
-	}		// end function min()
+function min(inArray) {                // returns index of least float value in inArray
+    var minsofar =  40076.0;        // initialize to earth circumference (km)
+    var j=-1;
+    for (var i=0; i< inArray.length; i++){
+        if (parseFloat(inArray[i]) < parseFloat(minsofar)) {
+            j=i;
+            minsofar=inArray[i];
+            }
+        }
+    return j;
+    }        // end function min()
 
-function ck_frames() {		// onLoad = "ck_frames()"
-	if(self.location.href==parent.location.href) {
-		self.location.href = 'index.php';
-		}
-	else {
-		parent.upper.show_butts();
-		}
-	}		// end function ck_frames()
+function ck_frames() {        // onLoad = "ck_frames()"
+    if(self.location.href==parent.location.href) {
+        self.location.href = 'index.php';
+        }
+    else {
+        parent.upper.show_butts();
+        }
+    }        // end function ck_frames()
 function doReset() {
-	document.reLoad_Form.submit();
-	}	// end function doReset()
+    document.reLoad_Form.submit();
+    }    // end function doReset()
 
-var starting = false;	
+var starting = false;
 
 function go_there(id) {
-	document.to_stage2.fac_id.value=id;			// 10/6/09
-	document.to_stage2.submit();
-	}	
+    document.to_stage2.fac_id.value=id;            // 10/6/09
+    document.to_stage2.submit();
+    }
 
 </script>
 <BODY>
 <?php
-if(array_key_exists('stage', $_GET) && $_GET['stage'] == 1 && array_key_exists('id', $_GET) && $_GET['id'] != 0) {		//	List Facilities
+if(array_key_exists('stage', $_GET) && $_GET['stage'] == 1 && array_key_exists('id', $_GET) && $_GET['id'] != 0) {        //    List Facilities
 ?>
-	<DIV id = "outer" style='position: absolute; left: 0px;'>
-		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
-			<SPAN>
+    <DIV id = "outer" style='position: absolute; left: 0px;'>
+        <DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
+            <SPAN>
 <?php
-				//	 user groups
-				$al_groups = $_SESSION['user_groups'];
-				
-				if(count($al_groups) == 0) {	//	catch for errors - no entries in allocates for the user.	//	5/30/13		
-					$where2 = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type` = 3";
-					} else {	
-					$x=0;	//	6/10/11
-					$where2 = "WHERE (";	//	6/10/11
-					foreach($al_groups as $grp) {	//	6/10/11
-						$where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";	
-						$where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
-						$where2 .= $where3;
-						$x++;
-						}
-					$where2 .= "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 3";	//	6/10/11
-					}
+                //     user groups
+                $al_groups = $_SESSION['user_groups'];
 
-				$query_fac = "SELECT *,`{$GLOBALS['mysql_prefix']}facilities`.`updated` AS `updated`, 
-					`{$GLOBALS['mysql_prefix']}facilities`.`id` 						AS `fac_id`, 
-					`{$GLOBALS['mysql_prefix']}fac_types`.`id` 							AS `type_id`,
-					`{$GLOBALS['mysql_prefix']}facilities`.`description` 				AS `facility_description`,
-					`{$GLOBALS['mysql_prefix']}facilities`.`boundary` 					AS `boundary`,		
-					`{$GLOBALS['mysql_prefix']}fac_types`.`name` 						AS `fac_type_name`, 
-					`{$GLOBALS['mysql_prefix']}fac_types`.`icon` 						AS `icon`, 
-					`{$GLOBALS['mysql_prefix']}facilities`.`name` 						AS `facility_name`, 
-					`{$GLOBALS['mysql_prefix']}fac_status`.`status_val` 				AS `fac_status_val`, 
-					`{$GLOBALS['mysql_prefix']}facilities`.`status_id` 					AS `fac_status_id`
-					FROM `{$GLOBALS['mysql_prefix']}facilities`
-					LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` 	ON ( `{$GLOBALS['mysql_prefix']}facilities`.`id` = 			`{$GLOBALS['mysql_prefix']}allocates`.`resource_id` )	
-					LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types` 	ON (`{$GLOBALS['mysql_prefix']}facilities`.`type` = 		`{$GLOBALS['mysql_prefix']}fac_types`.`id` )
-					LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_status` 	ON (`{$GLOBALS['mysql_prefix']}facilities`.`status_id` = 	`{$GLOBALS['mysql_prefix']}fac_status`.`id` )
-					{$where2} 
-					GROUP BY fac_id ORDER BY {$fac_order_str} ";											// 3/15/11, 6/10/11
+                if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
+                    $where2 = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type` = 3";
+                    } else {
+                    $x=0;    //    6/10/11
+                    $where2 = "WHERE (";    //    6/10/11
+                    foreach($al_groups as $grp) {    //    6/10/11
+                        $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
+                        $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                        $where2 .= $where3;
+                        $x++;
+                        }
+                    $where2 .= "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 3";    //    6/10/11
+                    }
 
-				$result_fac = db_query($query_fac);
-				$facs_ct = db()->affected_rows;			// 1/4/10
-				if($facs_ct > 0) {
-					$i = 0;
-					$facs_arr = array();
-					$class='even';
+                $query_fac = "SELECT *,`{$GLOBALS['mysql_prefix']}facilities`.`updated` AS `updated`,
+                    `{$GLOBALS['mysql_prefix']}facilities`.`id`                         AS `fac_id`,
+                    `{$GLOBALS['mysql_prefix']}fac_types`.`id`                             AS `type_id`,
+                    `{$GLOBALS['mysql_prefix']}facilities`.`description`                 AS `facility_description`,
+                    `{$GLOBALS['mysql_prefix']}facilities`.`boundary`                     AS `boundary`,
+                    `{$GLOBALS['mysql_prefix']}fac_types`.`name`                         AS `fac_type_name`,
+                    `{$GLOBALS['mysql_prefix']}fac_types`.`icon`                         AS `icon`,
+                    `{$GLOBALS['mysql_prefix']}facilities`.`name`                         AS `facility_name`,
+                    `{$GLOBALS['mysql_prefix']}fac_status`.`status_val`                 AS `fac_status_val`,
+                    `{$GLOBALS['mysql_prefix']}facilities`.`status_id`                     AS `fac_status_id`
+                    FROM `{$GLOBALS['mysql_prefix']}facilities`
+                    LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates`     ON ( `{$GLOBALS['mysql_prefix']}facilities`.`id` =             `{$GLOBALS['mysql_prefix']}allocates`.`resource_id` )
+                    LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types`     ON (`{$GLOBALS['mysql_prefix']}facilities`.`type` =         `{$GLOBALS['mysql_prefix']}fac_types`.`id` )
+                    LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_status`     ON (`{$GLOBALS['mysql_prefix']}facilities`.`status_id` =     `{$GLOBALS['mysql_prefix']}fac_status`.`id` )
+                    {$where2}
+                    GROUP BY fac_id ORDER BY {$fac_order_str} ";                                            // 3/15/11, 6/10/11
+
+                $result_fac = db_query($query_fac);
+                $facs_ct = db()->affected_rows;            // 1/4/10
+                if($facs_ct > 0) {
+                    $i = 0;
+                    $facs_arr = array();
+                    $class='even';
 ?>
-					<SPAN CLASS='heading' style='width: 100%; display: inline-block;'>CHOSE FACILITY TO ROUTE TO</SPAN>
-					<DIV id='facs_list' style='width: 100%; height: 98%; display: block; overflow-y: auto; overflow-x: auto;'>
-						<TABLE style='width: 100%;'>
-						<TR class='header'>
-							<TD class='plain_listheader'>Icon</TD><TD class='plain_listheader'>Name</TD><TD class='plain_listheader'>Type</TD><TD class='plain_listheader'>Opening Times (Today)</TD>
-						</TR>
+                    <SPAN CLASS='heading' style='width: 100%; display: inline-block;'>CHOSE FACILITY TO ROUTE TO</SPAN>
+                    <DIV id='facs_list' style='width: 100%; height: 98%; display: block; overflow-y: auto; overflow-x: auto;'>
+                        <TABLE style='width: 100%;'>
+                        <TR class='header'>
+                            <TD class='plain_listheader'>Icon</TD><TD class='plain_listheader'>Name</TD><TD class='plain_listheader'>Type</TD><TD class='plain_listheader'>Opening Times (Today)</TD>
+                        </TR>
 <?php
-						while($row_fac = $result_fac->fetch_assoc()){		// 7/7/10
-							$name = safe_htmlentities($row_fac['facility_name'],ENT_QUOTES);
-							$handle = safe_htmlentities($row_fac['handle'],ENT_QUOTES);
+                        while($row_fac = $result_fac->fetch_assoc()){        // 7/7/10
+                            $name = safe_htmlentities($row_fac['facility_name'],ENT_QUOTES);
+                            $handle = safe_htmlentities($row_fac['handle'],ENT_QUOTES);
 
-							$fac_id=$row_fac['fac_id'];
-							$fac_type=$row_fac['icon'];
-							$fac_type_name = $row_fac['fac_type_name'];
-							$fac_region = get_first_group(3, $fac_id);
-							$fac_lat = $row_fac['lat'];
-							$fac_lng = $row_fac['lng'];
-							
-							$fac_index = $row_fac['icon_str'];	
+                            $fac_id=$row_fac['fac_id'];
+                            $fac_type=$row_fac['icon'];
+                            $fac_type_name = $row_fac['fac_type_name'];
+                            $fac_region = get_first_group(3, $fac_id);
+                            $fac_lat = $row_fac['lat'];
+                            $fac_lng = $row_fac['lng'];
 
-							$latitude = $row_fac['lat'];
-							$longitude = $row_fac['lng'];
+                            $fac_index = $row_fac['icon_str'];
 
-							$the_bg_color = ($GLOBALS['FACY_TYPES_BG'][$row_fac['icon']]) ? $GLOBALS['FACY_TYPES_BG'][$row_fac['icon']] : "#FFFFFF";
-							$the_text_color = ($GLOBALS['FACY_TYPES_TEXT'][$row_fac['icon']]) ? $GLOBALS['FACY_TYPES_TEXT'][$row_fac['icon']] : "#000000";			
+                            $latitude = $row_fac['lat'];
+                            $longitude = $row_fac['lng'];
+
+                            $the_bg_color = ($GLOBALS['FACY_TYPES_BG'][$row_fac['icon']]) ? $GLOBALS['FACY_TYPES_BG'][$row_fac['icon']] : "#FFFFFF";
+                            $the_text_color = ($GLOBALS['FACY_TYPES_TEXT'][$row_fac['icon']]) ? $GLOBALS['FACY_TYPES_TEXT'][$row_fac['icon']] : "#000000";
 
 // STATUS
-							$temp = $row_fac['status_id'] ;
-							$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
+                            $temp = $row_fac['status_id'] ;
+                            $the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";                // 2/2/09
 // AS-OF - 11/3/2012
-							$updated = format_sb_date_2 ( $row_fac['updated'] );
-	
-							if(!(isempty(trim($row_fac['opening_hours']))))  	{
-								$opening_arr_serial = base64_decode($row_fac['opening_hours']);
-								$opening_arr = unserialize($opening_arr_serial);
-								$outputstring = "";
-								$the_day = "";
-								$z = 0;
-								foreach($opening_arr as $val) {
-									switch($z) {
-										case 0:
-										$dayname = "Monday";
-										break;
-										case 1:
-										$dayname = "Tuesday";
-										break;
-										case 2:
-										$dayname = "Wednesday";
-										break;
-										case 3:
-										$dayname = "Thursday";
-										break;
-										case 4:
-										$dayname = "Friday";
-										break;
-										case 5:
-										$dayname = "Saturday";
-										break;
-										case 6:
-										$dayname = "Sunday";
-										break;
-										}
-									$openstring = ($dayname == get_day()) ? "Open" : "Closed";
-									if($dayname == get_day()) {
-										$the_day .= $dayname;
-										$outputstring .= " Opens: " . $val[1] . " Closes: " . $val[2];
-										}
-									$z++;
-									}
-								$openingTimes = "(" . $the_day . ")  ---  " . $outputstring;
-								}
-							print "<TR CLASS='" . $class . "' style='width: 100%;' onCLick='go_there(" . $fac_id . ");'><TD CLASS='plain_list' style='background-color: " . $the_bg_color . "; color: " . $the_text_color . ";'>" . $fac_index . "</TD><TD CLASS='plain_list' style='background-color: " . $the_bg_color . "; color: " . $the_text_color . ";'>" . $name . "</TD><TD CLASS='plain_list'>" . $fac_type_name . "</TD><TD CLASS='plain_list'>" . $openingTimes . "</TD></TR>";
-							$class = ($class == "even") ? "odd" : "even";
-							$fac_stat = 0;
-							$facs_arr[$i][0] = $fac_id;	//	theid
-							$facs_arr[$i][1] = $fac_type;	//	color
-							$facs_arr[$i][2] = $fac_stat;	//	stat
-							$facs_arr[$i][3] = "";	//	info						
-							$facs_arr[$i][4] = $fac_index;	//	sym	
-							$facs_arr[$i][5] = $fac_type_name;	//	category
-							$facs_arr[$i][6] = $fac_region;	//	region
-							$facs_arr[$i][7] = $fac_type_name . ", " . $name;	//	tip		
-							$facs_arr[$i][8] = $fac_lat;	//	lat
-							$facs_arr[$i][9] = $fac_lng;	//	lon
-							$i++;
-							}
-						print "</TABLE>";
-						}
-?>
-					</DIV>
-			</SPAN>
-		</DIV>
-		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
-			<DIV style='position: fixed; top: 50px; z-index: 9999;'>
-				<SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
-			</DIV>
-		</DIV>
-		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>&nbsp;
-		</DIV>
-	</DIV>
-<SCRIPT>
-	if (typeof window.innerWidth != 'undefined') {
-		viewportwidth = window.innerWidth,
-		viewportheight = window.innerHeight
-		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-		viewportwidth = document.documentElement.clientWidth,
-		viewportheight = document.documentElement.clientHeight
-		} else {
-		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-		viewportheight = document.getElementsByTagName('body')[0].clientHeight
-		}
-	outerwidth = viewportwidth * .99;
-	outerheight = viewportheight * .95;
-	leftcolwidth = outerwidth * .70;
-	rightcolwidth = outerwidth * .1;
-	colwidth = outerwidth * .70;
-	colheight = outerheight * .95;
-	fieldwidth = colwidth * .6;
-	medfieldwidth = colwidth * .3;		
-	smallfieldwidth = colwidth * .15;
-	$('outer').style.width = outerwidth + "px";
-	$('outer').style.height = outerheight + "px";
-	$('leftcol').style.width = leftcolwidth + "px";
-	$('leftcol').style.height = colheight + "px";
-	$('rightcol').style.width = rightcolwidth + "px";
-	$('editform').style.width = leftcolwidth + "px";
-	$('rightcol').style.height = colheight + "px";
-</SCRIPT>
-	<FORM NAME="can_Form" METHOD="get" ACTION = "units.php?func=responder&edit=false&view=true&id=5">
-	<INPUT TYPE="hidden" NAME="func" VALUE='responder'>
-	<INPUT TYPE="hidden" NAME="edit" VALUE='false'>
-	<INPUT TYPE="hidden" NAME="view" VALUE='true'>	
-	<INPUT TYPE="hidden" NAME="id" VALUE=<?php print sanitize_int($_GET['id']);?> />
-	</FORM>
-	<FORM NAME="to_stage2" METHOD="get" ACTION = "fac_routes_nm.php">
-	<INPUT TYPE="hidden" NAME="stage" 	VALUE=2>
-	<INPUT TYPE="hidden" NAME="fac_id" 	VALUE="">
-	<INPUT TYPE="hidden" NAME="unit_id" VALUE=<?php print sanitize_int($_GET['id']);?> />
-	</FORM>
-<?php
-	} elseif(array_key_exists('stage', $_GET) && $_GET['stage'] == 2 && array_key_exists('fac_id', $_GET) && $_GET['fac_id'] != 0) {		//	Route to Facility
-	$fac_id = sanitize_int($_GET['fac_id']);
-	$unit_id = sanitize_int($_GET['unit_id']);
-	$facName = explode("/", get_fac_name($fac_id));
-	$respName = explode("/", get_unit_name($unit_id));
-?>
-<SCRIPT>
-	var facID = <?php print $fac_id;?>;
-	var respID = <?php print $unit_id;?>;
-</SCRIPT>
-	<DIV ID='finished' style='display: none;'>
-	<CENTER>		
-	<BR /><BR /><BR /><H3>Responder <?php print $respName[0];?> Location Updated</H3>
-	<BR /><BR /><BR />
-	<SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.forms['fin_form'].submit();"><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
-	</DIV>
-	<DIV id = "outer" style='position: absolute; left: 0px;'>
-		<DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
-			<SPAN CLASS='heading' style='width: 100%; display: block;'>Dispatching <?php print $respName[0];?> to <?php print $facName[0];?></SPAN>
-			<DIV ID='fac_table' style='width: 100%;'><?php print do_fac($fac_id);?></DIV><BR /><BR />
-			<DIV ID='map_canvas' style='height: 500px; width: 500px; display: block;'></DIV>
-		</DIV>
-		<DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
-			<DIV style='position: fixed; top: 50px; z-index: 9999;'>
-				<SPAN ID = 'disp_but' CLASS='plain_centerbuttons text' STYLE="float: none; width: 80px; display: block;" onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="$('disp_but').style.display='none'; $('un_status').style.display='inline-block'; $('disp2_but').style.display='inline-block';" />To <?php print get_text("Facility");?><BR /><IMG id='sub1_img' SRC='./images/submit.png' /></SPAN>
-				<SPAN ID = 'un_status' style='display: none; float: right;'><BR />
-					<SELECT ID="frm_status_sel" NAME="frm_un_status_id" onChange = "this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;">
-<?php
-						$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
-						$result_st = db_query($query);
+                            $updated = format_sb_date_2 ( $row_fac['updated'] );
 
-						$the_grp = strval(rand());			//  force initial optgroup value
-						$i = 0;
-						while ($row_st = stripslashes_deep($result_st->fetch_array())) {
-						if ($the_grp != $row_st['group']) {
-							print ($i == 0)? "": "</OPTGROUP>\n";
-							$the_grp = $row_st['group'];
-							print "\t\t<OPTGROUP LABEL='$the_grp'>\n";
-							}
-						$sel = (get_unit_status($unit_id)== $row_st['id'])? " SELECTED" : "";
-						print "\t\t<OPTION VALUE=" . $row_st['id'] . $sel ." STYLE='background-color:{$row_st['bg_color']}; color:{$row_st['text_color']};'  >" . $row_st['status_val']. "</OPTION>\n";	// 3/15/10
-						$i++;
-						}
+                            if(!(isempty(trim($row_fac['opening_hours']))))      {
+                                $opening_arr_serial = base64_decode($row_fac['opening_hours']);
+                                $opening_arr = unserialize($opening_arr_serial);
+                                $outputstring = "";
+                                $the_day = "";
+                                $z = 0;
+                                foreach($opening_arr as $val) {
+                                    switch($z) {
+                                        case 0:
+                                        $dayname = "Monday";
+                                        break;
+                                        case 1:
+                                        $dayname = "Tuesday";
+                                        break;
+                                        case 2:
+                                        $dayname = "Wednesday";
+                                        break;
+                                        case 3:
+                                        $dayname = "Thursday";
+                                        break;
+                                        case 4:
+                                        $dayname = "Friday";
+                                        break;
+                                        case 5:
+                                        $dayname = "Saturday";
+                                        break;
+                                        case 6:
+                                        $dayname = "Sunday";
+                                        break;
+                                        }
+                                    $openstring = ($dayname == get_day()) ? "Open" : "Closed";
+                                    if($dayname == get_day()) {
+                                        $the_day .= $dayname;
+                                        $outputstring .= " Opens: " . $val[1] . " Closes: " . $val[2];
+                                        }
+                                    $z++;
+                                    }
+                                $openingTimes = "(" . $the_day . ")  ---  " . $outputstring;
+                                }
+                            print "<TR CLASS='" . $class . "' style='width: 100%;' onCLick='go_there(" . $fac_id . ");'><TD CLASS='plain_list' style='background-color: " . $the_bg_color . "; color: " . $the_text_color . ";'>" . $fac_index . "</TD><TD CLASS='plain_list' style='background-color: " . $the_bg_color . "; color: " . $the_text_color . ";'>" . $name . "</TD><TD CLASS='plain_list'>" . $fac_type_name . "</TD><TD CLASS='plain_list'>" . $openingTimes . "</TD></TR>";
+                            $class = ($class == "even") ? "odd" : "even";
+                            $fac_stat = 0;
+                            $facs_arr[$i][0] = $fac_id;    //    theid
+                            $facs_arr[$i][1] = $fac_type;    //    color
+                            $facs_arr[$i][2] = $fac_stat;    //    stat
+                            $facs_arr[$i][3] = "";    //    info
+                            $facs_arr[$i][4] = $fac_index;    //    sym
+                            $facs_arr[$i][5] = $fac_type_name;    //    category
+                            $facs_arr[$i][6] = $fac_region;    //    region
+                            $facs_arr[$i][7] = $fac_type_name . ", " . $name;    //    tip
+                            $facs_arr[$i][8] = $fac_lat;    //    lat
+                            $facs_arr[$i][9] = $fac_lng;    //    lon
+                            $i++;
+                            }
+                        print "</TABLE>";
+                        }
 ?>
-					</SELECT>
-				</SPAN>
-				<SPAN ID='disp2_but' CLASS='plain_centerbuttons text' STYLE="float: none; width: 80px; display: none;" onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="update_location(facID, respID);"><?php print get_text("Submit");?> Move<BR /><IMG id='sub2_img' SRC='./images/submit.png' /></SPAN>
-				<SPAN ID='can_but' class='plain_centerbuttons text' STYLE='float: none; width: 80px; display: block;' onMouseover="do_hover_centerbuttons(this.id);" onMouseout="do_plain_centerbuttons(this.id);" onClick="document.forms['can_form'].submit();"><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
-			</DIV>
-		</DIV>
-		<DIV id='rightcol' style='position: relative; left: 20px; float: left;'>&nbsp;
-		</DIV>
-
-		</DIV>
-
-	</DIV>
+                    </DIV>
+            </SPAN>
+        </DIV>
+        <DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+            <DIV style='position: fixed; top: 50px; z-index: 9999;'>
+                <SPAN id='can_but' CLASS='plain_centerbuttons text' style='float: none; width: 80px; display: block;' onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick='document.can_Form.submit();'><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
+            </DIV>
+        </DIV>
+        <DIV id='rightcol' style='position: relative; left: 20px; float: left;'>&nbsp;
+        </DIV>
+    </DIV>
 <SCRIPT>
-	if (typeof window.innerWidth != 'undefined') {
-		viewportwidth = window.innerWidth,
-		viewportheight = window.innerHeight
-		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-		viewportwidth = document.documentElement.clientWidth,
-		viewportheight = document.documentElement.clientHeight
-		} else {
-		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-		viewportheight = document.getElementsByTagName('body')[0].clientHeight
-		}
-	outerwidth = viewportwidth * .99;
-	outerheight = viewportheight * .95;
-	leftcolwidth = outerwidth * .70;
-	rightcolwidth = outerwidth * .1;
-	colwidth = outerwidth * .70;
-	colheight = outerheight * .95;
-	fieldwidth = colwidth * .6;
-	medfieldwidth = colwidth * .3;		
-	smallfieldwidth = colwidth * .15;
-	$('outer').style.width = outerwidth + "px";
-	$('outer').style.height = outerheight + "px";
-	$('leftcol').style.width = leftcolwidth + "px";
-	$('fac_table').style.width = leftcolwidth + "px";
-	$('fac_inner_table').style.width = leftcolwidth + "px";	
-	$('leftcol').style.height = colheight + "px";
-	$('rightcol').style.width = rightcolwidth + "px";
-	$('editform').style.width = leftcolwidth + "px";
-	$('rightcol').style.height = colheight + "px";
+    if (typeof window.innerWidth != 'undefined') {
+        viewportwidth = window.innerWidth,
+        viewportheight = window.innerHeight
+        } else if (typeof document.documentElement != 'undefined'    && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+        viewportwidth = document.documentElement.clientWidth,
+        viewportheight = document.documentElement.clientHeight
+        } else {
+        viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+        viewportheight = document.getElementsByTagName('body')[0].clientHeight
+        }
+    outerwidth = viewportwidth * .99;
+    outerheight = viewportheight * .95;
+    leftcolwidth = outerwidth * .70;
+    rightcolwidth = outerwidth * .1;
+    colwidth = outerwidth * .70;
+    colheight = outerheight * .95;
+    fieldwidth = colwidth * .6;
+    medfieldwidth = colwidth * .3;
+    smallfieldwidth = colwidth * .15;
+    $('outer').style.width = outerwidth + "px";
+    $('outer').style.height = outerheight + "px";
+    $('leftcol').style.width = leftcolwidth + "px";
+    $('leftcol').style.height = colheight + "px";
+    $('rightcol').style.width = rightcolwidth + "px";
+    $('editform').style.width = leftcolwidth + "px";
+    $('rightcol').style.height = colheight + "px";
 </SCRIPT>
-	<FORM NAME="can_form" METHOD="get" ACTION = "fac_routes_nm.php">
-	<INPUT TYPE="hidden" NAME="stage" 	VALUE=1>
-	<INPUT TYPE="hidden" NAME="id" VALUE=<?php print $unit_id;?> />
-	</FORM>
-	<FORM NAME="fin_form" METHOD="get" ACTION = "main.php">
-	</FORM>
+    <FORM NAME="can_Form" METHOD="get" ACTION = "units.php?func=responder&edit=false&view=true&id=5">
+    <INPUT TYPE="hidden" NAME="func" VALUE='responder'>
+    <INPUT TYPE="hidden" NAME="edit" VALUE='false'>
+    <INPUT TYPE="hidden" NAME="view" VALUE='true'>
+    <INPUT TYPE="hidden" NAME="id" VALUE=<?php print sanitize_int($_GET['id']);?> />
+    </FORM>
+    <FORM NAME="to_stage2" METHOD="get" ACTION = "fac_routes_nm.php">
+    <INPUT TYPE="hidden" NAME="stage"     VALUE=2>
+    <INPUT TYPE="hidden" NAME="fac_id"     VALUE="">
+    <INPUT TYPE="hidden" NAME="unit_id" VALUE=<?php print sanitize_int($_GET['id']);?> />
+    </FORM>
 <?php
-	} else {
+    } elseif(array_key_exists('stage', $_GET) && $_GET['stage'] == 2 && array_key_exists('fac_id', $_GET) && $_GET['fac_id'] != 0) {        //    Route to Facility
+    $fac_id = sanitize_int($_GET['fac_id']);
+    $unit_id = sanitize_int($_GET['unit_id']);
+    $facName = explode("/", get_fac_name($fac_id));
+    $respName = explode("/", get_unit_name($unit_id));
 ?>
-	<DIV>Error</DIV>
+<SCRIPT>
+    var facID = <?php print $fac_id;?>;
+    var respID = <?php print $unit_id;?>;
+</SCRIPT>
+    <DIV ID='finished' style='display: none;'>
+    <CENTER>
+    <BR /><BR /><BR /><H3>Responder <?php print $respName[0];?> Location Updated</H3>
+    <BR /><BR /><BR />
+    <SPAN id='fin_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick="document.forms['fin_form'].submit();"><SPAN STYLE='float: left;'><?php print get_text("Finished");?></SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN>
+    </DIV>
+    <DIV id = "outer" style='position: absolute; left: 0px;'>
+        <DIV id = "leftcol" style='position: relative; left: 10px; float: left;'>
+            <SPAN CLASS='heading' style='width: 100%; display: block;'>Dispatching <?php print $respName[0];?> to <?php print $facName[0];?></SPAN>
+            <DIV ID='fac_table' style='width: 100%;'><?php print do_fac($fac_id);?></DIV><BR /><BR />
+            <DIV ID='map_canvas' style='height: 500px; width: 500px; display: block;'></DIV>
+        </DIV>
+        <DIV ID="middle_col" style='position: relative; left: 20px; width: 110px; float: left;'>&nbsp;
+            <DIV style='position: fixed; top: 50px; z-index: 9999;'>
+                <SPAN ID = 'disp_but' CLASS='plain_centerbuttons text' STYLE="float: none; width: 80px; display: block;" onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="$('disp_but').style.display='none'; $('un_status').style.display='inline-block'; $('disp2_but').style.display='inline-block';" />To <?php print get_text("Facility");?><BR /><IMG id='sub1_img' SRC='./images/submit.png' /></SPAN>
+                <SPAN ID = 'un_status' style='display: none; float: right;'><BR />
+                    <SELECT ID="frm_status_sel" NAME="frm_un_status_id" onChange = "this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor; this.style.color=this.options[this.selectedIndex].style.color;">
 <?php
-	}
+                        $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `status_val` ASC, `group` ASC, `sort` ASC";
+                        $result_st = db_query($query);
+
+                        $the_grp = strval(rand());            //  force initial optgroup value
+                        $i = 0;
+                        while ($row_st = stripslashes_deep($result_st->fetch_array())) {
+                        if ($the_grp != $row_st['group']) {
+                            print ($i == 0)? "": "</OPTGROUP>\n";
+                            $the_grp = $row_st['group'];
+                            print "\t\t<OPTGROUP LABEL='$the_grp'>\n";
+                            }
+                        $sel = (get_unit_status($unit_id)== $row_st['id'])? " SELECTED" : "";
+                        print "\t\t<OPTION VALUE=" . $row_st['id'] . $sel ." STYLE='background-color:{$row_st['bg_color']}; color:{$row_st['text_color']};'  >" . $row_st['status_val']. "</OPTION>\n";    // 3/15/10
+                        $i++;
+                        }
+?>
+                    </SELECT>
+                </SPAN>
+                <SPAN ID='disp2_but' CLASS='plain_centerbuttons text' STYLE="float: none; width: 80px; display: none;" onMouseover='do_hover_centerbuttons(this.id);' onMouseout='do_plain_centerbuttons(this.id);' onClick="update_location(facID, respID);"><?php print get_text("Submit");?> Move<BR /><IMG id='sub2_img' SRC='./images/submit.png' /></SPAN>
+                <SPAN ID='can_but' class='plain_centerbuttons text' STYLE='float: none; width: 80px; display: block;' onMouseover="do_hover_centerbuttons(this.id);" onMouseout="do_plain_centerbuttons(this.id);" onClick="document.forms['can_form'].submit();"><?php print get_text("Cancel");?><BR /><IMG id='can_img' SRC='./images/cancel.png' /></SPAN>
+            </DIV>
+        </DIV>
+        <DIV id='rightcol' style='position: relative; left: 20px; float: left;'>&nbsp;
+        </DIV>
+
+        </DIV>
+
+    </DIV>
+<SCRIPT>
+    if (typeof window.innerWidth != 'undefined') {
+        viewportwidth = window.innerWidth,
+        viewportheight = window.innerHeight
+        } else if (typeof document.documentElement != 'undefined'    && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+        viewportwidth = document.documentElement.clientWidth,
+        viewportheight = document.documentElement.clientHeight
+        } else {
+        viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+        viewportheight = document.getElementsByTagName('body')[0].clientHeight
+        }
+    outerwidth = viewportwidth * .99;
+    outerheight = viewportheight * .95;
+    leftcolwidth = outerwidth * .70;
+    rightcolwidth = outerwidth * .1;
+    colwidth = outerwidth * .70;
+    colheight = outerheight * .95;
+    fieldwidth = colwidth * .6;
+    medfieldwidth = colwidth * .3;
+    smallfieldwidth = colwidth * .15;
+    $('outer').style.width = outerwidth + "px";
+    $('outer').style.height = outerheight + "px";
+    $('leftcol').style.width = leftcolwidth + "px";
+    $('fac_table').style.width = leftcolwidth + "px";
+    $('fac_inner_table').style.width = leftcolwidth + "px";
+    $('leftcol').style.height = colheight + "px";
+    $('rightcol').style.width = rightcolwidth + "px";
+    $('editform').style.width = leftcolwidth + "px";
+    $('rightcol').style.height = colheight + "px";
+</SCRIPT>
+    <FORM NAME="can_form" METHOD="get" ACTION = "fac_routes_nm.php">
+    <INPUT TYPE="hidden" NAME="stage"     VALUE=1>
+    <INPUT TYPE="hidden" NAME="id" VALUE=<?php print $unit_id;?> />
+    </FORM>
+    <FORM NAME="fin_form" METHOD="get" ACTION = "main.php">
+    </FORM>
+<?php
+    } else {
+?>
+    <DIV>Error</DIV>
+<?php
+    }
 ?>
 </BODY>
 </HTML>
 
-	
+
 
 

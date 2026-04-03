@@ -2,12 +2,12 @@
 /*
 any comments go here
 */
-error_reporting(E_ALL);	
+error_reporting(E_ALL);
 function dump($variable) {
-	echo "\n<PRE>";				// pretty it a bit
-	var_dump($variable) ;
-	echo "</PRE>\n";
-	}
+    echo "\n<PRE>";                // pretty it a bit
+    var_dump($variable) ;
+    echo "</PRE>\n";
+    }
 
 dump ($_POST);
 ?>
@@ -22,16 +22,16 @@ dump ($_POST);
 <META HTTP-EQUIV="Expires" CONTENT="0">
 <META HTTP-EQUIV="Cache-Control" CONTENT="NO-CACHE">
 <META HTTP-EQUIV="Pragma" CONTENT="NO-CACHE">
-<META HTTP-EQUIV="Content-Script-Type"	CONTENT="application/x-javascript">
+<META HTTP-EQUIV="Content-Script-Type"    CONTENT="application/x-javascript">
 <SCRIPT>
 </SCRIPT>
 </HEAD>
 <BODY>
 <?php if (empty($_POST)) { ?>
 <h3>First pass</h3>
-<?php 
-	}
-else {	?>
+<?php
+    }
+else {    ?>
 <h1>Second pass</h1>
 <?php } ?>
 

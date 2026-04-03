@@ -14,39 +14,39 @@ if((isset($filter)) && ($filter != "")) { $where .= " AND ((`m`.`fromname` REGEX
 
 
 $order = "ORDER BY `date` DESC";
-$the_user = $_SESSION['user_id'];	
+$the_user = $_SESSION['user_id'];
 
 $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
-		`m`.`id` AS `message_id`,
-		`m`.`fromname` AS `fromname`,		
-		`m`.`message` AS `message`,
-		`m`.`ticket_id` AS `ticket_id`,
-		`m`.`message_id` AS `msg_id`,
-		`m`.`msg_type` AS `msg_type`,	
-		`m`.`recipients` AS `recipients`,	
-		`m`.`readby` AS `readby`,		
-		`m`.`subject` AS `subject`	
-		FROM `$GLOBALS[mysql_prefix]messages` `m` 
-		{$where} {$order} {$order2}";
+        `m`.`id` AS `message_id`,
+        `m`.`fromname` AS `fromname`,
+        `m`.`message` AS `message`,
+        `m`.`ticket_id` AS `ticket_id`,
+        `m`.`message_id` AS `msg_id`,
+        `m`.`msg_type` AS `msg_type`,
+        `m`.`recipients` AS `recipients`,
+        `m`.`readby` AS `readby`,
+        `m`.`subject` AS `subject`
+        FROM `$GLOBALS[mysql_prefix]messages` `m`
+        {$where} {$order} {$order2}";
 
 $result = db_query($query) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 $num=$result->num_rows;
 $i = 0;
 if ($result->num_rows == 0) {
-	$ret_arr[$i][0] = "No Messages";
-	} else {
-	while ($msg_row = stripslashes_deep($result->fetch_assoc())){
-		$fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";
-		$ret_arr[$i][0] = $msg_row['id'];	
-		$ret_arr[$i][1] = $msg_row['ticket_id'];
-		$ret_arr[$i][2] = $msg_row['msg_type'];
-		$ret_arr[$i][3] = $fromname;
-		$ret_arr[$i][5] = stripslashes_deep(shorten($msg_row['subject'], 18));
-		$ret_arr[$i][6] = stripslashes_deep(shorten($the_message, 2000));
-		$ret_arr[$i][7] = format_date_2(safe_strtotime($msg_row['date']));
-		$ret_arr[$i][8] = get_owner($msg_row['_by']);	
-		$i++;
-		} // end while	
-	}				// end else
+    $ret_arr[$i][0] = "No Messages";
+    } else {
+    while ($msg_row = stripslashes_deep($result->fetch_assoc())){
+        $fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";
+        $ret_arr[$i][0] = $msg_row['id'];
+        $ret_arr[$i][1] = $msg_row['ticket_id'];
+        $ret_arr[$i][2] = $msg_row['msg_type'];
+        $ret_arr[$i][3] = $fromname;
+        $ret_arr[$i][5] = stripslashes_deep(shorten($msg_row['subject'], 18));
+        $ret_arr[$i][6] = stripslashes_deep(shorten($the_message, 2000));
+        $ret_arr[$i][7] = format_date_2(safe_strtotime($msg_row['date']));
+        $ret_arr[$i][8] = get_owner($msg_row['_by']);
+        $i++;
+        } // end while
+    }                // end else
 print json_encode($ret_arr);
 ?>

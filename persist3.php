@@ -5,16 +5,16 @@
 error_reporting(E_ALL);
 
 @session_start();
-require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
 
 //if($istest) {
-//	dump ($_GET);
-//	dump ($_POST);
-//	}
+//    dump ($_GET);
+//    dump ($_POST);
+//    }
 
-$f_n = 		$_POST['f_n'];
-$v_n = 		$_POST['v_n']; 
-$sess_id = 	$_POST['sess_id'];				// sess_id
+$f_n =         $_POST['f_n'];
+$v_n =         $_POST['v_n'];
+$sess_id =     $_POST['sess_id'];                // sess_id
 
 //$query = "UPDATE `$GLOBALS[mysql_prefix]session` SET `$f_n` ='$v_n' WHERE `sess_id`='$sess_id' LIMIT 1";
 //$result = mysql_query($query) or do_error($query,'mysql_query() failed', mysql_error(), __FILE__, __LINE__);

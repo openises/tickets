@@ -7,17 +7,17 @@ require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
-	exit();
-	}
+    exit();
+    }
 
 $ret_arr = array();
 $the_message = sanitize_string(strip_tags($_GET['message']));
 
 $theresult = do_tweet($the_message);
 if($theresult == 1) {
-	$ret_arr[0] = 1;
-	} else {
-	$ret_arr[0] = 0;
-	}
+    $ret_arr[0] = 1;
+    } else {
+    $ret_arr[0] = 0;
+    }
 
 print json_encode($ret_arr);

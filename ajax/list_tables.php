@@ -11,11 +11,11 @@ $query = "SHOW TABLES FROM `" . $mysql_db . "`";
 $result = db_query($query);
 $i=0;
 while ($row = stripslashes_deep($result->fetch_assoc())) {
-	$keyname = "Tables_in_" . $mysql_db;
-	$table_name = $row[$keyname];
-	$tables[$i] = $table_name;
-	$i++;
-	}
+    $keyname = "Tables_in_" . $mysql_db;
+    $table_name = $row[$keyname];
+    $tables[$i] = $table_name;
+    $i++;
+    }
 
 print json_encode($tables);
 ?>

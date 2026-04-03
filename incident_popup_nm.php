@@ -5,37 +5,37 @@
 */
 
 error_reporting(E_ALL);
- 
+
 @session_start();
 session_write_close();
-require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php'); 
-$api_key = get_variable('gmaps_api_key');		// empty($_GET)
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');
+$api_key = get_variable('gmaps_api_key');        // empty($_GET)
 
 if ((!empty($_GET))&& ((isset($_GET['logout'])) && ($_GET['logout'] == 'true'))) {
-	do_logout();
-	exit();
-	}
+    do_logout();
+    exit();
+    }
 else {
-//	snap(__LINE__, basename(__FILE__));
-	do_login(basename(__FILE__));
-	}
+//    snap(__LINE__, basename(__FILE__));
+    do_login(basename(__FILE__));
+    }
 if ($istest) {
-	print "GET<BR/>\n";
-	if (!empty($_GET)) {
-		dump ($_GET);
-		}
-	print "POST<BR/>\n";
-	if (!empty($_POST)) {
-		dump ($_POST);
-		}
-	}
+    print "GET<BR/>\n";
+    if (!empty($_GET)) {
+        dump ($_GET);
+        }
+    print "POST<BR/>\n";
+    if (!empty($_POST)) {
+        dump ($_POST);
+        }
+    }
 
-//	$remotes = get_current();							// set auto-refresh if any mobile units														
-//	$interval = intval(get_variable('auto_poll'));
-//	$refresh = ((($remotes['aprs']) || ($remotes['instam']) || ($remotes['locatea']) || ($remotes['gtrack']) || ($remotes['glat'])) && ($interval>0))? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>\n": "";
+//    $remotes = get_current();                            // set auto-refresh if any mobile units
+//    $interval = intval(get_variable('auto_poll'));
+//    $refresh = ((($remotes['aprs']) || ($remotes['instam']) || ($remotes['locatea']) || ($remotes['gtrack']) || ($remotes['glat'])) && ($interval>0))? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>\n": "";
 $temp = get_variable('auto_poll');
 $poll_val = ($temp==0)? "none" : $temp ;
-$id =	(array_key_exists('id', ($_GET)))?	sanitize_int($_GET['id'])  :	NULL;
+$id =    (array_key_exists('id', ($_GET)))?    sanitize_int($_GET['id'])  :    null;
 
 $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?", [$id]);
 $row = $result->fetch_assoc();
@@ -49,57 +49,57 @@ $ticket_addr = "{$row['street']}, {$row['city']} {$row['state']} ";
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-	<HEAD><TITLE>Incident Popup - Incident <?php print $title;?> <?php print $ticket_updated;?></TITLE>
-	<LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">	<!-- 3/15/11 -->
+    <HEAD><TITLE>Incident Popup - Incident <?php print $title;?> <?php print $ticket_updated;?></TITLE>
+    <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">    <!-- 3/15/11 -->
 <?php
-	if ($_SESSION['internet']) {
-		$api_key = get_variable('gmaps_api_key');
-		$key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
-		if($key_str) {
-			if($https) {
+    if ($_SESSION['internet']) {
+        $api_key = get_variable('gmaps_api_key');
+        $key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
+        if($key_str) {
+            if($https) {
 ?>
-				<script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-				<script src="./js/Google.js"></script>
+                <script src="https://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+                <script src="./js/Google.js"></script>
 <?php
-				} else {
+                } else {
 ?>
-				<script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
-				<script src="./js/Google.js"></script>
-<?php				
-				}
-			}
-		}
+                <script src="http://maps.google.com/maps/api/js?<?php print $key_str;?>"></script>
+                <script src="./js/Google.js"></script>
+<?php
+                }
+            }
+        }
 ?>
 <script>
-	function ck_frames() {
-		}
+    function ck_frames() {
+        }
 
-	function $() {
-		var elements = new Array();
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (typeof element == 'string')
-				element = document.getElementById(element);
-			if (arguments.length == 1)
-				return element;
-			elements.push(element);
-			}
-		return elements;
-		}
+    function $() {
+        var elements = new Array();
+        for (var i = 0; i < arguments.length; i++) {
+            var element = arguments[i];
+            if (typeof element == 'string')
+                element = document.getElementById(element);
+            if (arguments.length == 1)
+                return element;
+            elements.push(element);
+            }
+        return elements;
+        }
 
-	/* function $() Sample Usage:
-	var obj1 = document.getElementById('element1');
-	var obj2 = document.getElementById('element2');
-	function alertElements() {
-	  var i;
-	  var elements = $('a','b','c',obj1,obj2,'d','e');
-	  for ( i=0;i
-	  }
-	*/
+    /* function $() Sample Usage:
+    var obj1 = document.getElementById('element1');
+    var obj2 = document.getElementById('element2');
+    function alertElements() {
+      var i;
+      var elements = $('a','b','c',obj1,obj2,'d','e');
+      for ( i=0;i
+      }
+    */
 
 
-	</SCRIPT>
-	
+    </SCRIPT>
+
 </HEAD>
 <?php
 $severities = $colors = array();
@@ -117,23 +117,23 @@ echo "<BODY style='background-color:{$severities[$row['severity']]}; text-color:
 /* Creates statistics header and details of responding and en-route units 7/29/09 */
 
 $result_dispatched = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id=?
-	AND `dispatched` IS NOT NULL AND `responding` IS NULL AND `on_scene` IS NULL AND `clear` IS NULL", [$id]);
+    AND `dispatched` IS NOT NULL AND `responding` IS NULL AND `on_scene` IS NULL AND `clear` IS NULL", [$id]);
 $num_rows_dispatched = $result_dispatched->num_rows;
 
 $result_responding = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id=?
-	AND `responding` IS NOT NULL AND `on_scene` IS NULL AND `clear` IS NULL", [$id]);
+    AND `responding` IS NOT NULL AND `on_scene` IS NULL AND `clear` IS NULL", [$id]);
 $num_rows_responding = $result_responding->num_rows;
 
 $result_on_scene = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id=?
-	AND `on_scene` IS NOT NULL AND `clear` IS NULL", [$id]);
+    AND `on_scene` IS NOT NULL AND `clear` IS NULL", [$id]);
 $num_rows_on_scene = $result_on_scene->num_rows;
 
 $result_cleared = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE ticket_id=?
-	AND `clear` IS NOT NULL", [$id]);
+    AND `clear` IS NOT NULL", [$id]);
 $num_rows_cleared = $result_cleared->num_rows;
-	
+
 $end_date = (is_date($row['problemend']))? totime($row['problemend']) : (time() - (get_variable('delta_mins')*60));
-$elapsed = my_date_diff($end_date, totime($row['problemstart']));		// integer values req'd - 3/12/10
+$elapsed = my_date_diff($end_date, totime($row['problemstart']));        // integer values req'd - 3/12/10
 
 $stats = "<B>Severity:&nbsp;{$ticket_severity}, <SPAN STYLE='background-color:white; color:black;'>&nbsp;age: $elapsed&nbsp;</SPAN>";
 
@@ -141,40 +141,40 @@ echo $stats;
 
 echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
 while ($row_base= $result_dispatched->fetch_assoc()) {
-	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-	$row = $result->fetch_assoc();
-	echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
-	}
+    $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+    $row = $result->fetch_assoc();
+    echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
+    }
 
 echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
 while ($row_base= $result_responding->fetch_assoc()) {
-	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-	$row = $result->fetch_assoc();
-	echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
-	}
+    $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+    $row = $result->fetch_assoc();
+    echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
+    }
 
 echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
 while ($row_base= $result_on_scene->fetch_assoc()) {
-	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-	$row = $result->fetch_assoc();
-	echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
-	}
+    $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+    $row = $result->fetch_assoc();
+    echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
+    }
 
 echo "<BR>Units clear:&nbsp;({$num_rows_cleared})&nbsp;";
 while ($row_base= $result_cleared->fetch_assoc()) {
-	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-	$row = $result->fetch_assoc();
-	echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
-	}
+    $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+    $row = $result->fetch_assoc();
+    echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
+    }
 
 
 echo "</B><BR><BR>";
 
-	$get_id = 				(array_key_exists('id', ($_GET)))?				$_GET['id']  :			NULL;
-//	snap(basename(__FILE__) . __LINE__, $get_id);
-	if ($get_id) {
-		popup_ticket($get_id);
-		}
+    $get_id =                 (array_key_exists('id', ($_GET)))?                $_GET['id']  :            null;
+//    snap(basename(__FILE__) . __LINE__, $get_id);
+    if ($get_id) {
+        popup_ticket($get_id);
+        }
 
 echo "<CENTER><br clear = 'both'/><br /><br /><SPAN STYLE='background-color:white; font-weight:bold; color:black;'>&nbsp;{$ticket_addr}&nbsp;</SPAN>" ;
 echo "<BR /><BR />";

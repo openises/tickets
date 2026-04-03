@@ -1,42 +1,42 @@
 <?php
 $failed = "failed";
 if(empty($_GET)) {
-	exit();
-	}
+    exit();
+    }
 require_once('../incs/functions.inc.php');
 
 do_login(basename(__FILE__));
 error_reporting(E_ALL);
 set_time_limit(0);
 if(empty($_GET)) {
-	exit;
-	}
+    exit;
+    }
 
 function directory_empty($path) {
-	if(($files = @scandir($path)) && (count($files) > 2)) {
-		return FALSE;
-		} else {
-		return TRUE;
-		}
-	}
+    if(($files = @scandir($path)) && (count($files) > 2)) {
+        return false;
+        } else {
+        return true;
+        }
+    }
 
 function rmdir_recurse($path) {
-	$path = rtrim($path, '/').'/';
-	$handle = opendir($path);
-	while(false !== ($file = readdir($handle))) {
-		if($file != '.' and $file != '..' ) {
-			$fullpath = $path.$file;
-			if(is_dir($fullpath)) {
-				rmdir_recurse($fullpath);
-				} else {
-				unlink($fullpath);
-				}
-		}
-	}
-	closedir($handle);
-	rmdir($path);
-	return TRUE;
-	}
+    $path = rtrim($path, '/').'/';
+    $handle = opendir($path);
+    while(false !== ($file = readdir($handle))) {
+        if($file != '.' and $file != '..' ) {
+            $fullpath = $path.$file;
+            if(is_dir($fullpath)) {
+                rmdir_recurse($fullpath);
+                } else {
+                unlink($fullpath);
+                }
+        }
+    }
+    closedir($handle);
+    rmdir($path);
+    return true;
+    }
 
 $filestore = substr(getcwd(), 0, -5) . "/_osm/tiles/";
 $zoom = sanitize_string($_GET['zoom']);
@@ -51,30 +51,30 @@ $ret_arr = array();
 $addition = "";
 
 if(@unlink($file)) {
-	$ret_arr[0] = "Completed";
-	} else {
-	$ret_arr[0] = "Failed";
-	}
+    $ret_arr[0] = "Completed";
+    } else {
+    $ret_arr[0] = "Failed";
+    }
 
 if(directory_empty($thecolDir)) {
-	@rmdir($thecolDir);
-	$addition .= "Directory /_osm/tiles/" . e($col) . " deleted";
-	}
+    @rmdir($thecolDir);
+    $addition .= "Directory /_osm/tiles/" . e($col) . " deleted";
+    }
 
 if(directory_empty($thezoomDir)) {
-	@rmdir($thezoomDir);
-	$addition .= "Directory /_osm/tiles/" . e($zoom) . " deleted";
-	}
+    @rmdir($thezoomDir);
+    $addition .= "Directory /_osm/tiles/" . e($zoom) . " deleted";
+    }
 
 $ret_arr[1] = e($theFile) . " deleted";
 
 if(directory_empty($filestore)) {
-	$ret_arr[2] = "alldone";
-	// All tiles removed — clear cached bounds.  3/14/26
-	recalculate_tile_bounds($filestore);
-	} else {
-	$ret_arr[2] = "continue";
-	}
+    $ret_arr[2] = "alldone";
+    // All tiles removed — clear cached bounds.  3/14/26
+    recalculate_tile_bounds($filestore);
+    } else {
+    $ret_arr[2] = "continue";
+    }
 $ret_arr[4] = ($addition != "") ? $addition : "";
 print json_encode($ret_arr);
 exit();

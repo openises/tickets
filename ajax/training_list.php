@@ -5,8 +5,8 @@ require_once('../incs/functions.inc.php');
 @session_start();
 $the_session = $_GET['session'];
 if(!(secure_page($the_session))) {
-	exit();
-	} else {
+    exit();
+    } else {
 
 $page = sanitize_int($_GET['page']);
 
@@ -52,16 +52,16 @@ if (!in_array($sidx, $allowed_sidx)) { $sidx = 'id'; }
 $sord = (strtoupper($sord) === 'DESC') ? 'DESC' : 'ASC';
 
 // the actual query for the grid data
-$query = "SELECT *,	`a`.`id` AS `id`,
-	`a`.`package_name` AS `name`,
-	`a`.`description` AS `description`,
-	`a`.`available` AS `available`
-	FROM `{$GLOBALS['mysql_prefix']}training_packages` `a`
-	ORDER BY `$sidx` $sord LIMIT ?, ?";
+$query = "SELECT *,    `a`.`id` AS `id`,
+    `a`.`package_name` AS `name`,
+    `a`.`description` AS `description`,
+    `a`.`available` AS `available`
+    FROM `{$GLOBALS['mysql_prefix']}training_packages` `a`
+    ORDER BY `$sidx` $sord LIMIT ?, ?";
 
 $result = db_query($query, [
-	$start,
-	$limit
+    $start,
+    $limit
 ]);
 
 // we should set the appropriate header information. Do not forget this.

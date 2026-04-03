@@ -4,62 +4,62 @@
 2/11/09 error messages revised
 7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
 */
-error_reporting(E_ALL);									// 10/1/08
+error_reporting(E_ALL);                                    // 10/1/08
 
 @session_start();
 session_write_close();
-require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
 $api_key = get_variable('gmaps_api_key');
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml">
-	<head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-	<title>Streetview for Tickets</title>
-	<script src="http://maps.google.com/maps?file=api&amp;v=2.x&amp;key=<?php print $api_key; ?>"
-			type="application/x-javascript"></script>
-	<script type="application/x-javascript">
+    <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>Streetview for Tickets</title>
+    <script src="http://maps.google.com/maps?file=api&amp;v=2.x&amp;key=<?php print $api_key; ?>"
+            type="application/x-javascript"></script>
+    <script type="application/x-javascript">
 
-	function $() {									// 1/19/09
-		var elements = new Array();
-		for (var i = 0; i < arguments.length; i++) {
-			var element = arguments[i];
-			if (typeof element == 'string')
-				element = document.getElementById(element);
-			if (arguments.length == 1)
-				return element;
-			elements.push(element);
-			}
-		return elements;
-		}
-	
-	
-	var myPano;
-	var lat = <?php print floatval($_GET['thelat']);?>;
-	var lng =  <?php print floatval($_GET['thelng']);?>;
-	function do_the_view() {
-		var the_loc = new GLatLng(lat,lng);
-		panoramaOptions = { latlng:the_loc 	};
-		myPano = new GStreetviewPanorama(document.getElementById("pano"), panoramaOptions);
-		GEvent.addListener(myPano, "error", handleNoFlash);
-		}
-	
-	function handleNoFlash(errorCode) {				// 2/11/09
-		if (errorCode == "600") {
-			alert("No StreetView this location")
-			self.close();
-			}
-		else {
-			alert ("error code " + errorCode);
-			self.close();
-			}
-		}			// end function handleNoFlash()
-		
-	</script>
-	</head>
-	<body onLoad = "do_the_view()" onUnload="GUnload()">
-	<div name="pano" id="pano" style="width: 600px; height: 400px"></div>
-	</body>
+    function $() {                                    // 1/19/09
+        var elements = new Array();
+        for (var i = 0; i < arguments.length; i++) {
+            var element = arguments[i];
+            if (typeof element == 'string')
+                element = document.getElementById(element);
+            if (arguments.length == 1)
+                return element;
+            elements.push(element);
+            }
+        return elements;
+        }
+
+
+    var myPano;
+    var lat = <?php print floatval($_GET['thelat']);?>;
+    var lng =  <?php print floatval($_GET['thelng']);?>;
+    function do_the_view() {
+        var the_loc = new GLatLng(lat,lng);
+        panoramaOptions = { latlng:the_loc     };
+        myPano = new GStreetviewPanorama(document.getElementById("pano"), panoramaOptions);
+        GEvent.addListener(myPano, "error", handleNoFlash);
+        }
+
+    function handleNoFlash(errorCode) {                // 2/11/09
+        if (errorCode == "600") {
+            alert("No StreetView this location")
+            self.close();
+            }
+        else {
+            alert ("error code " + errorCode);
+            self.close();
+            }
+        }            // end function handleNoFlash()
+
+    </script>
+    </head>
+    <body onLoad = "do_the_view()" onUnload="GUnload()">
+    <div name="pano" id="pano" style="width: 600px; height: 400px"></div>
+    </body>
 </html>

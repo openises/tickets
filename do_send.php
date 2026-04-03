@@ -7,12 +7,12 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
 //dump($_GET);
 //dump($_POST);
 //do_send ($to_str, $subject_str, $text_str ) ;
 
-//	var postData = "to_str=" + the_to +"&subject_str=" + the_subj + "&text_str=" + the_msg; // the post string
+//    var postData = "to_str=" + the_to +"&subject_str=" + the_subj + "&text_str=" + the_msg; // the post string
 //snap(basename(__FILE__) . __LINE__, $_POST['to_str'] );
 //snap(basename(__FILE__) . __LINE__, $_POST['subject_str'] );
 //snap(basename(__FILE__) . __LINE__, $_POST['text_str']);

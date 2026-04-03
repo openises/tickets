@@ -10,43 +10,43 @@ header("Content-type: image/png");
 //$img_url = "./icons/gen_icon5.php?blank=7&text=BB";
 
 function do_icon ($icon, $text, $color) {
-	$im = imagecreatefrompng($icon);
-	imageAlphaBlending($im, true);
-	imageSaveAlpha($im, true);
-		
-	$len = strlen($text);
-	$p1 = ($len <= 2)? 1:2 ;
-	$p2 = ($len <= 2)? 3:2 ;
-	$px = (imagesx($im) - 7 * $len) / 2 + $p1;
-	$font = 'arial.ttf';
-	$contrast = ($color)? imagecolorallocate($im, 255, 255, 255): imagecolorallocate($im, 0, 0, 0); // white on dark?
+    $im = imagecreatefrompng($icon);
+    imageAlphaBlending($im, true);
+    imageSaveAlpha($im, true);
 
-	imagestring($im, $p2, $px, 3, $text, $contrast);	// imagestring  ( $image, $font, $x, $y, $string, $color)
+    $len = strlen($text);
+    $p1 = ($len <= 2)? 1:2 ;
+    $p2 = ($len <= 2)? 3:2 ;
+    $px = (imagesx($im) - 7 * $len) / 2 + $p1;
+    $font = 'arial.ttf';
+    $contrast = ($color)? imagecolorallocate($im, 255, 255, 255): imagecolorallocate($im, 0, 0, 0); // white on dark?
 
-	imagepng($im);
-	imagedestroy($im);
-	}
-				// the following array must be kept in synch with $GLOBALS['icons'] 
-				
-$icons = array("black.png", "blue.png", "green.png", "red.png", "white.png", "yellow.png", "gray.png", "lt_blue.png", "orange.png");		// 1/9/09
-$light = array( TRUE, 		TRUE, 		FALSE, 		 FALSE, 	FALSE, 		FALSE, 		FALSE, 			FALSE, 		FALSE);		// white text?
-	
+    imagestring($im, $p2, $px, 3, $text, $contrast);    // imagestring  ( $image, $font, $x, $y, $string, $color)
+
+    imagepng($im);
+    imagedestroy($im);
+    }
+                // the following array must be kept in synch with $GLOBALS['icons']
+
+$icons = array("black.png", "blue.png", "green.png", "red.png", "white.png", "yellow.png", "gray.png", "lt_blue.png", "orange.png");        // 1/9/09
+$light = array( true,         true,         false,          false,     false,         false,         false,             false,         false);        // white text?
+
 $blank = (array_key_exists('blank', $_GET)) ? intval($_GET['blank']) : 0;
 if ($blank < 0 || $blank >= count($icons)) { $blank = 0; }
-$the_icon = $icons[$blank];				// bounded icon index
+$the_icon = $icons[$blank];                // bounded icon index
 $the_text = (array_key_exists('text', $_GET) && !is_null($_GET['text'])) ? substr((string)$_GET['text'], 0, 3) : '';
 
 if (!function_exists('imagecreatefrompng') || !function_exists('imagestring') || !function_exists('imagepng')) {
-	$icon_path = __DIR__ . '/' . $the_icon;
-	if (is_readable($icon_path)) {
-		readfile($icon_path);
-		exit();
-	}
-	http_response_code(500);
-	exit();
+    $icon_path = __DIR__ . '/' . $the_icon;
+    if (is_readable($icon_path)) {
+        readfile($icon_path);
+        exit();
+    }
+    http_response_code(500);
+    exit();
 }
 
-do_icon ($the_icon, $the_text, $light[$blank]);	
+do_icon ($the_icon, $the_text, $light[$blank]);
 
 ?>
 

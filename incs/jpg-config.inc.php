@@ -1,9 +1,9 @@
 <?php
 //=======================================================================
-// File:	JPG-CONFIG.INC
-// Description:	Configuration file for JpGraph library
-// Created: 	2004-03-27
-// Ver:		$Id: jpg-config.inc.php 781 2006-10-08 08:07:47Z ljp $
+// File:    JPG-CONFIG.INC
+// Description:    Configuration file for JpGraph library
+// Created:     2004-03-27
+// Ver:        $Id: jpg-config.inc.php 781 2006-10-08 08:07:47Z ljp $
 //
 // Copyright (c) Aditus Consulting. All rights reserved.
 //========================================================================
@@ -11,7 +11,7 @@
 
 
 //------------------------------------------------------------------------
-// Directories for cache and font directory. 
+// Directories for cache and font directory.
 //
 // CACHE_DIR:
 // The full absolute name of the directory to be used to store the
@@ -44,14 +44,14 @@
 // Cache directory specification for use with CSIM graphs that are
 // using the cache.
 // The directory must be the filesysystem name as seen by PHP
-// and the 'http' version must be the same directory but as 
-// seen by the HTTP server relative to the 'htdocs' ddirectory. 
+// and the 'http' version must be the same directory but as
+// seen by the HTTP server relative to the 'htdocs' ddirectory.
 // If a relative path is specified it is taken to be relative from where
 // the image script is executed.
-// Note: The default setting is to create a subdirectory in the 
+// Note: The default setting is to create a subdirectory in the
 // directory from where the image script is executed and store all files
 // there. As ususal this directory must be writeable by the PHP process.
-DEFINE("CSIMCACHE_DIR","csimcache/"); 
+DEFINE("CSIMCACHE_DIR","csimcache/");
 DEFINE("CSIMCACHE_HTTP_DIR","csimcache/");
 
 //------------------------------------------------------------------------
@@ -67,7 +67,7 @@ DEFINE('CHINESE_TTF_FONT','bkai00mp.ttf');
 DEFINE("LANGUAGE_GREEK",false);
 
 // If you are setting this config to true the conversion of greek characters
-// will assume that the input text is windows 1251 
+// will assume that the input text is windows 1251
 DEFINE("GREEK_FROM_WINDOWS",false);
 
 // Special unicode cyrillic language support
@@ -102,7 +102,7 @@ DEFINE("CYRILLIC_FROM_WINDOWS",false);
 //
 // where $locale_char_set is a GLOBAL (string) variable
 // from the application including JpGraph.
-// 
+//
 DEFINE('LANGUAGE_CHARSET', null);
 
 // Japanese TrueType font used with FF_MINCHO, FF_PMINCHO, FF_GOTHIC, FF_PGOTHIC
@@ -112,7 +112,7 @@ DEFINE('GOTHIC_TTF_FONT','ipag.ttf');
 DEFINE('PGOTHIC_TTF_FONT','ipagp.ttf');
 
 // Assume that Japanese text have been entered in EUC-JP encoding.
-// If this define is true then conversion from EUC-JP to UTF8 is done 
+// If this define is true then conversion from EUC-JP to UTF8 is done
 // automatically in the library using the mbstring module in PHP.
 DEFINE('ASSUME_EUCJP_ENCODING',false);
 
@@ -132,16 +132,16 @@ DEFINE('DEFAULT_ERR_LOCALE','en');
 DEFINE("DEFAULT_GFORMAT","auto");
 
 // Should the cache be used at all? By setting this to false no
-// files will be generated in the cache directory.  
+// files will be generated in the cache directory.
 // The difference from READ_CACHE being that setting READ_CACHE to
 // false will still create the image in the cache directory
 // just not use it. By setting USE_CACHE=false no files will even
 // be generated in the cache directory.
 DEFINE("USE_CACHE",false);
 
-// Should we try to find an image in the cache before generating it? 
+// Should we try to find an image in the cache before generating it?
 // Set this define to false to bypass the reading of the cache and always
-// regenerate the image. Note that even if reading the cache is 
+// regenerate the image. Note that even if reading the cache is
 // disabled the cached will still be updated with the newly generated
 // image. Set also "USE_CACHE" below.
 DEFINE("READ_CACHE",true);
@@ -167,10 +167,10 @@ DEFINE("INSTALL_PHP_ERR_HANDLER",false);
 // If the color palette is full should JpGraph try to allocate
 // the closest match? If you plan on using background images or
 // gradient fills it might be a good idea to enable this.
-// If not you will otherwise get an error saying that the color palette is 
-// exhausted. The drawback of using approximations is that the colors 
-// might not be exactly what you specified. 
-// Note1: This does only apply to paletted images, not truecolor 
+// If not you will otherwise get an error saying that the color palette is
+// exhausted. The drawback of using approximations is that the colors
+// might not be exactly what you specified.
+// Note1: This does only apply to paletted images, not truecolor
 // images since they don't have the limitations of maximum number
 // of colors.
 DEFINE("USE_APPROX_COLORS",true);
@@ -203,7 +203,7 @@ DEFINE("CACHE_FILE_GROUP","wwwadmin");
 DEFINE("CACHE_FILE_MOD",0664);
 
 // Decide if we should use the bresenham circle algorithm or the
-// built in Arc(). Bresenham gives better visual apperance of circles 
+// built in Arc(). Bresenham gives better visual apperance of circles
 // but is more CPU intensive and slower then the built in Arc() function
 // in GD. Turned off by default for speed
 DEFINE("USE_BRESENHAM",false);

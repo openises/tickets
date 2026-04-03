@@ -1,12 +1,12 @@
 <?php
-function the_func() {	
-	return FALSE;	
-	}
+function the_func() {
+    return false;
+    }
 if ($temp = the_func()) {
-	print __LINE__;
-	print $temp;
-	}
+    print __LINE__;
+    print $temp;
+    }
 else {
-	print __LINE__;
-	}
+    print __LINE__;
+    }
 ?>

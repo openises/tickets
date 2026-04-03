@@ -6,8 +6,8 @@ list messages.php - gets messages from messages table for display in message win
 require_once('../incs/functions.inc.php');
 
 if(empty($_GET)) {
-	exit();
-	}
+    exit();
+    }
 
 $the_id = sanitize_int($_GET['id']);
 

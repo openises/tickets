@@ -5,42 +5,42 @@
 @session_start();
 require_once('../../incs/functions.inc.php');
 function br2nl($input) {
-	return preg_replace('/<br(\s+)?\/?>/i', "\n", $input);
-	}
+    return preg_replace('/<br(\s+)?\/?>/i', "\n", $input);
+    }
 $return = "";
 if(empty($_GET)) {
-	exit;
-	} else {
-	$user_id = sanitize_int($_GET['id']);
-	}
+    exit;
+    } else {
+    $user_id = sanitize_int($_GET['id']);
+    }
 
 $where = "WHERE (`user_id` = ? OR `user_id` = 0) AND `type` = 2";
 
 $query = "SELECT *,
-		`fx`.`id` AS `x_id`,
-		`f`.`id` AS `f_id`
-		FROM `{$GLOBALS['mysql_prefix']}files_x` `fx`
-		LEFT JOIN `{$GLOBALS['mysql_prefix']}files` `f` ON `f`.`id` = `fx`.`file_id`
-		WHERE (`user_id` = ? OR `user_id` = 0) AND `type` = 2 ORDER BY `f`.`id` ASC";
+        `fx`.`id` AS `x_id`,
+        `f`.`id` AS `f_id`
+        FROM `{$GLOBALS['mysql_prefix']}files_x` `fx`
+        LEFT JOIN `{$GLOBALS['mysql_prefix']}files` `f` ON `f`.`id` = `fx`.`file_id`
+        WHERE (`user_id` = ? OR `user_id` = 0) AND `type` = 2 ORDER BY `f`.`id` ASC";
 $bgcolor = '#EEEEEE';
 $result = db_query($query, [$user_id]);
 if (db()->affected_rows == 0) {
-	$return .= "<TABLE style='width: 100%;'><TR style='width: 100%; font-size: 1em; cursor: default;'><TD style='width: 100%; font-size: 1em; text-align: center; cursor: default;'>No Files</TD></TR></TABLE>";
-	} else {
-	$return .= "<TABLE style='width: 100%;'>";	
-	$return .= "<TR class='heading' style='width: 100%; color: #FFFFFF; font-size: 1.1em; cursor: default;'><TD style='font-size: 1em;; color: #FFFFFF; cursor: default;'>File Name</TD><TD style='font-size: 1em;; color: #FFFFFF; cursor: default;'>Uploaded By</TD><TD style='font-size: 1em;; color: #FFFFFF; cursor: default;'>Date</TD></TR>";		
-	while ($row = stripslashes_deep($result->fetch_assoc())){
-		$return .= "<TR style='background-color: " . $bgcolor . "; font-size: 1em;' onClick=\"location.href='./ajax/download.php?filename=" . $filename . "&origname=" . $row['orig_filename'] . "';\">";
-		$filename = $row['filename'];
-		$return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . $row['title'] . "</TD>";
-		$return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . get_owner($row['_by']) . "</TD>";
-		$return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . format_date_2(safe_strtotime($row['_on'])) . "</TD>";		
-		$return .= "</TR>";
-		$bgcolor = ($bgcolor == '#EEEEEE') ? '#FEFEFE' : '#EEEEEE';
-		}				// end while
-		$return .= "</TABLE>";
-	}	//	end else
-	
+    $return .= "<TABLE style='width: 100%;'><TR style='width: 100%; font-size: 1em; cursor: default;'><TD style='width: 100%; font-size: 1em; text-align: center; cursor: default;'>No Files</TD></TR></TABLE>";
+    } else {
+    $return .= "<TABLE style='width: 100%;'>";
+    $return .= "<TR class='heading' style='width: 100%; color: #FFFFFF; font-size: 1.1em; cursor: default;'><TD style='font-size: 1em;; color: #FFFFFF; cursor: default;'>File Name</TD><TD style='font-size: 1em;; color: #FFFFFF; cursor: default;'>Uploaded By</TD><TD style='font-size: 1em;; color: #FFFFFF; cursor: default;'>Date</TD></TR>";
+    while ($row = stripslashes_deep($result->fetch_assoc())){
+        $return .= "<TR style='background-color: " . $bgcolor . "; font-size: 1em;' onClick=\"location.href='./ajax/download.php?filename=" . $filename . "&origname=" . $row['orig_filename'] . "';\">";
+        $filename = $row['filename'];
+        $return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . $row['title'] . "</TD>";
+        $return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . get_owner($row['_by']) . "</TD>";
+        $return .= "<TD class='td_data' style='font-size: 1em; cursor: pointer;'>" . format_date_2(safe_strtotime($row['_on'])) . "</TD>";
+        $return .= "</TR>";
+        $bgcolor = ($bgcolor == '#EEEEEE') ? '#FEFEFE' : '#EEEEEE';
+        }                // end while
+        $return .= "</TABLE>";
+    }    //    end else
+
 print $return;
 exit();
 ?>

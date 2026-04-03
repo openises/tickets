@@ -10,30 +10,30 @@ $theError = sanitize_string($_GET['debugtxt']);
 $filename = "../debuglog.txt";
 
 if (file_exists($filename)) {
-	if (!$fp = fopen($filename, 'a')) {
-		$ret_arr[0] = 0;
-		} else {
-		fwrite($fp, "Debug Written " . date('r') . "\r\n");
-		fwrite($fp, "{$theError}\r\n\n");
-		fclose($fp);
-		$ret_arr[0] = 1;
-		}
-	} else {
-	if(!$fp = fopen($filename, 'w')) {
-		$ret_arr[0] = 99;
-		} else {
-		fwrite($fp, "Created " . date('r') . "\n");
-		fclose($fp);
-		if (!$fp = fopen($filename, 'a')) {
-			$ret_arr[0] = 0;
-			} else {
-			fwrite($fp, "Debug Written " . date('r') . "\r\n");
-			fwrite($fp, "{$theError}\r\n\n");
-			fclose($fp);
-			$ret_arr[0] = 1;
-			}
-		}
-	}
+    if (!$fp = fopen($filename, 'a')) {
+        $ret_arr[0] = 0;
+        } else {
+        fwrite($fp, "Debug Written " . date('r') . "\r\n");
+        fwrite($fp, "{$theError}\r\n\n");
+        fclose($fp);
+        $ret_arr[0] = 1;
+        }
+    } else {
+    if(!$fp = fopen($filename, 'w')) {
+        $ret_arr[0] = 99;
+        } else {
+        fwrite($fp, "Created " . date('r') . "\n");
+        fclose($fp);
+        if (!$fp = fopen($filename, 'a')) {
+            $ret_arr[0] = 0;
+            } else {
+            fwrite($fp, "Debug Written " . date('r') . "\r\n");
+            fwrite($fp, "{$theError}\r\n\n");
+            fclose($fp);
+            $ret_arr[0] = 1;
+            }
+        }
+    }
 
 print json_encode($ret_arr);
 exit();

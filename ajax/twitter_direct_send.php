@@ -7,17 +7,17 @@ require_once('../incs/functions.inc.php');
 @session_start();
 session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
-	exit();
-	}
+    exit();
+    }
 $ret_arr = array();
 $the_message = sanitize_string(strip_tags($_GET['message']));
 $the_userid = sanitize_string(strip_tags($_GET['userid']));
 $the_screenname = sanitize_string(strip_tags($_GET['screenname']));
 $theresult = do_tweet_direct($the_message, $the_userid, $the_screenname);
 if($theresult == 1) {
-	$ret_arr[0] = 1;
-	} else {
-	$ret_arr[0] = $theresult;
-	}
+    $ret_arr[0] = 1;
+    } else {
+    $ret_arr[0] = $theresult;
+    }
 
 print json_encode($ret_arr);

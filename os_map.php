@@ -4,12 +4,12 @@ require_once('./incs/functions.inc.php');
 session_write_close();
 $server_name = "http://www." . $_SERVER['SERVER_NAME'];
 function get_day() {
-	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-	if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
-	return date('l',$timestamp);
-	}
+    $timestamp = (time() - (intval(get_variable('delta_mins'))*60));
+    if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
+    return date('l',$timestamp);
+    }
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';
-$alt_day_night = ($day_night=="Day") ? "Night" : "Day"; 
+$alt_day_night = ($day_night=="Day") ? "Night" : "Day";
 $label1 = "";
 $label2 = "";
 $label3 = "";
@@ -30,236 +30,236 @@ $text8 = "";
 $id = sanitize_int($_GET['id']);
 $popup_type = sanitize_string($_GET['type']);
 if($popup_type == 'ticket') {
-	$label1 = get_text('Scope');
-	$label2 = get_text('Synopsis');
-	$label3 = get_text('Problemstart');
-	$label4 = get_text('Problemend');
-	$label5 = get_text('Disposition');
-	$label6 = get_text('Severity');
-	$label7 = get_text('Type');
-	$label8 = get_text('Status');
-	$u_types = array();
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";		// types in use
-	$result = db_query($query);
-	while ($row = stripslashes_deep($result->fetch_assoc())) {
-		$u_types [$row['id']] = array ($row['name'], $row['icon']);		// name, index, aprs - 1/5/09, 1/21/09
-		}
-	unset($result);
+    $label1 = get_text('Scope');
+    $label2 = get_text('Synopsis');
+    $label3 = get_text('Problemstart');
+    $label4 = get_text('Problemend');
+    $label5 = get_text('Disposition');
+    $label6 = get_text('Severity');
+    $label7 = get_text('Type');
+    $label8 = get_text('Status');
+    $u_types = array();
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}unit_types` ORDER BY `id`";        // types in use
+    $result = db_query($query);
+    while ($row = stripslashes_deep($result->fetch_assoc())) {
+        $u_types [$row['id']] = array ($row['name'], $row['icon']);        // name, index, aprs - 1/5/09, 1/21/09
+        }
+    unset($result);
 
-	$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
+    $eols = array ("\r\n", "\n", "\r");        // all flavors of eol
 
-	$assigns = array();					// 8/3/08
-	$tickets = array();					// ticket id's
-	$responders = array();				// responder details
+    $assigns = array();                    // 8/3/08
+    $tickets = array();                    // ticket id's
+    $responders = array();                // responder details
 
-	$query = "SELECT `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`,
-		`{$GLOBALS['mysql_prefix']}assigns`.`responder_id`,
-		`{$GLOBALS['mysql_prefix']}ticket`.`scope` AS `ticket`
-		FROM `{$GLOBALS['mysql_prefix']}assigns`
-		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` ON `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`=`{$GLOBALS['mysql_prefix']}ticket`.`id`";
-	$result_as = db_query($query);
-	while ($row_as = stripslashes_deep($result_as->fetch_array())) {
-		$assigns[$row_as['responder_id']] = $row_as['ticket'];
-		$tickets[$row_as['responder_id']] = $row_as['ticket_id'];
-		}
-	unset($result_as);
+    $query = "SELECT `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`,
+        `{$GLOBALS['mysql_prefix']}assigns`.`responder_id`,
+        `{$GLOBALS['mysql_prefix']}ticket`.`scope` AS `ticket`
+        FROM `{$GLOBALS['mysql_prefix']}assigns`
+        LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` ON `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`=`{$GLOBALS['mysql_prefix']}ticket`.`id`";
+    $result_as = db_query($query);
+    while ($row_as = stripslashes_deep($result_as->fetch_array())) {
+        $assigns[$row_as['responder_id']] = $row_as['ticket'];
+        $tickets[$row_as['responder_id']] = $row_as['ticket_id'];
+        }
+    unset($result_as);
 
-	$query = "SELECT `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`,
-		`{$GLOBALS['mysql_prefix']}assigns`.`responder_id`,
-		`{$GLOBALS['mysql_prefix']}responder`.`name` AS `r_name`,
-		`{$GLOBALS['mysql_prefix']}responder`.`handle` AS `r_handle`,
-		`{$GLOBALS['mysql_prefix']}responder`.`street` AS `r_street`,
-		`{$GLOBALS['mysql_prefix']}responder`.`city` AS `r_city`,
-		`{$GLOBALS['mysql_prefix']}responder`.`status_updated` AS `r_updated`,
-		`{$GLOBALS['mysql_prefix']}responder`.`lat` AS `r_lat`,
-		`{$GLOBALS['mysql_prefix']}responder`.`lng` AS `r_lng`
-		FROM `{$GLOBALS['mysql_prefix']}assigns`
-		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` ON `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`=`{$GLOBALS['mysql_prefix']}ticket`.`id`
-		LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` ON `{$GLOBALS['mysql_prefix']}assigns`.`responder_id`=`{$GLOBALS['mysql_prefix']}responder`.`id`
-		WHERE `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = ?";
-	$result_ras = db_query($query, [$id]);
-	while ($row_ras = stripslashes_deep($result_ras->fetch_array())) {
-		$responders[$row_ras['responder_id']][0] = $row_ras['responder_id'];
-		$responders[$row_ras['responder_id']][1] = $row_ras['r_name'];
-		$responders[$row_ras['responder_id']][2] = $row_ras['r_lat'];
-		$responders[$row_ras['responder_id']][3] = $row_ras['r_lng'];
-		$responders[$row_ras['responder_id']][4] = $row_ras['r_street'];
-		$responders[$row_ras['responder_id']][5] = $row_ras['r_city'];
-		$responders[$row_ras['responder_id']][6] = $row_ras['r_updated'];
-		$responders[$row_ras['responder_id']][7] = $row_ras['r_handle'];
-		}
-	unset($result_ras);	
-	$query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?";
-	$result = db_query($query, [$id]);
-	$row = $result->fetch_assoc();
-	$theRow = $row;
-	$lat = $row['lat'];
-	$lng = $row['lng'];
-	$title = $text1 = $row['scope'];
-	$sev = $row['severity'];
-	$ticket_severity = $text6 = get_severity($row['severity']);
-	$ticket_type = $text7 = get_type($row['in_types_id']);
-	$ticket_status = $text7 = get_status($row['status']);
-	$ticket_updated = format_date_time($row['updated']);
-	$ticket_addr = "{$row['street']}, {$row['city']} {$row['state']} ";
-	$ticket_synopsis = $text2 = $row['description'];
-	$ticket_disposition = $text5 = $row['comments'];
-	$ticket_start = $row['problemstart'];		//
-	$ticket_end = $row['problemend'];		//
-	$ticket_start_str = $text3 = format_date_2($row['problemstart']);		//
-	$ticket_end_str = $text4 = format_date_2($row['problemend']);		//
-	$thetabs = "<TABLE style=\"width: 250px;\">";
-	$thetabs .= "<TR class=\"even\"><TD class=\"td_label\">" . get_text('Scope') . "</TD><TD class=\"td_data\">" . $title . "</TD></TR>";
-	$thetabs .= "<TR class=\"odd\"><TD class=\"td_label\">" . get_text('Address') . "</TD><TD class=\"td_data\">" . $row['street'] . "</TD></TR>";
-	$thetabs .= "<TR class=\"even\"><TD class=\"td_label\">" . get_text('City') . "</TD><TD class=\"td_data\">" . $row['city'] . "</TD></TR>";
-	$thetabs .= "<TR class=\"odd\"><TD class=\"td_label\">" . get_text('Problemstart') . "</TD><TD class=\"td_data\">" . format_date_2($ticket_start) . "</TD></TR>";
-	$thetabs .= "</TABLE>";
-	} elseif($popup_type == 'responder') {
-	$status_vals = array();											// build array of $status_vals
-	$status_vals[''] = $status_vals['0']="TBD";
+    $query = "SELECT `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`,
+        `{$GLOBALS['mysql_prefix']}assigns`.`responder_id`,
+        `{$GLOBALS['mysql_prefix']}responder`.`name` AS `r_name`,
+        `{$GLOBALS['mysql_prefix']}responder`.`handle` AS `r_handle`,
+        `{$GLOBALS['mysql_prefix']}responder`.`street` AS `r_street`,
+        `{$GLOBALS['mysql_prefix']}responder`.`city` AS `r_city`,
+        `{$GLOBALS['mysql_prefix']}responder`.`status_updated` AS `r_updated`,
+        `{$GLOBALS['mysql_prefix']}responder`.`lat` AS `r_lat`,
+        `{$GLOBALS['mysql_prefix']}responder`.`lng` AS `r_lng`
+        FROM `{$GLOBALS['mysql_prefix']}assigns`
+        LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` ON `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id`=`{$GLOBALS['mysql_prefix']}ticket`.`id`
+        LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` ON `{$GLOBALS['mysql_prefix']}assigns`.`responder_id`=`{$GLOBALS['mysql_prefix']}responder`.`id`
+        WHERE `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = ?";
+    $result_ras = db_query($query, [$id]);
+    while ($row_ras = stripslashes_deep($result_ras->fetch_array())) {
+        $responders[$row_ras['responder_id']][0] = $row_ras['responder_id'];
+        $responders[$row_ras['responder_id']][1] = $row_ras['r_name'];
+        $responders[$row_ras['responder_id']][2] = $row_ras['r_lat'];
+        $responders[$row_ras['responder_id']][3] = $row_ras['r_lng'];
+        $responders[$row_ras['responder_id']][4] = $row_ras['r_street'];
+        $responders[$row_ras['responder_id']][5] = $row_ras['r_city'];
+        $responders[$row_ras['responder_id']][6] = $row_ras['r_updated'];
+        $responders[$row_ras['responder_id']][7] = $row_ras['r_handle'];
+        }
+    unset($result_ras);
+    $query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?";
+    $result = db_query($query, [$id]);
+    $row = $result->fetch_assoc();
+    $theRow = $row;
+    $lat = $row['lat'];
+    $lng = $row['lng'];
+    $title = $text1 = $row['scope'];
+    $sev = $row['severity'];
+    $ticket_severity = $text6 = get_severity($row['severity']);
+    $ticket_type = $text7 = get_type($row['in_types_id']);
+    $ticket_status = $text7 = get_status($row['status']);
+    $ticket_updated = format_date_time($row['updated']);
+    $ticket_addr = "{$row['street']}, {$row['city']} {$row['state']} ";
+    $ticket_synopsis = $text2 = $row['description'];
+    $ticket_disposition = $text5 = $row['comments'];
+    $ticket_start = $row['problemstart'];        //
+    $ticket_end = $row['problemend'];        //
+    $ticket_start_str = $text3 = format_date_2($row['problemstart']);        //
+    $ticket_end_str = $text4 = format_date_2($row['problemend']);        //
+    $thetabs = "<TABLE style=\"width: 250px;\">";
+    $thetabs .= "<TR class=\"even\"><TD class=\"td_label\">" . get_text('Scope') . "</TD><TD class=\"td_data\">" . $title . "</TD></TR>";
+    $thetabs .= "<TR class=\"odd\"><TD class=\"td_label\">" . get_text('Address') . "</TD><TD class=\"td_data\">" . $row['street'] . "</TD></TR>";
+    $thetabs .= "<TR class=\"even\"><TD class=\"td_label\">" . get_text('City') . "</TD><TD class=\"td_data\">" . $row['city'] . "</TD></TR>";
+    $thetabs .= "<TR class=\"odd\"><TD class=\"td_label\">" . get_text('Problemstart') . "</TD><TD class=\"td_data\">" . format_date_2($ticket_start) . "</TD></TR>";
+    $thetabs .= "</TABLE>";
+    } elseif($popup_type == 'responder') {
+    $status_vals = array();                                            // build array of $status_vals
+    $status_vals[''] = $status_vals['0']="TBD";
 
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `id`";
-	$result_st = db_query($query);
-	while ($row_st = stripslashes_deep($result_st->fetch_array())) {
-		$temp = $row_st['id'];
-		$status_vals[$temp] = $row_st['status_val'];
-		$status_hide[$temp] = $row_st['hide'];
-		}
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` ORDER BY `id`";
+    $result_st = db_query($query);
+    while ($row_st = stripslashes_deep($result_st->fetch_array())) {
+        $temp = $row_st['id'];
+        $status_vals[$temp] = $row_st['status_val'];
+        $status_hide[$temp] = $row_st['hide'];
+        }
 
-	unset($result_st);
-	
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
-		LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` t ON ({$GLOBALS['mysql_prefix']}assigns.ticket_id = t.id)
-		WHERE `responder_id` = ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
+    unset($result_st);
 
-	$result_as = db_query($query, [$id]);
-	$units_assigned = $result_as->num_rows;
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+        LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` t ON ({$GLOBALS['mysql_prefix']}assigns.ticket_id = t.id)
+        WHERE `responder_id` = ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
 
-	switch ($units_assigned) {		
-		case 0:
-			$ass_td = "";
-			break;			
-		case 1:
-			$row_assign = stripslashes_deep($result_as->fetch_assoc());
-			$the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
-			$tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
-			switch($row_assign['severity'])		{		//color tickets by severity
-				case $GLOBALS['SEVERITY_MEDIUM']: 	$severityclass='severity_medium'; break;
-				case $GLOBALS['SEVERITY_HIGH']: 	$severityclass='severity_high'; break;
-				default: 							$severityclass='severity_normal'; break;
-				}		// end switch()
-			$ass_td = shorten($row_assign['scope'], 20);
-			break;
-		default:							// multiples
-			$ass_td = $units_assigned;
-			break;
-		}						// end switch(($units_assigned))
-	
-	$label1 = get_text('Name');
-	$label2 = get_text('Handle');
-	$label3 = get_text('Address');
-	$label4 = get_text('Assignments');
-	$label5 = get_text('Description');
-	$label6 = get_text('Status');
-	$label7 = get_text('Contact Via');
-	$label8 = get_text('Updated');
-	$the_day = "";
-	$outputstring = "";
-	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$id]);
-	$row = $result->fetch_assoc();
-	$theRow = $row;
-	$lat = $row['lat'];
-	$lng = $row['lng'];
-	$name = $text1 = $row['name'];
-	$handle = $text2 = $row['handle'];
-	$address = $text3 = shorten($row['street'] . ", " . $row['city'] . ", " . $row['state'], 30);
-	$assigns = $text4 = $ass_td;
-	$description = $text5 = "<textarea cols=30 cols=6 readonly>" . $row['description'] . "</textarea>";
-	$status = $text6 = $status_vals[$row['un_status_id']];
-	$email = $text7 = $row['contact_via'];
-	$updated = $text8 = format_date_2($row['updated']);
-	$thetabs = "<TABLE style=\"width: 250px;\">";
-	$thetabs .= "<TR class=\"even\"><TD class=\"td_label\">" . get_text('Name') . "</TD><TD class=\"td_data\">" . $name . "</TD></TR>";
-	$thetabs .= "<TR class=\"odd\"><TD class=\"td_label\">" . get_text('Address') . "</TD><TD class=\"td_data\">" . $row['street'] . "</TD></TR>";
-	$thetabs .= "<TR class=\"even\"><TD class=\"td_label\">" . get_text('City') . "</TD><TD class=\"td_data\">" . $row['city'] . "</TD></TR>";
-	$thetabs .= "<TR class=\"odd\"><TD class=\"td_label\">" . get_text('Updated') . "</TD><TD class=\"td_data\">" . format_date_2($updated) . "</TD></TR>";
-	$thetabs .= "</TABLE>";
-	} elseif($popup_type == 'facility') {
-	
-	$fac_status_vals = array();											// build array of $status_vals
-	$fac_status_vals[''] = $fac_status_vals['0']="TBD";
+    $result_as = db_query($query, [$id]);
+    $units_assigned = $result_as->num_rows;
 
-	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` ORDER BY `id`";
-	$result_st = db_query($query);
-	while ($row_st = stripslashes_deep($result_st->fetch_array())) {
-		$facid = $row_st['id'];
-		$fac_status_vals[$facid][0] = $row_st['status_val'];
-		$fac_status_vals[$facid][1] = $row_st['description'];
-		$fac_status_vals[$facid][2] = $row_st['bg_color'];	
-		$fac_status_vals[$facid][3] = $row_st['text_color'];			
-		}
+    switch ($units_assigned) {
+        case 0:
+            $ass_td = "";
+            break;
+        case 1:
+            $row_assign = stripslashes_deep($result_as->fetch_assoc());
+            $the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
+            $tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
+            switch($row_assign['severity'])        {        //color tickets by severity
+                case $GLOBALS['SEVERITY_MEDIUM']:     $severityclass='severity_medium'; break;
+                case $GLOBALS['SEVERITY_HIGH']:     $severityclass='severity_high'; break;
+                default:                             $severityclass='severity_normal'; break;
+                }        // end switch()
+            $ass_td = shorten($row_assign['scope'], 20);
+            break;
+        default:                            // multiples
+            $ass_td = $units_assigned;
+            break;
+        }                        // end switch(($units_assigned))
 
-	unset($result_st);
-	$label1 = get_text('Name');
-	$label2 = get_text('Handle');
-	$label3 = get_text('Address');
-	$label4 = get_text('Opening Hours');
-	$label5 = get_text('Description');
-	$label6 = get_text('Status');
-	$label7 = get_text('Contact Email');
-	$label8 = get_text('Updated');
-	$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE id=?", [$id]);
-	$row = $result->fetch_assoc();
-	$theRow = $row;
-	$opening_arr_serial = base64_decode($row['opening_hours']);
-	$opening_arr = unserialize($opening_arr_serial);
-	$openingHours = "Opening Hours<BR />";
-	$z=0;
-	foreach($opening_arr as $val) {
-		switch($z) {
-			case 0:
-			$dayname = "Monday";
-			break;
-			case 1:
-			$dayname = "Tuesday";
-			break;
-			case 2:
-			$dayname = "Wednesday";
-			break;
-			case 3:
-			$dayname = "Thursday";
-			break;
-			case 4:
-			$dayname = "Friday";
-			break;
-			case 5:
-			$dayname = "Saturday";
-			break;
-			case 6:
-			$dayname = "Sunday";
-			break;
-			}
-		if($dayname == get_day()) {
-			$the_day .= $dayname;
-			$outputstring .= " Opens: " . $val[1] . " Closes: " . $val[2];
-			}
-		$z++;
-		}
-	$openingHours = "Opening Times Today (" . $the_day . ")<BR />" . $outputstring;
-	
-	$name = $text1 = $row['name'];
-	$handle = $text2 = $row['handle'];
-	$address = $text3 = shorten($row['street'] . ", " . $row['city'] . ", " . $row['state'], 30);
-	$opening = $text4 = $openingHours;
-	$description = $text5 = "<textarea cols=30 cols=6 readonly>" . $row['description'] . "</textarea>";
-	$status = $text6 = $fac_status_vals[$row['status_id']][0];
-	$email = $text7 = $row['contact_email'];
-	$updated = $text8 = format_date_2($row['updated']);	
-	$lat = $row['lat'];
-	$lng = $row['lng'];	
-	} else {
-	exit();
-	}
+    $label1 = get_text('Name');
+    $label2 = get_text('Handle');
+    $label3 = get_text('Address');
+    $label4 = get_text('Assignments');
+    $label5 = get_text('Description');
+    $label6 = get_text('Status');
+    $label7 = get_text('Contact Via');
+    $label8 = get_text('Updated');
+    $the_day = "";
+    $outputstring = "";
+    $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$id]);
+    $row = $result->fetch_assoc();
+    $theRow = $row;
+    $lat = $row['lat'];
+    $lng = $row['lng'];
+    $name = $text1 = $row['name'];
+    $handle = $text2 = $row['handle'];
+    $address = $text3 = shorten($row['street'] . ", " . $row['city'] . ", " . $row['state'], 30);
+    $assigns = $text4 = $ass_td;
+    $description = $text5 = "<textarea cols=30 cols=6 readonly>" . $row['description'] . "</textarea>";
+    $status = $text6 = $status_vals[$row['un_status_id']];
+    $email = $text7 = $row['contact_via'];
+    $updated = $text8 = format_date_2($row['updated']);
+    $thetabs = "<TABLE style=\"width: 250px;\">";
+    $thetabs .= "<TR class=\"even\"><TD class=\"td_label\">" . get_text('Name') . "</TD><TD class=\"td_data\">" . $name . "</TD></TR>";
+    $thetabs .= "<TR class=\"odd\"><TD class=\"td_label\">" . get_text('Address') . "</TD><TD class=\"td_data\">" . $row['street'] . "</TD></TR>";
+    $thetabs .= "<TR class=\"even\"><TD class=\"td_label\">" . get_text('City') . "</TD><TD class=\"td_data\">" . $row['city'] . "</TD></TR>";
+    $thetabs .= "<TR class=\"odd\"><TD class=\"td_label\">" . get_text('Updated') . "</TD><TD class=\"td_data\">" . format_date_2($updated) . "</TD></TR>";
+    $thetabs .= "</TABLE>";
+    } elseif($popup_type == 'facility') {
+
+    $fac_status_vals = array();                                            // build array of $status_vals
+    $fac_status_vals[''] = $fac_status_vals['0']="TBD";
+
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` ORDER BY `id`";
+    $result_st = db_query($query);
+    while ($row_st = stripslashes_deep($result_st->fetch_array())) {
+        $facid = $row_st['id'];
+        $fac_status_vals[$facid][0] = $row_st['status_val'];
+        $fac_status_vals[$facid][1] = $row_st['description'];
+        $fac_status_vals[$facid][2] = $row_st['bg_color'];
+        $fac_status_vals[$facid][3] = $row_st['text_color'];
+        }
+
+    unset($result_st);
+    $label1 = get_text('Name');
+    $label2 = get_text('Handle');
+    $label3 = get_text('Address');
+    $label4 = get_text('Opening Hours');
+    $label5 = get_text('Description');
+    $label6 = get_text('Status');
+    $label7 = get_text('Contact Email');
+    $label8 = get_text('Updated');
+    $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE id=?", [$id]);
+    $row = $result->fetch_assoc();
+    $theRow = $row;
+    $opening_arr_serial = base64_decode($row['opening_hours']);
+    $opening_arr = unserialize($opening_arr_serial);
+    $openingHours = "Opening Hours<BR />";
+    $z=0;
+    foreach($opening_arr as $val) {
+        switch($z) {
+            case 0:
+            $dayname = "Monday";
+            break;
+            case 1:
+            $dayname = "Tuesday";
+            break;
+            case 2:
+            $dayname = "Wednesday";
+            break;
+            case 3:
+            $dayname = "Thursday";
+            break;
+            case 4:
+            $dayname = "Friday";
+            break;
+            case 5:
+            $dayname = "Saturday";
+            break;
+            case 6:
+            $dayname = "Sunday";
+            break;
+            }
+        if($dayname == get_day()) {
+            $the_day .= $dayname;
+            $outputstring .= " Opens: " . $val[1] . " Closes: " . $val[2];
+            }
+        $z++;
+        }
+    $openingHours = "Opening Times Today (" . $the_day . ")<BR />" . $outputstring;
+
+    $name = $text1 = $row['name'];
+    $handle = $text2 = $row['handle'];
+    $address = $text3 = shorten($row['street'] . ", " . $row['city'] . ", " . $row['state'], 30);
+    $opening = $text4 = $openingHours;
+    $description = $text5 = "<textarea cols=30 cols=6 readonly>" . $row['description'] . "</textarea>";
+    $status = $text6 = $fac_status_vals[$row['status_id']][0];
+    $email = $text7 = $row['contact_email'];
+    $updated = $text8 = format_date_2($row['updated']);
+    $lat = $row['lat'];
+    $lng = $row['lng'];
+    } else {
+    exit();
+    }
 $openspace_api = get_variable('openspace_api');
 $_SERVER['HTTP_REFERER'] = $server_name;
 
@@ -271,30 +271,30 @@ $_SERVER['HTTP_REFERER'] = $server_name;
 <LINK REL=StyleSheet HREF="stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <link rel="stylesheet" href="./js/leaflet/leaflet.css" />
 <!--[if lte IE 8]>
-	 <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
+     <link rel="stylesheet" href="./js/leaflet/leaflet.ie.css" />
 <![endif]-->
 <STYLE>
-	.disp_stat	{ FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
-	#regions_control { font-family: verdana, arial, helvetica, sans-serif; font-size: 5px; background-color: #FEFEFE; font-weight: bold;}
-	table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
-	table.cruises td {overflow: hidden; }
-	div.scrollableContainer { position: relative; padding-top: 1.3em; border: 1px solid #999; }
-	div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
-	div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
-	div.scrollingArea2 { max-height: 460px; overflow: auto; overflow-x: hidden; }
-	table.scrollable thead tr { position: absolute; left: -1px; top: 0px; }
-	table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
-	div.tabBox {}
-	div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
-	span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;	border-radius-topleft: .75em; border-radius-topright: .75em;
-			padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
-	span.tabinuse {	background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;	border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
-			border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;	z-index: 100;}
-	span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
-	div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;	border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
-			position: relative;	z-index: 101; cursor: normal; height: 250px;}
-	div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
-	.text-labels {font-size: 2em; font-weight: 700;}
+    .disp_stat    { FONT-WEIGHT: bold; FONT-SIZE: 9px; COLOR: #FFFFFF; BACKGROUND-COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;}
+    #regions_control { font-family: verdana, arial, helvetica, sans-serif; font-size: 5px; background-color: #FEFEFE; font-weight: bold;}
+    table.cruises { font-family: verdana, arial, helvetica, sans-serif; font-size: 11px; cellspacing: 0; border-collapse: collapse; }
+    table.cruises td {overflow: hidden; }
+    div.scrollableContainer { position: relative; padding-top: 1.3em; border: 1px solid #999; }
+    div.scrollableContainer2 { position: relative; padding-top: 1.3em; }
+    div.scrollingArea { max-height: 240px; overflow: auto; overflow-x: hidden; }
+    div.scrollingArea2 { max-height: 460px; overflow: auto; overflow-x: hidden; }
+    table.scrollable thead tr { position: absolute; left: -1px; top: 0px; }
+    table.cruises th { text-align: left; border-left: 1px solid #999; background: #CECECE; color: black; font-weight: bold; overflow: hidden; }
+    div.tabBox {}
+    div.tabArea { font-size: 80%; font-weight: bold; padding: 0px 0px 3px 0px; }
+    span.tab { background-color: #CECECE; color: #8060b0; border: 2px solid #000000; border-bottom-width: 0px; -moz-border-radius: .75em .75em 0em 0em;    border-radius-topleft: .75em; border-radius-topright: .75em;
+            padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px; z-index: 100; }
+    span.tabinuse {    background-color: #FFFFFF; color: #000000; border: 2px solid #000000; border-bottom-width: 0px;    border-color: #f0d0ff #b090e0 #b090e0 #f0d0ff; -moz-border-radius: .75em .75em 0em 0em;
+            border-radius-topleft: .75em; border-radius-topright: .75em; padding: 2px 1em 2px 1em; position: relative; text-decoration: none; top: 3px;    z-index: 100;}
+    span.tab:hover { background-color: #FEFEFE; border-color: #c0a0f0 #8060b0 #8060b0 #c0a0f0; color: #ffe0ff;}
+    div.content { font-size: 80%; background-color: #F0F0F0; border: 2px outset #707070; -moz-border-radius: 0em .5em .5em 0em;    border-radius-topright: .5em; border-radius-bottomright: .5em; padding: .5em;
+            position: relative;    z-index: 101; cursor: normal; height: 250px;}
+    div.contentwrapper { width: 260px; background-color: #F0F0F0; cursor: normal;}
+    .text-labels {font-size: 2em; font-weight: 700;}
 </STYLE>
 <script type="application/x-javascript" src="./js/usng.js"></script>
 <script type="application/x-javascript" src="./js/osgb.js"></script>
@@ -307,7 +307,7 @@ $_SERVER['HTTP_REFERER'] = $server_name;
 <script src="./js/leaflet/leaflet.js"></script>
 <script src="./js/proj4leaflet.js"></script>
 <script src="./js/leaflet/KML.js"></script>
-<script src="./js/leaflet/gpx.js"></script>  
+<script src="./js/leaflet/gpx.js"></script>
 <script src="./js/OSOpenspace.js"></script>
 <script src="./js/leaflet-openweathermap.js"></script>
 <script src="./js/esri-leaflet.js"></script>
@@ -333,26 +333,26 @@ var outerwidth;
 var outerheight;
 var topheight;
 function set_size() {
-	if (typeof window.innerWidth != 'undefined') {
-		viewportwidth = window.innerWidth,
-		viewportheight = window.innerHeight
-		} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-		viewportwidth = document.documentElement.clientWidth,
-		viewportheight = document.documentElement.clientHeight
-		} else {
-		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-		viewportheight = document.getElementsByTagName('body')[0].clientHeight
-		}
-	mapWidth = viewportwidth * .95;
-	mapHeight = viewportheight * .60;
-	outerwidth = viewportwidth * .99;
-	outerheight = viewportheight * .95;
-	$('outer').style.width = outerwidth + "px";
-	$('outer').style.height = outerheight + "px";
-	$('map_canvas').style.width = mapWidth + "px";
-	$('map_canvas').style.height = mapHeight + "px";
-	set_fontsizes(viewportwidth, "popup");
-	}
+    if (typeof window.innerWidth != 'undefined') {
+        viewportwidth = window.innerWidth,
+        viewportheight = window.innerHeight
+        } else if (typeof document.documentElement != 'undefined'    && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+        viewportwidth = document.documentElement.clientWidth,
+        viewportheight = document.documentElement.clientHeight
+        } else {
+        viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+        viewportheight = document.getElementsByTagName('body')[0].clientHeight
+        }
+    mapWidth = viewportwidth * .95;
+    mapHeight = viewportheight * .60;
+    outerwidth = viewportwidth * .99;
+    outerheight = viewportheight * .95;
+    $('outer').style.width = outerwidth + "px";
+    $('outer').style.height = outerheight + "px";
+    $('map_canvas').style.width = mapWidth + "px";
+    $('map_canvas').style.height = mapHeight + "px";
+    set_fontsizes(viewportwidth, "popup");
+    }
 
 //declare marker variables
 var pos, size, offset, infoWindowAnchor, icon, content, popUpSize;
@@ -360,236 +360,236 @@ var pos, size, offset, infoWindowAnchor, icon, content, popUpSize;
 var osgrid = LLtoOSGB(<?php print $lat;?>, <?php print $lng;?>, 5)
 
 function initmapbuilder() {
-	//initiate the map
-	var options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5, 4, 2.5, 2, 1]};
-	osMap = new OpenSpace.Map('map_canvas', options);
+    //initiate the map
+    var options = {resolutions: [2500, 1000, 500, 200, 100, 50, 25, 10, 5, 4, 2.5, 2, 1]};
+    osMap = new OpenSpace.Map('map_canvas', options);
 
-	//configure map options (basicmap.js)
-	setglobaloptions();
-	
-	// add a marker
-	var lonlat = new OpenLayers.LonLat(<?php print $lng;?>, <?php print $lat;?>);
+    //configure map options (basicmap.js)
+    setglobaloptions();
 
-	var gridProjection = new OpenSpace.GridProjection();
-	var pos = gridProjection.getMapPointFromLonLat(lonlat);
-	osMap.setCenter(pos,3);
-	size = new OpenLayers.Size(20,32);
-	offset = new OpenLayers.Pixel(-6,-5);
-	infoWindowAnchor = new OpenLayers.Pixel(16,16);
-	popUpSize = new OpenLayers.Size(300,150);
-	icon = new OpenSpace.Icon('./our_icons/red.png', size, offset, null, infoWindowAnchor);
-	osMap.createMarker(pos, icon, '<?php print $thetabs;?>', popUpSize);
-	$('osgrid').innerHTML = osgrid;
+    // add a marker
+    var lonlat = new OpenLayers.LonLat(<?php print $lng;?>, <?php print $lat;?>);
+
+    var gridProjection = new OpenSpace.GridProjection();
+    var pos = gridProjection.getMapPointFromLonLat(lonlat);
+    osMap.setCenter(pos,3);
+    size = new OpenLayers.Size(20,32);
+    offset = new OpenLayers.Pixel(-6,-5);
+    infoWindowAnchor = new OpenLayers.Pixel(16,16);
+    popUpSize = new OpenLayers.Size(300,150);
+    icon = new OpenSpace.Icon('./our_icons/red.png', size, offset, null, infoWindowAnchor);
+    osMap.createMarker(pos, icon, '<?php print $thetabs;?>', popUpSize);
+    $('osgrid').innerHTML = osgrid;
 <?php
-		if($popup_type == "ticket") {
-			foreach($responders AS $theVal) {
+        if($popup_type == "ticket") {
+            foreach($responders AS $theVal) {
 ?>
-			var lonlat<?php print $theVal[0];?> = new OpenLayers.LonLat(<?php print $theVal[3];?>, <?php print $theVal[2];?>);
-			var pos<?php print $theVal[0];?> = gridProjection.getMapPointFromLonLat(lonlat<?php print $theVal[0];?>);
-			icon = new OpenSpace.Icon('./our_icons/blue.png', size, offset, null, infoWindowAnchor);
-			var theHTML = "<TABLE style='width: 250px;'>";
-			theHTML += "<TR class='even'><TD class='td_label'>Name</TD><TD class='td_data'><?php print $theVal[1];?> (<?php print $theVal[7];?>)</TD></TR>";
-			theHTML += "<TR class='odd'><TD class='td_label'>Address</TD><TD class='td_data'><?php print $theVal[4];?></TD></TR>";
-			theHTML += "<TR class='even'><TD class='td_label'>City</TD><TD class='td_data'><?php print $theVal[5];?></TD></TR>";
-			theHTML += "<TR class='odd'><TD class='td_label'>Updated</TD><TD class='td_data'><?php print format_date_2($theVal[6]);?></TD></TR>";
-			theHTML += "</TABLE>";
-			osMap.createMarker(pos<?php print $theVal[0];?>, icon, theHTML, popUpSize);
+            var lonlat<?php print $theVal[0];?> = new OpenLayers.LonLat(<?php print $theVal[3];?>, <?php print $theVal[2];?>);
+            var pos<?php print $theVal[0];?> = gridProjection.getMapPointFromLonLat(lonlat<?php print $theVal[0];?>);
+            icon = new OpenSpace.Icon('./our_icons/blue.png', size, offset, null, infoWindowAnchor);
+            var theHTML = "<TABLE style='width: 250px;'>";
+            theHTML += "<TR class='even'><TD class='td_label'>Name</TD><TD class='td_data'><?php print $theVal[1];?> (<?php print $theVal[7];?>)</TD></TR>";
+            theHTML += "<TR class='odd'><TD class='td_label'>Address</TD><TD class='td_data'><?php print $theVal[4];?></TD></TR>";
+            theHTML += "<TR class='even'><TD class='td_label'>City</TD><TD class='td_data'><?php print $theVal[5];?></TD></TR>";
+            theHTML += "<TR class='odd'><TD class='td_label'>Updated</TD><TD class='td_data'><?php print format_date_2($theVal[6]);?></TD></TR>";
+            theHTML += "</TABLE>";
+            osMap.createMarker(pos<?php print $theVal[0];?>, icon, theHTML, popUpSize);
 <?php
-			}
-		}
+            }
+        }
 ?>
-	}
+    }
 </script>
 </HEAD>
 <?php
 if($popup_type == 'ticket') {
-	$severities = $colors = array();
-	$severities[$GLOBALS['SEVERITY_NORMAL']] = "#DEE3E7";
-	$severities[$GLOBALS['SEVERITY_MEDIUM']] = "#00FF00";
-	$severities[$GLOBALS['SEVERITY_HIGH']] = "#F80000";
+    $severities = $colors = array();
+    $severities[$GLOBALS['SEVERITY_NORMAL']] = "#DEE3E7";
+    $severities[$GLOBALS['SEVERITY_MEDIUM']] = "#00FF00";
+    $severities[$GLOBALS['SEVERITY_HIGH']] = "#F80000";
 
-	$colors[$GLOBALS['SEVERITY_NORMAL']] = "black";
-	$colors[$GLOBALS['SEVERITY_MEDIUM']] = "black";
-	$colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
-	
-	$styleStr = "style='background-color: " . $severities[$theRow['severity']] . "; color: " . $colors[$theRow['severity']] . ";'";
-	} else {
-	$styleStr = "style='background-color: " . get_css("row_light", $day_night) . "; color: " . get_css("row_light_text", $day_night) . ";'";
-	}
+    $colors[$GLOBALS['SEVERITY_NORMAL']] = "black";
+    $colors[$GLOBALS['SEVERITY_MEDIUM']] = "black";
+    $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
+
+    $styleStr = "style='background-color: " . $severities[$theRow['severity']] . "; color: " . $colors[$theRow['severity']] . ";'";
+    } else {
+    $styleStr = "style='background-color: " . get_css("row_light", $day_night) . "; color: " . get_css("row_light_text", $day_night) . ";'";
+    }
 switch($popup_type) {
-	case "ticket":
-	$header = "Ticket Details - Ordnance Survey Map - Grid Reference";
-	break;
-	case "responder":
-	$header = "Responder Details - Ordnance Survey Map - Grid Reference";
-	break;
-	case "facility":
-	$header = "Facility Details - Ordnance Survey Map - Grid Reference";
-	break;
-	}
+    case "ticket":
+    $header = "Ticket Details - Ordnance Survey Map - Grid Reference";
+    break;
+    case "responder":
+    $header = "Responder Details - Ordnance Survey Map - Grid Reference";
+    break;
+    case "facility":
+    $header = "Facility Details - Ordnance Survey Map - Grid Reference";
+    break;
+    }
 ?>
 <BODY <?php print $styleStr;?> onload="initmapbuilder();">
 <DIV id='outer' style='width: 100%;'>
-	<DIV id='button_bar' class='but_container'>	
-		<SPAN id='print_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.print();'><SPAN STYLE='float: left;'><?php print get_text("Print");?></SPAN><IMG STYLE='float: right;' SRC='./images/print_small.png' BORDER=0></SPAN>
-		<SPAN id='close_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/close_door_small.png' BORDER=0></SPAN>
-	</DIV>
-	<DIV id='theTop' style='position: relative; left: 2px; top: 70px; text-align: left;'>
-		<SPAN class='heading text' style='width: 100%; display: block;'><?php print $header;?>:<SPAN class='heading' id='osgrid'></SPAN></SPAN>
-		<TABLE style='width: 100%; table-layout: fixed; word-wrap: break-all;'>
-			<TR class='even'>
+    <DIV id='button_bar' class='but_container'>
+        <SPAN id='print_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.print();'><SPAN STYLE='float: left;'><?php print get_text("Print");?></SPAN><IMG STYLE='float: right;' SRC='./images/print_small.png' BORDER=0></SPAN>
+        <SPAN id='close_but' class='plain' style='float: right; vertical-align: middle; display: inline-block; width: 100px;;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='window.close();'><SPAN STYLE='float: left;'><?php print get_text("Close");?></SPAN><IMG STYLE='float: right;' SRC='./images/close_door_small.png' BORDER=0></SPAN>
+    </DIV>
+    <DIV id='theTop' style='position: relative; left: 2px; top: 70px; text-align: left;'>
+        <SPAN class='heading text' style='width: 100%; display: block;'><?php print $header;?>:<SPAN class='heading' id='osgrid'></SPAN></SPAN>
+        <TABLE style='width: 100%; table-layout: fixed; word-wrap: break-all;'>
+            <TR class='even'>
 <?php
-			if($popup_type == "ticket") {
+            if($popup_type == "ticket") {
 ?>
-				<TD style='width: 60%; border: 1px outset #707070;'>
+                <TD style='width: 60%; border: 1px outset #707070;'>
 <?php
-				} else {
+                } else {
 ?>
-				<TD style='width: 100%; border: 1px outset #707070;'>
+                <TD style='width: 100%; border: 1px outset #707070;'>
 <?php
-				}
+                }
 ?>
-					<TABLE style='table-layout: fixed; width: 100%; word-wrap: break-all;'>
-						<TR class='even' style='width: 100%;'>
-							<TD class='td_label text' style='width: 40%;'><?php print $label1;?></TD>
-							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text1;?></TD>
-						</TR>
-						<TR class='odd' style='width: 100%;'>
-							<TD class='td_label text' style='width: 40%;'><?php print $label2;?></TD>
-							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text2;?></TD>
-						</TR>
-						<TR class='even' style='width: 100%;'>
-							<TD class='td_label text' style='width: 40%;'><?php print $label3;?></TD>
-							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text3;?></TD>
-						</TR>
-						<TR class='odd' style='width: 100%;'>
-							<TD class='td_label text' style='width: 40%;'><?php print $label4;?></TD>
-							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text4;?></TD>
-						</TR>
-						<TR class='even' style='width: 100%;'>
-							<TD class='td_label text' style='width: 40%;'><?php print $label5;?></TD>
-							<TD class='td_data_wrap text' style='width: 60%; height: auto;'><?php print $text5;?></TD>
-						</TR>
-						<TR class='odd' style='width: 100%;'>
-							<TD class='td_label text' style='width: 40%;'><?php print $label6;?></TD>
-							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text6;?></TD>
-						</TR>
-						<TR class='even' style='width: 100%;'>
-							<TD class='td_label text' style='width: 40%;'><?php print $label7;?></TD>
-							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text7;?></TD>
-						</TR>
-						<TR class='odd' style='width: 100%;'>
-							<TD class='td_label text' style='width: 40%;'><?php print $label8;?></TD>
-							<TD class='td_data_wrap text' style='width: 60%;'><?php print $text8;?></TD>
-						</TR>
-					</TABLE>
-				</TD>
+                    <TABLE style='table-layout: fixed; width: 100%; word-wrap: break-all;'>
+                        <TR class='even' style='width: 100%;'>
+                            <TD class='td_label text' style='width: 40%;'><?php print $label1;?></TD>
+                            <TD class='td_data_wrap text' style='width: 60%;'><?php print $text1;?></TD>
+                        </TR>
+                        <TR class='odd' style='width: 100%;'>
+                            <TD class='td_label text' style='width: 40%;'><?php print $label2;?></TD>
+                            <TD class='td_data_wrap text' style='width: 60%;'><?php print $text2;?></TD>
+                        </TR>
+                        <TR class='even' style='width: 100%;'>
+                            <TD class='td_label text' style='width: 40%;'><?php print $label3;?></TD>
+                            <TD class='td_data_wrap text' style='width: 60%;'><?php print $text3;?></TD>
+                        </TR>
+                        <TR class='odd' style='width: 100%;'>
+                            <TD class='td_label text' style='width: 40%;'><?php print $label4;?></TD>
+                            <TD class='td_data_wrap text' style='width: 60%;'><?php print $text4;?></TD>
+                        </TR>
+                        <TR class='even' style='width: 100%;'>
+                            <TD class='td_label text' style='width: 40%;'><?php print $label5;?></TD>
+                            <TD class='td_data_wrap text' style='width: 60%; height: auto;'><?php print $text5;?></TD>
+                        </TR>
+                        <TR class='odd' style='width: 100%;'>
+                            <TD class='td_label text' style='width: 40%;'><?php print $label6;?></TD>
+                            <TD class='td_data_wrap text' style='width: 60%;'><?php print $text6;?></TD>
+                        </TR>
+                        <TR class='even' style='width: 100%;'>
+                            <TD class='td_label text' style='width: 40%;'><?php print $label7;?></TD>
+                            <TD class='td_data_wrap text' style='width: 60%;'><?php print $text7;?></TD>
+                        </TR>
+                        <TR class='odd' style='width: 100%;'>
+                            <TD class='td_label text' style='width: 40%;'><?php print $label8;?></TD>
+                            <TD class='td_data_wrap text' style='width: 60%;'><?php print $text8;?></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
 <?php
-				if($popup_type == "ticket") {
+                if($popup_type == "ticket") {
 ?>
-					<TD style='width: 40%; border: 1px outset #707070;'>
-						<TABLE>
-							<TR class='even'>
-								<TD CLASS='td_data_wrap text'>
-									<DIV style='width: 98%; height: 100%; overflow-y: auto;'>
+                    <TD style='width: 40%; border: 1px outset #707070;'>
+                        <TABLE>
+                            <TR class='even'>
+                                <TD CLASS='td_data_wrap text'>
+                                    <DIV style='width: 98%; height: 100%; overflow-y: auto;'>
 <?php
-										/* Creates statistics header and details of responding and en-route units 7/29/09 */
+                                        /* Creates statistics header and details of responding and en-route units 7/29/09 */
 
-										$result_dispatched = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
-											WHERE ticket_id=?
-											AND `dispatched` IS NOT NULL
-											AND `responding` IS NULL
-											AND `on_scene` IS NULL
-											AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))", [$id]);		// 6/25/10
-										$num_rows_dispatched = $result_dispatched->num_rows;
+                                        $result_dispatched = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+                                            WHERE ticket_id=?
+                                            AND `dispatched` IS NOT NULL
+                                            AND `responding` IS NULL
+                                            AND `on_scene` IS NULL
+                                            AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))", [$id]);        // 6/25/10
+                                        $num_rows_dispatched = $result_dispatched->num_rows;
 
-										$result_responding = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
-											WHERE ticket_id=?
-											AND `responding` IS NOT NULL
-											AND `on_scene` IS NULL
-											AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))", [$id]);		// 6/25/10
-										$num_rows_responding = $result_responding->num_rows;
+                                        $result_responding = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+                                            WHERE ticket_id=?
+                                            AND `responding` IS NOT NULL
+                                            AND `on_scene` IS NULL
+                                            AND ((`clear` IS NULL) OR (DATE_FORMAT(`clear`,'%y') = '00'))", [$id]);        // 6/25/10
+                                        $num_rows_responding = $result_responding->num_rows;
 
-										$result_on_scene = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
-											WHERE ticket_id=?
-											AND `on_scene` IS NOT NULL
-											AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')
-											", [$id]);		// 6/25/10
-										$num_rows_on_scene = $result_on_scene->num_rows;
-											
-										$query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(problemstart) AS problemstart,
-											`{$GLOBALS['mysql_prefix']}assigns`.`id` AS `assign_id` ,
-											`{$GLOBALS['mysql_prefix']}assigns`.`comments` AS `assign_comments`,
-											`r`.`id` AS `unit_id`,
-											`r`.`name` AS `unit_name` ,
-											`r`.`type` AS `unit_type` ,
-											`{$GLOBALS['mysql_prefix']}assigns`.`as_of` AS `assign_as_of`
-											FROM `{$GLOBALS['mysql_prefix']}assigns`
-											LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket`	 `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
-											LEFT JOIN `{$GLOBALS['mysql_prefix']}responder`	 `r` ON (`{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = `r`.`id`)
-												WHERE (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')
-												AND ticket_id=? ";
+                                        $result_on_scene = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns`
+                                            WHERE ticket_id=?
+                                            AND `on_scene` IS NOT NULL
+                                            AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')
+                                            ", [$id]);        // 6/25/10
+                                        $num_rows_on_scene = $result_on_scene->num_rows;
 
-										$result_cleared  = db_query($query, [$id]);
-										$num_rows_cleared = db()->affected_rows;
-										$ticket_end = ($ticket_end > 1)? $ticket_end:  (time() - (get_variable('delta_mins')*60));
-										$tick_end_str = format_date_2($ticket_end);
-										$elapsed = my_date_diff(mysql_format_date($ticket_start), mysql_format_date($ticket_end));		// 5/13/10
-										echo "<BR /><B>Ticket:&nbsp;{$title}<BR />Opened:&nbsp;{$ticket_start_str},&nbsp;&nbsp;&nbsp;&nbsp;Status: {$ticket_status}</B><BR />";
-										$stats = "<B>Severity:&nbsp;{$ticket_severity}, &nbsp;age: {$elapsed}";
+                                        $query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of, UNIX_TIMESTAMP(problemstart) AS problemstart,
+                                            `{$GLOBALS['mysql_prefix']}assigns`.`id` AS `assign_id` ,
+                                            `{$GLOBALS['mysql_prefix']}assigns`.`comments` AS `assign_comments`,
+                                            `r`.`id` AS `unit_id`,
+                                            `r`.`name` AS `unit_name` ,
+                                            `r`.`type` AS `unit_type` ,
+                                            `{$GLOBALS['mysql_prefix']}assigns`.`as_of` AS `assign_as_of`
+                                            FROM `{$GLOBALS['mysql_prefix']}assigns`
+                                            LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket`     `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
+                                            LEFT JOIN `{$GLOBALS['mysql_prefix']}responder`     `r` ON (`{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = `r`.`id`)
+                                                WHERE (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00')
+                                                AND ticket_id=? ";
 
-										echo $stats;
+                                        $result_cleared  = db_query($query, [$id]);
+                                        $num_rows_cleared = db()->affected_rows;
+                                        $ticket_end = ($ticket_end > 1)? $ticket_end:  (time() - (get_variable('delta_mins')*60));
+                                        $tick_end_str = format_date_2($ticket_end);
+                                        $elapsed = my_date_diff(mysql_format_date($ticket_start), mysql_format_date($ticket_end));        // 5/13/10
+                                        echo "<BR /><B>Ticket:&nbsp;{$title}<BR />Opened:&nbsp;{$ticket_start_str},&nbsp;&nbsp;&nbsp;&nbsp;Status: {$ticket_status}</B><BR />";
+                                        $stats = "<B>Severity:&nbsp;{$ticket_severity}, &nbsp;age: {$elapsed}";
 
-										echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
-										while ($row_base= $result_dispatched->fetch_assoc()) {
-											$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-											$row = $result->fetch_assoc();
-											echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
-											}
+                                        echo $stats;
 
-										echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
-										while ($row_base= $result_responding->fetch_assoc()) {
-											$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-											$row = $result->fetch_assoc();
-											echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
-											}
+                                        echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
+                                        while ($row_base= $result_dispatched->fetch_assoc()) {
+                                            $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+                                            $row = $result->fetch_assoc();
+                                            echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+                                            }
 
-										echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
-										while ($row_base= $result_on_scene->fetch_assoc()) {
-											$result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-											$row = $result->fetch_assoc();
-											echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
-											}
+                                        echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
+                                        while ($row_base= $result_responding->fetch_assoc()) {
+                                            $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+                                            $row = $result->fetch_assoc();
+                                            echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+                                            }
 
-										echo "<BR>Units clear:&nbsp;({$num_rows_cleared})&nbsp;";
-										while ($row_base= $result_cleared->fetch_assoc()) {
-											echo "{$row_base['unit_name']}:&nbsp;{$row_base['handle']}&nbsp;&nbsp;";
-											}
+                                        echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
+                                        while ($row_base= $result_on_scene->fetch_assoc()) {
+                                            $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
+                                            $row = $result->fetch_assoc();
+                                            echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
+                                            }
+
+                                        echo "<BR>Units clear:&nbsp;({$num_rows_cleared})&nbsp;";
+                                        while ($row_base= $result_cleared->fetch_assoc()) {
+                                            echo "{$row_base['unit_name']}:&nbsp;{$row_base['handle']}&nbsp;&nbsp;";
+                                            }
 ?>
-								</DIV>
-							</TD>
-						</TR>
-					</TABLE>
-				</TD>
+                                </DIV>
+                            </TD>
+                        </TR>
+                    </TABLE>
+                </TD>
 <?php
-				}
+                }
 ?>
-			</TR>
-		</TABLE>
-		<DIV id="map_canvas" style="border: 1px solid black;"></DIV></CENTER><BR />
-	</DIV>
+            </TR>
+        </TABLE>
+        <DIV id="map_canvas" style="border: 1px solid black;"></DIV></CENTER><BR />
+    </DIV>
 </DIV>
 <SCRIPT>
 if (typeof window.innerWidth != 'undefined') {
-	viewportwidth = window.innerWidth,
-	viewportheight = window.innerHeight
-	} else if (typeof document.documentElement != 'undefined'	&& typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
-	viewportwidth = document.documentElement.clientWidth,
-	viewportheight = document.documentElement.clientHeight
-	} else {
-	viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
-	viewportheight = document.getElementsByTagName('body')[0].clientHeight
-	}
+    viewportwidth = window.innerWidth,
+    viewportheight = window.innerHeight
+    } else if (typeof document.documentElement != 'undefined'    && typeof document.documentElement.clientWidth != 'undefined' && document.documentElement.clientWidth != 0) {
+    viewportwidth = document.documentElement.clientWidth,
+    viewportheight = document.documentElement.clientHeight
+    } else {
+    viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+    viewportheight = document.getElementsByTagName('body')[0].clientHeight
+    }
 mapWidth = viewportwidth * .95;
 mapHeight = viewportheight * .60;
 outerwidth = viewportwidth * .95;

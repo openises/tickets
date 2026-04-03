@@ -1,11 +1,11 @@
-<?php 
+<?php
 error_reporting(E_ALL);
 require_once('../incs/functions.inc.php');
 @session_start();
 // $the_session = $_GET['session'];
 // if(!(secure_page($the_session))) {
-	// exit();
-	// } else {
+    // exit();
+    // } else {
 
 $page = (isset($_GET['page'])) ? sanitize_int($_GET['page']) : 1;
 $the_list_lengths = explode(',', get_variable('list_length'));
@@ -27,20 +27,20 @@ $sord = (isset($_GET['sord'])) ? sanitize_string($_GET['sord']) : 'ASC';
 $lev = (isset($_GET['lev'])) ? sanitize_int($_GET['lev']) : $_SESSION['level'] ;
 
 // Team
-$team = (isset($_GET['team'])) ? sanitize_int($_GET['team']) : 0;  
+$team = (isset($_GET['team'])) ? sanitize_int($_GET['team']) : 0;
 
-// User 
+// User
 $user = (isset($_GET['user'])) ? sanitize_int($_GET['user']) : $SESSION['user_id'];
 
 $query = "SELECT * from `$GLOBALS[mysql_prefix]user` WHERE `id` = ?";
 $result = db_query($query, [$user]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 $num_rows = $result->num_rows;
 if($num_rows !=0) {
-	$row = stripslashes_deep($result->fetch_assoc());
-	$member = $row['member'];
-	} else {
-	$member = NULL;
-	}
+    $row = stripslashes_deep($result->fetch_assoc());
+    $member = $row['member'];
+    } else {
+    $member = null;
+    }
 // if we not pass at first time index use the first column for the index or what you want
 if(!$sidx) $sidx =1;
 
@@ -50,75 +50,75 @@ if (!in_array($sidx, $allowed_sidx)) $sidx = '1';
 $sord = (strtoupper($sord) === 'DESC') ? 'DESC' : 'ASC';
 
 if(($lev == 0) || ($lev == 1) || ($lev == 2)) {
-	$where = "";
-	} elseif (($team !=0 ) && ($lev == 3)) {
-	$where = "WHERE `te`.`id` = ? ";
-	$where_params[] = $team;
-	} elseif (($lev == 4) && ($member != NULL)) {
-	$where = "WHERE `m`.`id` = ? ";
-	$where_params[] = $member;
-	} else {
-	exit();
-	}
+    $where = "";
+    } elseif (($team !=0 ) && ($lev == 3)) {
+    $where = "WHERE `te`.`id` = ? ";
+    $where_params[] = $team;
+    } elseif (($lev == 4) && ($member != null)) {
+    $where = "WHERE `m`.`id` = ? ";
+    $where_params[] = $member;
+    } else {
+    exit();
+    }
 
-// calculate the number of rows for the query. We need this for paging the result 
+// calculate the number of rows for the query. We need this for paging the result
 $result = db_query("SELECT COUNT(*) AS count FROM `$GLOBALS[mysql_prefix]member`");
-$row = $result->fetch_assoc(); 
-$count = $row['count']; 
- 
-// calculate the total pages for the query 
-if( $count > 0 && $limit > 0) { 
-              $total_pages = ceil($count/$limit); 
-} else { 
-              $total_pages = 0; 
-} 
- 
-// if for some reasons the requested page is greater than the total 
-// set the requested page to total page 
-if ($page > $total_pages) $page=$total_pages;
- 
-// calculate the starting position of the rows 
-$start = $limit*$page - $limit;
- 
-// if for some reasons start position is negative set it to 0 
-// typical case is that the user type 0 for the requested page 
-if($start <0) $start = 0; 
+$row = $result->fetch_assoc();
+$count = $row['count'];
 
-// the actual query for the grid data 
+// calculate the total pages for the query
+if( $count > 0 && $limit > 0) {
+              $total_pages = ceil($count/$limit);
+} else {
+              $total_pages = 0;
+}
+
+// if for some reasons the requested page is greater than the total
+// set the requested page to total page
+if ($page > $total_pages) $page=$total_pages;
+
+// calculate the starting position of the rows
+$start = $limit*$page - $limit;
+
+// if for some reasons start position is negative set it to 0
+// typical case is that the user type 0 for the requested page
+if($start <0) $start = 0;
+
+// the actual query for the grid data
 $query = "SELECT *, `m`.`_on` AS `updated`,
-	`t`.`id` AS `type_id`, 
-	`s`.`id` AS `status_id`, 
-	`m`.`id` AS `member_id`, 
-	`m`.`field6` AS `middle_name`, 
-	`m`.`field1` AS `surname`, 
-	`m`.`field2` AS `firstname`, 
-	`m`.`field9` AS `street`, 
-	`m`.`field10` AS `city`, 	
-	`m`.`field11` AS `postcode`, 
-	`m`.`field21` AS `member_status_id`, 
-	`m`.`field7` AS `membertype`, 
-	`m`.`field12` AS `lat`, 
-	`m`.`field13` AS `lon`, 
-	`m`.`field25` AS `contact`, 	
-	`m`.`field17` AS `joindate`, 
-	`m`.`field16` AS `duedate`, 
-	`m`.`field18` AS `dob`, 	
-	`m`.`field19` AS `crb`, 
-	`m`.`field4` AS `teamno`,
-	`s`.`description` AS `stat_descr`, 
-	`s`.`status_val` AS `status_name`, 
-	`t`.`name` AS `type_name`, 	
-	`t`.`background` AS `type_background`, 
-	`t`.`color` AS `type_text`, 
-	`s`.`background` AS `status_background`, 
-	`s`.`color` AS `status_text`, 
-	`m`.`field14` AS `medical` 
-	FROM `$GLOBALS[mysql_prefix]member` `m` 
-	LEFT JOIN `$GLOBALS[mysql_prefix]member_types` `t` ON ( `m`.`field7` = t.id )	
-	LEFT JOIN `$GLOBALS[mysql_prefix]member_status` `s` ON ( `m`.`field21` = s.id ) 	
-	LEFT JOIN `$GLOBALS[mysql_prefix]team` `te` ON ( `m`.`field3` = te.id ) 
-	LEFT JOIN `$GLOBALS[mysql_prefix]user` `us` ON ( `m`.`id` = us.member ) 	
-	$where ORDER BY $sidx $sord LIMIT ? , ?";
+    `t`.`id` AS `type_id`,
+    `s`.`id` AS `status_id`,
+    `m`.`id` AS `member_id`,
+    `m`.`field6` AS `middle_name`,
+    `m`.`field1` AS `surname`,
+    `m`.`field2` AS `firstname`,
+    `m`.`field9` AS `street`,
+    `m`.`field10` AS `city`,
+    `m`.`field11` AS `postcode`,
+    `m`.`field21` AS `member_status_id`,
+    `m`.`field7` AS `membertype`,
+    `m`.`field12` AS `lat`,
+    `m`.`field13` AS `lon`,
+    `m`.`field25` AS `contact`,
+    `m`.`field17` AS `joindate`,
+    `m`.`field16` AS `duedate`,
+    `m`.`field18` AS `dob`,
+    `m`.`field19` AS `crb`,
+    `m`.`field4` AS `teamno`,
+    `s`.`description` AS `stat_descr`,
+    `s`.`status_val` AS `status_name`,
+    `t`.`name` AS `type_name`,
+    `t`.`background` AS `type_background`,
+    `t`.`color` AS `type_text`,
+    `s`.`background` AS `status_background`,
+    `s`.`color` AS `status_text`,
+    `m`.`field14` AS `medical`
+    FROM `$GLOBALS[mysql_prefix]member` `m`
+    LEFT JOIN `$GLOBALS[mysql_prefix]member_types` `t` ON ( `m`.`field7` = t.id )
+    LEFT JOIN `$GLOBALS[mysql_prefix]member_status` `s` ON ( `m`.`field21` = s.id )
+    LEFT JOIN `$GLOBALS[mysql_prefix]team` `te` ON ( `m`.`field3` = te.id )
+    LEFT JOIN `$GLOBALS[mysql_prefix]user` `us` ON ( `m`.`id` = us.member )
+    $where ORDER BY $sidx $sord LIMIT ? , ?";
 
 $where_params[] = $start;
 $where_params[] = $limit;
@@ -127,50 +127,50 @@ $result = db_query($query, $where_params) or do_error($query, 'mysql query faile
 
 // we should set the appropriate header information. Do not forget this.
 header("Content-type: text/xml;charset=utf-8");
- 
+
 $s = "<?xml version='1.0' encoding='utf-8'?>";
 $s .= "<rows>";
 $s .= "<page>".$page."</page>";
 $s .= "<total>".$total_pages."</total>";
 $s .= "<records>".$count."</records>";
- 
+
 // be sure to put text data in CDATA
 while($row = $result->fetch_assoc()) {
-	if((can_edit()) || (is_manager($row['member_id'])) || (is_curr_member($row['member_id']))) {
-		$statusmenu = get_status_sel($row['member_id'], $row['member_status_id'], "m");
-		} else {
-		$statusmenu = "<SPAN style='background: " . $row['status_background'] . "; color: " . $row['status_text'] . ";'>" . $row['status_name'] . "</SPAN>";
-		}
-	if((can_edit()) || (is_manager($row['member_id']))) {
-		$typemenu = get_type_sel($row['member_id'], $row['membertype'], "m");
-		} else {
-		$typemenu = "<SPAN style='background: " . $row['type_background'] . "; color: " . $row['type_text'] . ";'>" . $row['type_name'] . "</SPAN>";
-		}		
-	$type_col = ($row['type_id'] == 2) ? "red" : "green";
-	$type_back = ($row['type_id'] == 2) ? "yellow" : "#CECECE";	
-    $s .= "<row id='". $row['member_id']."'>";            
+    if((can_edit()) || (is_manager($row['member_id'])) || (is_curr_member($row['member_id']))) {
+        $statusmenu = get_status_sel($row['member_id'], $row['member_status_id'], "m");
+        } else {
+        $statusmenu = "<SPAN style='background: " . $row['status_background'] . "; color: " . $row['status_text'] . ";'>" . $row['status_name'] . "</SPAN>";
+        }
+    if((can_edit()) || (is_manager($row['member_id']))) {
+        $typemenu = get_type_sel($row['member_id'], $row['membertype'], "m");
+        } else {
+        $typemenu = "<SPAN style='background: " . $row['type_background'] . "; color: " . $row['type_text'] . ";'>" . $row['type_name'] . "</SPAN>";
+        }
+    $type_col = ($row['type_id'] == 2) ? "red" : "green";
+    $type_back = ($row['type_id'] == 2) ? "yellow" : "#CECECE";
+    $s .= "<row id='". $row['member_id']."'>";
     $s .= "<cell>". $row['member_id']."</cell>";
     $s .= "<cell><![CDATA[". $row['firstname']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['middle_name']."]]></cell>";
-    $s .= "<cell><![CDATA[". $row['surname']."]]></cell>";	
+    $s .= "<cell><![CDATA[". $row['surname']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['teamno']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['street']."]]></cell>";
-    $s .= "<cell><![CDATA[". $row['city']."]]></cell>";	
+    $s .= "<cell><![CDATA[". $row['city']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['postcode']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['lat']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['lon']."]]></cell>";
-    $s .= "<cell><![CDATA[". $row['contact']."]]></cell>";	
-    $s .= "<cell><![CDATA[". $row['membertype']."]]></cell>";	
+    $s .= "<cell><![CDATA[". $row['contact']."]]></cell>";
+    $s .= "<cell><![CDATA[". $row['membertype']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['type_name']."]]></cell>";
     $s .= "<cell><![CDATA[". $typemenu."]]></cell>";
     $s .= "<cell><![CDATA[". $row['status_name']."]]></cell>";
     $s .= "<cell><![CDATA[". $statusmenu."]]></cell>";
-    $s .= ((safe_strtotime($row['joindate']) == NULL) || (date("Y", safe_strtotime($row['joindate'])) == '1970') || (date("Y", safe_strtotime($row['joindate'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", safe_strtotime($row['joindate']))."]]></cell>";
-    $s .= ((safe_strtotime($row['duedate']) == NULL) || (date("Y", safe_strtotime($row['duedate'])) == '1970') || (date("Y", safe_strtotime($row['duedate'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", safe_strtotime($row['duedate']))."]]></cell>";
-    $s .= ((safe_strtotime($row['updated']) == NULL) || (date("Y", safe_strtotime($row['updated'])) == '1970') || (date("Y", safe_strtotime($row['updated'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", safe_strtotime($row['updated']))."]]></cell>";
+    $s .= ((safe_strtotime($row['joindate']) == null) || (date("Y", safe_strtotime($row['joindate'])) == '1970') || (date("Y", safe_strtotime($row['joindate'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", safe_strtotime($row['joindate']))."]]></cell>";
+    $s .= ((safe_strtotime($row['duedate']) == null) || (date("Y", safe_strtotime($row['duedate'])) == '1970') || (date("Y", safe_strtotime($row['duedate'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", safe_strtotime($row['duedate']))."]]></cell>";
+    $s .= ((safe_strtotime($row['updated']) == null) || (date("Y", safe_strtotime($row['updated'])) == '1970') || (date("Y", safe_strtotime($row['updated'])) == '0000')) ? "<cell><![CDATA[TBA]]></cell>" : "<cell><![CDATA[". date("d-m-Y", safe_strtotime($row['updated']))."]]></cell>";
     $s .= "</row>";
 }
-$s .= "</rows>"; 
- 
+$s .= "</rows>";
+
 echo $s;
 //}

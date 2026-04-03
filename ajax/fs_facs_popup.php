@@ -5,87 +5,87 @@ require_once('../incs/status_cats.inc.php');
 session_write_close();
 
 if($_GET['q'] != $_SESSION['id']) {
-	exit();
-	}
+    exit();
+    }
 
 $ret_arr = array();
 $id = sanitize_int($_GET['id']);
-$eols = array ("\r\n", "\n", "\r");		// all flavors of eol
+$eols = array ("\r\n", "\n", "\r");        // all flavors of eol
 $internet = ((isset($_SESSION['internet'])) && ($_SESSION['internet'] == true)) ? true: false;
 $use_twitter = (get_variable('twitter_consumerkey') != "" && get_variable('twitter_consumersecret') != "" && get_variable('twitter_accesstoken') != "" && get_variable('twitter_accesstokensecret') != "") ? true : false;
-$status_vals = array();											// build array of $status_vals
+$status_vals = array();                                            // build array of $status_vals
 $status_vals[''] = $status_vals['0']="TBD";
-$locale = get_variable('locale');	// 08/03/09
+$locale = get_variable('locale');    // 08/03/09
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` ORDER BY `id`";
 $result_st = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
 while ($row_st = stripslashes_deep($result_st->fetch_array())) {
-	$temp = $row_st['id'];
-	$status_vals[$temp] = $row_st['status_val'];
-	}
+    $temp = $row_st['id'];
+    $status_vals[$temp] = $row_st['status_val'];
+    }
 
 function isempty($arg) {
-	return (bool) (safe_strlen($arg) == 0) ;
-	}
+    return (bool) (safe_strlen($arg) == 0) ;
+    }
 
 function fac_cat($id) {
-	$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `id` = ?";
-	$result = db_query($query, [$id]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
-	$row = stripslashes_deep($result->fetch_array());
-	return $row['name'];
-	}
+    $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `id` = ?";
+    $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+    $row = stripslashes_deep($result->fetch_array());
+    return $row['name'];
+    }
 
 function get_day() {
-	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-//	if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
-	return date('l',$timestamp);
-	}
+    $timestamp = (time() - (intval(get_variable('delta_mins'))*60));
+//    if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
+    return date('l',$timestamp);
+    }
 
 function get_currenttime() {
-	$timestamp = (time() - (intval(get_variable('delta_mins'))*60));
-//	if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
-	return date('H:i',$timestamp);
-	}
+    $timestamp = (time() - (intval(get_variable('delta_mins'))*60));
+//    if(date('w',$timestamp)==0) {$timestamp = $timestamp + 86400;}
+    return date('H:i',$timestamp);
+    }
 
 function isTimeBetween($lower, $higher) {
-	$current_time = get_currenttime();
-	$timecurrent = safe_strtotime($current_time);
-	$timelower = safe_strtotime($lower);
-	$timehigher = safe_strtotime($higher);
-//	print $current_time . " -- " . $timecurrent . " -- " . $timelower . " -- " . $timehigher . "<BR />";
-//	print date("Y-m-d H:i:s", $timecurrent) . " -- " . date("Y-m-d H:i:s", $timelower) . " -- " . date("Y-m-d H:i:s", $timehigher) . "<BR />";
-	if($timecurrent >= $timelower && $timecurrent <= $timehigher) {
-		return true;
-		} else {
-		return false;
-		}
-	}
+    $current_time = get_currenttime();
+    $timecurrent = safe_strtotime($current_time);
+    $timelower = safe_strtotime($lower);
+    $timehigher = safe_strtotime($higher);
+//    print $current_time . " -- " . $timecurrent . " -- " . $timelower . " -- " . $timehigher . "<BR />";
+//    print date("Y-m-d H:i:s", $timecurrent) . " -- " . date("Y-m-d H:i:s", $timelower) . " -- " . date("Y-m-d H:i:s", $timehigher) . "<BR />";
+    if($timecurrent >= $timelower && $timecurrent <= $timehigher) {
+        return true;
+        } else {
+        return false;
+        }
+    }
 
 $f_types = array();
-$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` ORDER BY `id`";		// types in use
+$query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` ORDER BY `id`";        // types in use
 $result = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
 while ($row = stripslashes_deep($result->fetch_assoc())) {
-	$f_types [$row['id']] = array ($row['name'], $row['icon']);
-	}
+    $f_types [$row['id']] = array ($row['name'], $row['icon']);
+    }
 unset($result);
 
 $query_fac = "SELECT *,`$GLOBALS[mysql_prefix]facilities`.`updated` AS `updated`,
-	`$GLOBALS[mysql_prefix]facilities`.`id` 						AS `fac_id`,
-	`$GLOBALS[mysql_prefix]fac_types`.`id` 							AS `type_id`,
-	`$GLOBALS[mysql_prefix]facilities`.`description` 				AS `facility_description`,
-	`$GLOBALS[mysql_prefix]facilities`.`boundary` 					AS `boundary`,
-	`$GLOBALS[mysql_prefix]fac_types`.`name` 						AS `fac_type_name`,
-	`$GLOBALS[mysql_prefix]fac_types`.`icon` 						AS `icon`,
-	`$GLOBALS[mysql_prefix]facilities`.`name` 						AS `facility_name`,
-	`$GLOBALS[mysql_prefix]fac_status`.`status_val` 				AS `fac_status_val`,
-	`$GLOBALS[mysql_prefix]facilities`.`status_id` 					AS `fac_status_id`
-	FROM `$GLOBALS[mysql_prefix]facilities`
-	LEFT JOIN `$GLOBALS[mysql_prefix]allocates` 	ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = 			`$GLOBALS[mysql_prefix]allocates`.`resource_id` )
-	LEFT JOIN `$GLOBALS[mysql_prefix]fac_types` 	ON (`$GLOBALS[mysql_prefix]facilities`.`type` = 		`$GLOBALS[mysql_prefix]fac_types`.`id` )
-	LEFT JOIN `$GLOBALS[mysql_prefix]fac_status` 	ON (`$GLOBALS[mysql_prefix]facilities`.`status_id` = 	`$GLOBALS[mysql_prefix]fac_status`.`id` )
-	WHERE `$GLOBALS[mysql_prefix]facilities`.`id` = ?";											// 3/15/11, 6/10/11
+    `$GLOBALS[mysql_prefix]facilities`.`id`                         AS `fac_id`,
+    `$GLOBALS[mysql_prefix]fac_types`.`id`                             AS `type_id`,
+    `$GLOBALS[mysql_prefix]facilities`.`description`                 AS `facility_description`,
+    `$GLOBALS[mysql_prefix]facilities`.`boundary`                     AS `boundary`,
+    `$GLOBALS[mysql_prefix]fac_types`.`name`                         AS `fac_type_name`,
+    `$GLOBALS[mysql_prefix]fac_types`.`icon`                         AS `icon`,
+    `$GLOBALS[mysql_prefix]facilities`.`name`                         AS `facility_name`,
+    `$GLOBALS[mysql_prefix]fac_status`.`status_val`                 AS `fac_status_val`,
+    `$GLOBALS[mysql_prefix]facilities`.`status_id`                     AS `fac_status_id`
+    FROM `$GLOBALS[mysql_prefix]facilities`
+    LEFT JOIN `$GLOBALS[mysql_prefix]allocates`     ON ( `$GLOBALS[mysql_prefix]facilities`.`id` =             `$GLOBALS[mysql_prefix]allocates`.`resource_id` )
+    LEFT JOIN `$GLOBALS[mysql_prefix]fac_types`     ON (`$GLOBALS[mysql_prefix]facilities`.`type` =         `$GLOBALS[mysql_prefix]fac_types`.`id` )
+    LEFT JOIN `$GLOBALS[mysql_prefix]fac_status`     ON (`$GLOBALS[mysql_prefix]facilities`.`status_id` =     `$GLOBALS[mysql_prefix]fac_status`.`id` )
+    WHERE `$GLOBALS[mysql_prefix]facilities`.`id` = ?";                                            // 3/15/11, 6/10/11
 
 $result_fac = db_query($query_fac, [$id]) or do_error($query_fac, 'mysql query failed', '', basename(__FILE__), __LINE__);
-$facs_ct = db_affected_rows();			// 1/4/10
+$facs_ct = db_affected_rows();            // 1/4/10
 
 $row_fac = $result_fac->fetch_assoc();
 $name = safe_htmlentities($row_fac['facility_name'],ENT_QUOTES);
@@ -104,151 +104,151 @@ $latitude = $row_fac['lat'];
 $longitude = $row_fac['lng'];
 
 $facility_display_name = $f_disp_name = $row_fac['facility_name'];
-$the_bg_color = 	$GLOBALS['FACY_TYPES_BG'][$row_fac['icon']];		// 2/8/10
-$the_text_color = 	$GLOBALS['FACY_TYPES_TEXT'][$row_fac['icon']];		// 2/8/10
+$the_bg_color =     $GLOBALS['FACY_TYPES_BG'][$row_fac['icon']];        // 2/8/10
+$the_text_color =     $GLOBALS['FACY_TYPES_TEXT'][$row_fac['icon']];        // 2/8/10
 
 // MAIL
 if ((may_email()) && (is_email($row_fac['contact_email']))) {
-	$mail_link = $row_fac['contact_email'];
-	} elseif((may_email()) && (is_email($row_fac['security_email']))){
-	$mail_link = $row_fac['security_email'];
-	} else {
-	$mail_link = "";
-	}
+    $mail_link = $row_fac['contact_email'];
+    } elseif((may_email()) && (is_email($row_fac['security_email']))){
+    $mail_link = $row_fac['security_email'];
+    } else {
+    $mail_link = "";
+    }
 // BEDS
 $beds_info = "<TD ALIGN='right'>" . e($row_fac['beds_a']) . "/" . e($row_fac['beds_o']) . "</TD>";
 // STATUS
-$status = get_status_sel($row_fac['fac_id'], $row_fac['fac_status_id'], "f");		// status, 3/15/11
+$status = get_status_sel($row_fac['fac_id'], $row_fac['fac_status_id'], "f");        // status, 3/15/11
 $status_id = $row_fac['fac_status_id'];
 $temp = $row_fac['status_id'] ;
-$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";				// 2/2/09
+$the_status = (array_key_exists($temp, $status_vals))? $status_vals[$temp] : "??";                // 2/2/09
 // AS-OF - 11/3/2012
 $updated = format_sb_date_2 ( $row_fac['updated'] );
 
 if(is_guest() || is_unit()) {
-	$toedit = $tomail = "";
-	}
+    $toedit = $tomail = "";
+    }
 else {
-	$toedit = "<A id='edit_" . intval($row_fac['fac_id']) . "' CLASS='plain text' style='float: none; color: #000000;' HREF='{$_SESSION['facilitiesfile']}?func=responder&edit=true&id=" . intval($row_fac['fac_id']) . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";
-	$tomail = "<SPAN id='mail_" . intval($row_fac['fac_id']) . "' CLASS='plain text' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onClick = 'do_mail_in_win(" . intval($row_fac['fac_id']) . ")'>Email</SPAN>";
-	}
+    $toedit = "<A id='edit_" . intval($row_fac['fac_id']) . "' CLASS='plain text' style='float: none; color: #000000;' HREF='{$_SESSION['facilitiesfile']}?func=responder&edit=true&id=" . intval($row_fac['fac_id']) . "' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\">Edit</A>";
+    $tomail = "<SPAN id='mail_" . intval($row_fac['fac_id']) . "' CLASS='plain text' style='float: none; color: #000000;' onMouseOver=\"do_hover(this.id);\" onMouseOut=\"do_plain(this.id);\" onClick = 'do_mail_in_win(" . intval($row_fac['fac_id']) . ")'>Email</SPAN>";
+    }
 
-if (my_is_float($row_fac['lat'])) {										// position data of any type?
-	$temptype = $f_types[$row_fac['type_id']];
-	$the_type = $temptype[0];
-	$line_ctr = 0;
-	$temp_array[0] = $row_fac['lat'];
-	$temp_array[1] = $row_fac['lng'];
-	$temp_array[2] = safe_htmlentities(shorten($facility_display_name, 48), ENT_QUOTES);
-	$temp_array[3] = safe_htmlentities(shorten(str_replace($eols, " ", $facility_display_name), 48), ENT_QUOTES);
-	$theTabs = "<div class='infowin'><BR />";
-	$theTabs .= '<div class="tabBox" style="float: left; width: 100%;">';
-	$theTabs .= '<div class="tabArea">';
-	$theTabs .= '<span id="tab1" class="tabinuse" style="cursor: pointer;" onClick="do_tab(\'tab1\', 1, null, null);">Summary</span>';
-	$theTabs .= '<span id="tab3" class="tab" style="cursor: pointer;" onClick="do_tab(\'tab3\', 3, ' . $row_fac['lat'] . ',' . $row_fac['lng'] . ');">Location</span>';
-	$theTabs .= '</div>';
-	$theTabs .= '<div class="contentwrapper">';
+if (my_is_float($row_fac['lat'])) {                                        // position data of any type?
+    $temptype = $f_types[$row_fac['type_id']];
+    $the_type = $temptype[0];
+    $line_ctr = 0;
+    $temp_array[0] = $row_fac['lat'];
+    $temp_array[1] = $row_fac['lng'];
+    $temp_array[2] = safe_htmlentities(shorten($facility_display_name, 48), ENT_QUOTES);
+    $temp_array[3] = safe_htmlentities(shorten(str_replace($eols, " ", $facility_display_name), 48), ENT_QUOTES);
+    $theTabs = "<div class='infowin'><BR />";
+    $theTabs .= '<div class="tabBox" style="float: left; width: 100%;">';
+    $theTabs .= '<div class="tabArea">';
+    $theTabs .= '<span id="tab1" class="tabinuse" style="cursor: pointer;" onClick="do_tab(\'tab1\', 1, null, null);">Summary</span>';
+    $theTabs .= '<span id="tab3" class="tab" style="cursor: pointer;" onClick="do_tab(\'tab3\', 3, ' . $row_fac['lat'] . ',' . $row_fac['lng'] . ');">Location</span>';
+    $theTabs .= '</div>';
+    $theTabs .= '<div class="contentwrapper">';
 
-	$tab_1 = "<TABLE width='280px' style='height: auto;'><TR><TD><TABLE width='98%'>";
-	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . safe_htmlentities(shorten($facility_display_name, 48), ENT_QUOTES) . "</B> - " . e($the_type) . "</TD></TR>";
-	$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Description:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . safe_htmlentities(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32), ENT_QUOTES) . "</TD></TR>";
-	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Status:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($the_status) . " </TD></TR>";
-	$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>As of:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date(safe_strtotime($row_fac['updated'])) . "</TD></TR>";
-	$tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['contact_name']). " Via: " . e($row_fac['contact_email']) . "</TD></TR>";
-	if(!(isempty(trim($row_fac['security_contact']))))	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left' STYLE= 'width:50%'>" . e($row_fac['security_contact']) . " </TD></TR>";}
-	if(!(isempty(trim($row_fac['security_email']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Security email:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['security_email']) . " </TD></TR>";}
-	if(!(isempty(trim($row_fac['security_phone']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Security phone:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['security_phone']) . " </TD></TR>";}
-	if(!(isempty(trim($row_fac['access_rules']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>" . get_text("Access rules") . ":&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";}
-	if(!(isempty(trim($row_fac['security_reqs']))))  	{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Security reqs:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";}
-	if(!(isempty(trim($row_fac['opening_hours']))))  	{
-		$opening_arr_serial = base64_decode($row_fac['opening_hours']);
-		$opening_arr = unserialize($opening_arr_serial);
-		$outputstring = "";
-		$the_day = "";
-		$z = 0;
-		foreach($opening_arr as $val) {
-			switch($z) {
-				case 0:
-				$dayname = "Monday";
-				break;
-				case 1:
-				$dayname = "Tuesday";
-				break;
-				case 2:
-				$dayname = "Wednesday";
-				break;
-				case 3:
-				$dayname = "Thursday";
-				break;
-				case 4:
-				$dayname = "Friday";
-				break;
-				case 5:
-				$dayname = "Saturday";
-				break;
-				case 6:
-				$dayname = "Sunday";
-				break;
-				}
+    $tab_1 = "<TABLE width='280px' style='height: auto;'><TR><TD><TABLE width='98%'>";
+    $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' COLSPAN=2 ALIGN='center'><B>" . safe_htmlentities(shorten($facility_display_name, 48), ENT_QUOTES) . "</B> - " . e($the_type) . "</TD></TR>";
+    $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Description:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . safe_htmlentities(shorten(str_replace($eols, " ", $row_fac['facility_description']), 32), ENT_QUOTES) . "</TD></TR>";
+    $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Status:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($the_status) . " </TD></TR>";
+    $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>As of:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . format_date(safe_strtotime($row_fac['updated'])) . "</TD></TR>";
+    $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['contact_name']). " Via: " . e($row_fac['contact_email']) . "</TD></TR>";
+    if(!(isempty(trim($row_fac['security_contact']))))    {$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right' STYLE= 'width:50%'>Security contact:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left' STYLE= 'width:50%'>" . e($row_fac['security_contact']) . " </TD></TR>";}
+    if(!(isempty(trim($row_fac['security_email']))))      {$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Security email:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['security_email']) . " </TD></TR>";}
+    if(!(isempty(trim($row_fac['security_phone']))))      {$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Security phone:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['security_phone']) . " </TD></TR>";}
+    if(!(isempty(trim($row_fac['access_rules']))))      {$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>" . get_text("Access rules") . ":&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e(str_replace($eols, " ", $row_fac['access_rules'])) . "</TD></TR>";}
+    if(!(isempty(trim($row_fac['security_reqs']))))      {$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Security reqs:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e(str_replace($eols, " ", $row_fac['security_reqs'])) . "</TD></TR>";}
+    if(!(isempty(trim($row_fac['opening_hours']))))      {
+        $opening_arr_serial = base64_decode($row_fac['opening_hours']);
+        $opening_arr = unserialize($opening_arr_serial);
+        $outputstring = "";
+        $the_day = "";
+        $z = 0;
+        foreach($opening_arr as $val) {
+            switch($z) {
+                case 0:
+                $dayname = "Monday";
+                break;
+                case 1:
+                $dayname = "Tuesday";
+                break;
+                case 2:
+                $dayname = "Wednesday";
+                break;
+                case 3:
+                $dayname = "Thursday";
+                break;
+                case 4:
+                $dayname = "Friday";
+                break;
+                case 5:
+                $dayname = "Saturday";
+                break;
+                case 6:
+                $dayname = "Sunday";
+                break;
+                }
 
-			if($dayname == get_day()) {
-				$openstring = (array_key_exists(0, $val) && $val[0] == "on") ? "Open" : "Closed";
-				if($openstring == "Open") {
-					$outputstring .= "Opens: " . e($val[1]) . "<BR />Closes: " . e($val[2]);
-					if(isTimeBetween($val[1], $val[2])) {
-						$calculatedStatus = 1;
-						} else {
-						$calculatedStatus = 0;
-						}
-					$calculatedStatus = 1;
-					} else {
-					$outputstring .= "(" . $dayname . ")  ---  " . $openstring;
-					$calculatedStatus = 0;
-					}
-				}
-			$z++;
-			}
+            if($dayname == get_day()) {
+                $openstring = (array_key_exists(0, $val) && $val[0] == "on") ? "Open" : "Closed";
+                if($openstring == "Open") {
+                    $outputstring .= "Opens: " . e($val[1]) . "<BR />Closes: " . e($val[2]);
+                    if(isTimeBetween($val[1], $val[2])) {
+                        $calculatedStatus = 1;
+                        } else {
+                        $calculatedStatus = 0;
+                        }
+                    $calculatedStatus = 1;
+                    } else {
+                    $outputstring .= "(" . $dayname . ")  ---  " . $openstring;
+                    $calculatedStatus = 0;
+                    }
+                }
+            $z++;
+            }
 
-		$tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Opening Times<BR />(" . get_day() . "):</TD><TD CLASS='td_data text' ALIGN='left'>" . $outputstring . "</TD></TR>";
-		}
-	if(!(isempty(trim($row_fac['pager_p']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Prim pager:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['pager_p']) . " </TD></TR>";}
-	if(!(isempty(trim($row_fac['pager_s']))))  			{$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Sec pager:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['pager_s']) . " </TD></TR>";}
-	$tab_1 .= "</TABLE></TD></TR>";
-	$tab_1 .= "<TR><TD COLSPAN=99>&nbsp;</TD></TR>";
-	$tab_1 .= "</TABLE>";
-	$tab_2 = "<TABLE width='280px' style='height: 280px;'><TR><TD>";
-	$tab_2 .= "<TABLE width='98%'>";
+        $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Opening Times<BR />(" . get_day() . "):</TD><TD CLASS='td_data text' ALIGN='left'>" . $outputstring . "</TD></TR>";
+        }
+    if(!(isempty(trim($row_fac['pager_p']))))              {$line_ctr++; $tab_1 .= "<TR CLASS='odd'><TD CLASS='td_label text' ALIGN='right'>Prim pager:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['pager_p']) . " </TD></TR>";}
+    if(!(isempty(trim($row_fac['pager_s']))))              {$line_ctr++; $tab_1 .= "<TR CLASS='even'><TD CLASS='td_label text' ALIGN='right'>Sec pager:&nbsp;</TD><TD CLASS='td_data text' ALIGN='left'>" . e($row_fac['pager_s']) . " </TD></TR>";}
+    $tab_1 .= "</TABLE></TD></TR>";
+    $tab_1 .= "<TR><TD COLSPAN=99>&nbsp;</TD></TR>";
+    $tab_1 .= "</TABLE>";
+    $tab_2 = "<TABLE width='280px' style='height: 280px;'><TR><TD>";
+    $tab_2 .= "<TABLE width='98%'>";
 
-	switch($locale) {
-		case "0":
-		$tab_2 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>USNG:</TD><TD CLASS='td_data text' ALIGN='left'>" . LLtoUSNG($row_fac['lat'], $row_fac['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
-		break;
+    switch($locale) {
+        case "0":
+        $tab_2 .= "<TR CLASS='odd'><TD class='td_label text' ALIGN='left'>USNG:</TD><TD CLASS='td_data text' ALIGN='left'>" . LLtoUSNG($row_fac['lat'], $row_fac['lng']) . "</TD></TR>";    // 8/23/08, 10/15/08, 8/3/09
+        break;
 
-		case "1":
-		$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>OSGB:</TD><TD CLASS='td_data text' ALIGN='left'>" . LLtoOSGB($row_fac['lat'], $row_fac['lng']) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
-		break;
+        case "1":
+        $tab_2 .= "<TR CLASS='odd'>    <TD class='td_label text' ALIGN='left'>OSGB:</TD><TD CLASS='td_data text' ALIGN='left'>" . LLtoOSGB($row_fac['lat'], $row_fac['lng']) . "</TD></TR>";    // 8/23/08, 10/15/08, 8/3/09
+        break;
 
-		case "2":
-		$coords =  $row_fac['lat'] . "," . $row_fac['lng'];							// 8/12/09
-		$tab_2 .= "<TR CLASS='odd'>	<TD class='td_label text' ALIGN='left'>UTM:</TD><TD CLASS='td_data text' ALIGN='left'>" . toUTM($coords) . "</TD></TR>";	// 8/23/08, 10/15/08, 8/3/09
-		break;
+        case "2":
+        $coords =  $row_fac['lat'] . "," . $row_fac['lng'];                            // 8/12/09
+        $tab_2 .= "<TR CLASS='odd'>    <TD class='td_label text' ALIGN='left'>UTM:</TD><TD CLASS='td_data text' ALIGN='left'>" . toUTM($coords) . "</TD></TR>";    // 8/23/08, 10/15/08, 8/3/09
+        break;
 
-		default:
-		print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
-		}
-	$tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lat</TD><TD class='td_data text' style='font-size: 80%;'>" . e($row_fac['lat']) . "</TD></TR>";
-	$tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lng</TD><TD class='td_data text' style='font-size: 80%;'>" . e($row_fac['lng']) . "</TD></TR>";
-	$tab_2 .= "</TABLE></TD></TR><RR><TD><TABLE width='100%'>";			// 11/6/08
-	$tab_2 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
-	$tab_2 .= "</TABLE></TD</TR></TABLE>";
+        default:
+        print "ERROR in " . basename(__FILE__) . " " . __LINE__ . "<BR />";
+        }
+    $tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lat</TD><TD class='td_data text' style='font-size: 80%;'>" . e($row_fac['lat']) . "</TD></TR>";
+    $tab_2 .= "<TR><TD class='td_label text' style='font-size: 80%;'>Lng</TD><TD class='td_data text' style='font-size: 80%;'>" . e($row_fac['lng']) . "</TD></TR>";
+    $tab_2 .= "</TABLE></TD></TR><RR><TD><TABLE width='100%'>";            // 11/6/08
+    $tab_2 .= "<TR><TD style='text-align: center;'><CENTER><DIV id='minimap' style='height: 180px; width: 180px; border: 2px outset #707070;'>Map Here</DIV></CENTER></TD></TR>";
+    $tab_2 .= "</TABLE></TD</TR></TABLE>";
 
-	$theTabs .= "<div class='content' id='content1' style = 'display: block;'>" . $tab_1 . "</div>";
-	$theTabs .= "<div class='content' id='content3' style = 'display: none;'>" . $tab_2 . "</div>";
-	$theTabs .= "</div>";
-	$theTabs .= "</div>";
-	$theTabs .= "</div>";
-	$line_ctr++;
-	}		// end if/else
+    $theTabs .= "<div class='content' id='content1' style = 'display: block;'>" . $tab_1 . "</div>";
+    $theTabs .= "<div class='content' id='content3' style = 'display: none;'>" . $tab_2 . "</div>";
+    $theTabs .= "</div>";
+    $theTabs .= "</div>";
+    $theTabs .= "</div>";
+    $line_ctr++;
+    }        // end if/else
 
 $ret_arr[0] = $theTabs;
 

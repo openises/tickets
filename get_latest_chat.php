@@ -1,21 +1,21 @@
 <?php
 /*
-4/9/10 initial release 
+4/9/10 initial release
 7/28/10 Added inclusion of startup.inc.php for checking of network status and setting of file name variables to support no-maps versions of scripts.
 */
-error_reporting(E_ALL);	
+error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');		//7/28/10
+require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
 get_current();
 $me = $_SESSION['user_id'];
 //$me = 1;
 
-				// most recent chat invites other than written by 'me'
-$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}chat_invites` WHERE `_by` <> {$me}  AND (`to` = 0   OR `to` = {$me}) ORDER BY `id` DESC LIMIT 1";		// broadcasts
+                // most recent chat invites other than written by 'me'
+$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}chat_invites` WHERE `_by` <> {$me}  AND (`to` = 0   OR `to` = {$me}) ORDER BY `id` DESC LIMIT 1";        // broadcasts
 $result = db_query($query);
-$row = ($result->num_rows>0)? stripslashes_deep($result->fetch_assoc()): FALSE;
+$row = ($result->num_rows>0)? stripslashes_deep($result->fetch_assoc()): false;
 //snap ($me, $query);
 //dump($row);
 print ($row)? $row['id'] : "0";

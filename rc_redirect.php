@@ -4,9 +4,9 @@
 <body>
 <script type="application/x-javascript"><!--
 function do_Post(the_table) {
-	document.tables.tablename.value=the_table;
-	document.tables.submit();
-	}
+    document.tables.tablename.value=the_table;
+    document.tables.submit();
+    }
 setTimeout('Redirect()',1000);
 function Redirect()
 {

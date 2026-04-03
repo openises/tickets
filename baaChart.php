@@ -23,13 +23,13 @@ USAGE SAMPLE
     $mygraph->addDataSeries('L',LINE_MARK_NONE,"30,45,50,55,52,60","Europe");
     $mygraph->setBgColor(255,255,255,0);
     $mygraph->drawGraph();
-                                   
+
 */
     /********************************************************
     *                      defines                          *
     ********************************************************/
     define ('VERSION', 'baaChart 1.4');
-    
+
     define ('PIE_NONE',0);
     define ('PIE_LEGEND_PCENT',1);
     define ('PIE_LEGEND_VALUE',2);
@@ -101,7 +101,7 @@ class baaChart  {
     /********************************************************
     *                   public methods                      *
     ********************************************************/
-	public function __construct($awidth, $aheight=0, $pic='', $clip=0, $picx=0, $picy=0){	//	Changed for php7 10/31/16
+    public function __construct($awidth, $aheight=0, $pic='', $clip=0, $picx=0, $picy=0){    //    Changed for php7 10/31/16
         $this->width = $awidth;
         $this->height = $aheight==0 ? floor($awidth / 1.616) : $aheight;
         $this->pic = $pic;
@@ -658,7 +658,7 @@ class baaChart  {
             foreach ($b as $v) {
                 #$m += $this->xmaxima[$v];
                 for ($i=0; $i<$this->xcount; $i++) {
-                	$stacktots[$i] += $this->data[$v][$i];
+                    $stacktots[$i] += $this->data[$v][$i];
                 }
                 $this->stacked[$v] = 1;
             }
