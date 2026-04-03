@@ -35,7 +35,6 @@ $query_insert  = "INSERT INTO `{$GLOBALS['mysql_prefix']}ticket` (
 $result_insert    = db_query($query_insert, [trim($street) . ' ' . trim($apartment), trim($city), $the_number, $GLOBALS['STATUS_RESERVED'], $by]);
 @session_start();
 session_write_close();
-if (!(empty($_SESSION)) [
-
-    ]
-?>
+if (!(empty($_SESSION))) {
+    // CID (Caller ID) data processed
+}
