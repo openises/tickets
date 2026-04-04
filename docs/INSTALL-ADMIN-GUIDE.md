@@ -1,8 +1,10 @@
 # TicketsCAD Installation and Administration Guide
 
-**Version:** 2.0 -- Covers Legacy v3.44 and NewUI v4.0
+**Version:** 2.1 -- Covers TicketsCAD v3.44 (Legacy)
 **Date:** April 2026
 **Replaces:** TicketsCAD Installation Manual (2011, v2.20a)
+
+> **This guide covers TicketsCAD v3.44, the current stable release.** All instructions, features, and configuration options described here apply to the v3.44 Legacy interface. A next-generation interface (NewUI v4.0) is in active development but is **not included** in the v3.44 release or Docker image. See [Appendix D: Coming in v4.0 (NewUI)](#appendix-d-coming-in-v40-newui) for a preview of planned v4.0 features.
 
 ---
 
@@ -20,6 +22,7 @@
 - [Appendix A: Settings Reference](#appendix-a-settings-reference)
 - [Appendix B: Environment Variables (Docker)](#appendix-b-environment-variables-docker)
 - [Appendix C: Security Checklist](#appendix-c-security-checklist)
+- [Appendix D: Coming in v4.0 (NewUI)](#appendix-d-coming-in-v40-newui)
 
 ---
 
@@ -55,32 +58,18 @@ TicketsCAD is designed for organizations that need dispatch capability but canno
 
 PHP 7.4 is supported on existing installations but has reached end-of-life. PHP 8.0 through 8.4 are fully tested and supported via a built-in compatibility layer.
 
-### Two Versions: Legacy (v3.44) and NewUI (v4.0)
+### About This Release
 
-TicketsCAD ships as two separate applications:
+TicketsCAD v3.44 is the current stable release. It uses the original interface with HTML framesets and jQuery, and includes over 800 PHP files battle-tested across hundreds of installations. All features documented in this guide are available in v3.44.
 
-**Legacy v3.44** (`/tickets/`)
-- The original interface, using HTML framesets and jQuery 1.4.2
-- Over 800 PHP files, battle-tested across hundreds of installations
-- Supports all features documented in this guide
-- Recommended for production use today
+A next-generation interface (v4.0 NewUI) is in active development and will be released separately in the future. It is not included in the v3.44 download or Docker image. See [Appendix D](#appendix-d-coming-in-v40-newui) for details.
 
-**NewUI v4.0** (`/newui/`)
-- A ground-up rewrite with Bootstrap 5, Leaflet maps, and a modern dashboard
-- Keyboard-first design optimized for dispatchers
-- Currently in active development (v4.0.0-dev)
-- Over 60 API endpoints, 30+ configuration panels, and full feature parity in progress
-- Recommended for evaluation and testing; not yet considered production-ready
-
-Both versions can run against the same database, though NewUI uses its own database by default during development.
-
-### Choosing Which Version to Install
+### Choosing How to Install
 
 | Situation | Recommendation |
 |-----------|---------------|
-| New deployment, need production stability | Legacy v3.44 via Docker |
-| Evaluating TicketsCAD for the first time | Legacy v3.44 (Docker or XAMPP) |
-| Want to test the modern interface | Install both; use NewUI alongside Legacy |
+| New deployment, need production stability | v3.44 via Docker |
+| Evaluating TicketsCAD for the first time | v3.44 (Docker or XAMPP) |
 | Existing v3.x installation | Upgrade to v3.44.2 (security critical) |
 
 ---
@@ -432,13 +421,11 @@ MySQL 8.0 also rejects empty strings for DATETIME columns. The updated connectio
 
 ## Part 3: Initial Configuration
 
-After installation, configure these settings before putting the system into service. In Legacy, all settings are under **Config** in the top menu. In NewUI, settings are under **Config/Settings** in the sidebar.
+After installation, configure these settings before putting the system into service. All settings are under **Config** in the top menu.
 
 ### Changing the Admin Password (Do This FIRST)
 
-**Legacy:** Config > Users > Click your admin username > Change password
-
-**NewUI:** Config > Users > Edit the admin account
+Config > Users > Click your admin username > Change password
 
 Choose a strong password. TicketsCAD hashes passwords with bcrypt (cost 12). There is no password recovery mechanism other than the emergency reset tool.
 
@@ -505,8 +492,7 @@ Options include:
 
 Incident types categorize calls and can include response protocols -- step-by-step instructions the dispatcher reads to the caller or announces to responders.
 
-**Legacy:** Config > Incident Types
-**NewUI:** Config > Incident Types
+Config > Incident Types
 
 Each incident type has:
 
@@ -527,7 +513,7 @@ TicketsCAD ships with 50 demo incident types across 5 organizational templates: 
 
 Units represent responders, apparatus, or teams that can be dispatched. Each unit has a status indicating its availability.
 
-**Legacy:** Config > Unit Types and Config > Unit Statuses
+Config > Unit Types and Config > Unit Statuses
 
 Default dispatch statuses: `D/R/O/FE/FA/Clear` (Dispatched, Responding, On-Scene, Fire Extinguished, Fire Apparatus, Clear).
 
@@ -537,15 +523,15 @@ Customize statuses to match your organization's protocols. Each status can trigg
 
 Facilities represent fixed locations like hospitals, shelters, stations, and staging areas.
 
-**Legacy:** Config > Facilities
+Config > Facilities
 
-Each facility record includes name, type, description, address, and lat/lng coordinates for map display. In NewUI, facilities also support bed/capacity tracking.
+Each facility record includes name, type, description, address, and lat/lng coordinates for map display.
 
 ### Creating Regions
 
 Regions divide your coverage area into zones for dispatching and visibility control.
 
-**Legacy:** Config > Regions
+Config > Regions
 
 Enable regions with the `regions_control` setting. When enabled, incidents can be assigned to regions, and users can be restricted to seeing only incidents in their region.
 
@@ -553,7 +539,7 @@ Enable regions with the `regions_control` setting. When enabled, incidents can b
 
 Signal codes (10-codes, unit signals, etc.) provide shorthand references during dispatch.
 
-**Legacy:** Config > Signal Codes
+Config > Signal Codes
 
 The signal codes table (`signals` or `hints`, depending on installation age) stores code-description pairs. These appear in dropdown menus when creating incidents.
 
@@ -563,14 +549,13 @@ The signal codes table (`signals` or `hints`, depending on installation age) sto
 
 ### Creating User Accounts
 
-**Legacy:** Config > Users > Add New User
-**NewUI:** Config > Users
+Config > Users > Add New User
 
 Each user account requires a username, password, display name, and access level.
 
-### Access Levels (Legacy)
+### Access Levels
 
-Legacy TicketsCAD uses a numeric access level system:
+TicketsCAD uses a numeric access level system:
 
 | Level | Name | Numeric Value | Capabilities |
 |-------|------|--------------|-------------|
@@ -581,38 +566,14 @@ Legacy TicketsCAD uses a numeric access level system:
 | Member | Member | 4 | Limited access; can view incidents assigned to their region/group |
 | Unit | Unit | 5 | Mobile unit interface; can update own status and view assigned incidents |
 
-### RBAC Roles and Permissions (NewUI)
-
-NewUI v4.0 adds a granular Role-Based Access Control system on top of the legacy levels. RBAC allows defining custom roles with specific permissions:
-
-- `action.manage_config` -- Modify system configuration
-- `action.manage_users` -- Create and edit user accounts
-- `action.create_incident` -- Create new incidents
-- `action.dispatch_units` -- Assign units to incidents
-- And many more
-
-The RBAC schema is in place; the full administration UI is under development.
-
-### Two-Factor Authentication Setup (NewUI)
-
-NewUI supports TOTP-based two-factor authentication (compatible with Google Authenticator, Authy, and similar apps).
-
-1. Go to Config > Security > Two-Factor Authentication
-2. Enable 2FA for the desired user accounts
-3. Users scan the QR code with their authenticator app
-4. On subsequent logins, users enter their password plus the 6-digit code
-
-### Login Security (Lockout, Session Management)
+### Login Security
 
 | Setting | Description | Default |
 |---------|-------------|---------|
 | `session_timeout` | Minutes of inactivity before session expires | 60 |
 | `login_userlist` | Show username dropdown on login page (0 = no, 1 = yes) | 0 |
 
-NewUI adds:
-- **Login attempt logging** -- All login attempts (success and failure) are recorded with IP address and timestamp
-- **Active session monitoring** -- Admins can view all active sessions and force-logout any session
-- **Account lockout** -- After repeated failed attempts, accounts are temporarily locked
+Additional security capabilities including RBAC, two-factor authentication, account lockout, and session management will be available in the upcoming v4.0 release. See [Appendix D](#appendix-d-coming-in-v40-newui).
 
 ---
 
@@ -633,39 +594,7 @@ For Docker deployments, configure an external SMTP relay (SendGrid, Mailgun, Ama
 
 For traditional installations, PHP's built-in `mail()` function uses the local sendmail binary. On Linux, ensure `sendmail` or `postfix` is installed and running.
 
-### SMS Configuration (NewUI)
-
-NewUI supports multiple SMS providers through a generic REST adapter:
-
-| Provider | Configuration |
-|----------|--------------|
-| **Generic REST** | Any HTTP API that accepts a URL, phone number, and message body |
-| **Twilio** | Account SID, Auth Token, and From number |
-| **BulkVS** | API key and endpoint |
-| **Pushbullet** | API key (sends push notifications, not true SMS) |
-
-Configure SMS providers in Config > Communications > SMS.
-
-### Slack Integration (NewUI)
-
-NewUI can post incident notifications to Slack channels using incoming webhooks.
-
-1. Create an Incoming Webhook in your Slack workspace
-2. Copy the webhook URL
-3. In TicketsCAD, go to Config > Communications > Slack
-4. Paste the webhook URL
-5. Select which events trigger Slack notifications
-
-### Chat System (NewUI)
-
-NewUI includes a built-in chat system for real-time dispatcher-to-dispatcher communication. The chat system supports:
-
-- Direct messages between users
-- Channel-based group messaging
-- Signal code / status code shortcuts
-- Message history and search
-
-The chat system uses Server-Sent Events (SSE) for real-time message delivery without requiring WebSocket infrastructure.
+Additional communication capabilities including SMS (Twilio, BulkVS, Pushbullet), Slack integration, and a built-in chat system will be available in the upcoming v4.0 release. See [Appendix D](#appendix-d-coming-in-v40-newui).
 
 ---
 
@@ -696,20 +625,7 @@ TicketsCAD can display weather radar and alert overlays on the map using data fr
 |---------|-------------|
 | `openweathermaps_api` | API key for OpenWeatherMap (free tier available) |
 
-NewUI includes a weather proxy (`api/weather-proxy.php`) that caches weather tiles to reduce API calls and improve performance.
-
-### Map Markups and Zones (NewUI)
-
-NewUI supports drawing on the map to mark hazard zones, search areas, staging locations, and other operational boundaries.
-
-- **Draw tools:** Lines, polygons, circles, and markers
-- **Categories:** Organize markups by category (hazard, search, staging, etc.)
-- **Toggle visibility:** Show or hide markup categories independently
-- **Persistence:** Markups are saved to the database and shared across all users
-
-### Road Conditions (NewUI)
-
-NewUI includes a road conditions overlay for displaying road closures, construction zones, and other travel advisories. Road condition data can be entered manually or imported via API.
+Additional map features including a weather tile caching proxy, interactive map markups/zones, and a road conditions overlay will be available in the upcoming v4.0 release.
 
 ---
 
@@ -793,9 +709,7 @@ When updating PHP, use version 8.2 or 8.4. The compatibility layer handles diffe
 
 TicketsCAD maintains an audit log of administrative actions. Review the log periodically for unauthorized changes.
 
-**Legacy:** The `log` table records user actions with timestamps and IP addresses. View logs under Config > Log.
-
-**NewUI:** The audit log (`api/audit-log.php`) provides a searchable interface with filtering by user, action type, and date range. A service health monitoring dashboard shows uptime and recent errors.
+The `log` table records user actions with timestamps and IP addresses. View logs under Config > Log.
 
 ### Security Headers and HTTPS
 
@@ -1212,8 +1126,6 @@ Use this checklist to verify your TicketsCAD deployment follows security best pr
 
 - [ ] **Disable login_userlist** -- Set to `0` to prevent username enumeration
 - [ ] **Set session timeout** -- 60 minutes or less for dispatch environments
-- [ ] **Enable 2FA** (NewUI) -- For all admin and dispatcher accounts
-- [ ] **Review active sessions** periodically (NewUI) -- Force-logout any suspicious sessions
 - [ ] **Password strength** -- Enforce minimum password length through organizational policy
 
 ### Application Security
@@ -1252,4 +1164,58 @@ Use this checklist to verify your TicketsCAD deployment follows security best pr
 
 ---
 
-*This guide was written for TicketsCAD v3.44.2 (Legacy) and v4.0.0-dev (NewUI). For the latest information, see the [GitHub wiki](https://github.com/openises/tickets/wiki) and [release notes](https://github.com/openises/tickets/releases).*
+## Appendix D: Coming in v4.0 (NewUI)
+
+The next major version of TicketsCAD (v4.0, also known as "NewUI") is a ground-up rewrite currently in active development. It is **not included** in the v3.44 release or Docker image. The information below is provided for planning purposes only -- these features are not yet available for production use.
+
+### Overview
+
+NewUI v4.0 features a modern interface built with Bootstrap 5, Leaflet maps, and a drag-and-drop GridStack dashboard. It is designed with a keyboard-first workflow optimized for dispatchers. Key highlights include:
+
+- Over 60 API endpoints and 30+ configuration panels
+- Responsive design for desktop and mobile
+- Server-Sent Events (SSE) for real-time push updates (replacing AJAX polling)
+
+### Security Enhancements (v4.0)
+
+- **RBAC (Role-Based Access Control):** 65 granular permissions across screens, widgets, actions, and data visibility, with 6 default roles from Super Admin to Field Unit
+- **Two-Factor Authentication (TOTP):** Compatible with Google Authenticator, Authy, and similar apps, with QR enrollment, backup codes, and trusted network CIDR ranges
+- **Account lockout:** Configurable failed-attempt thresholds with temporary lockout
+- **Session management:** Admins can view all active sessions and force-logout any session
+- **RSA field encryption:** For deployments without HTTPS, form fields can be encrypted in the browser using Web Crypto API
+
+### Communications (v4.0)
+
+- **SMS:** Multiple providers supported through a generic REST adapter (Twilio, BulkVS, Pushbullet)
+- **Slack integration:** Post incident notifications to Slack channels via incoming webhooks
+- **Built-in chat:** Real-time dispatcher-to-dispatcher messaging with channel switching, signal code shortcuts, and message history
+- **Meshtastic and DMR radio messaging:** Configuration panels for mesh networking and digital radio
+
+### Mapping Enhancements (v4.0)
+
+- **Weather tile caching proxy:** Reduces API calls and improves map performance
+- **Interactive map markups:** Draw lines, polygons, circles, and markers with category-based visibility toggling
+- **Road conditions overlay:** Display road closures, construction zones, and travel advisories
+- **Geofencing:** Polygon containment detection with SSE-based alerts
+
+### Additional v4.0 Features
+
+- GridStack dashboard with draggable, resizable widgets
+- Command bar (`/` prefix) for rapid dispatch
+- Personnel management with FCC callsign lookup and team assignments
+- Equipment and vehicle tracking
+- Scheduling with shifts, events, time slots, and self-signup
+- SOP viewer/editor
+- Webhooks with HMAC signing and retry logic
+- Major incident linking with cascade close
+- Internationalization (i18n) with translation import/export
+- Facility bed/capacity tracking (8 categories)
+- Full-screen situation view with Leaflet map overlay
+
+### Timeline
+
+There is no fixed release date for v4.0. Development progress can be tracked in the project repository. When released, v4.0 will be available as a separate installation that can optionally share a database with existing v3.44 installations.
+
+---
+
+*This guide was written for TicketsCAD v3.44.2. For the latest information, see the [GitHub wiki](https://github.com/openises/tickets/wiki) and [release notes](https://github.com/openises/tickets/releases).*

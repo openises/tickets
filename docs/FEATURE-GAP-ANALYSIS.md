@@ -1,5 +1,7 @@
 # Feature Gap Analysis: Legacy TicketsCAD (v3.44) vs NewUI (v4.0)
 
+> **INTERNAL PLANNING DOCUMENT** -- This document is for the TicketsCAD development team only. It is not user-facing documentation and should not be distributed to end users. It tracks the progress of v4.0 NewUI development relative to the v3.44 Legacy system.
+
 Generated: 2026-04-02
 
 ---
