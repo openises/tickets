@@ -5816,4 +5816,55 @@ function get_mdb_status_select($selectname, $selected=null) {
     }
 
 if(checkColExists('std_msgs', 'name')) {$std_messages = get_standard_messages();}
+
+// ── One-time schema fix: in_types optional columns ──────────
+// Older installations have columns like protocol, group, sort, radius, color,
+// opacity, notify_mailgroup, notify_email marked NOT NULL without defaults,
+// which forces the form validation to require all fields. Fix once, flag it.
+(function() {
+    $prefix = $GLOBALS['mysql_prefix'] ?? '';
+    $flagKey = 'in_types_nullable_fix';
+
+    // Check if already fixed via settings flag
+    try {
+        $chk = db_query("SELECT `value` FROM `{$prefix}settings` WHERE `name` = '{$flagKey}'");
+        if ($chk && $chk->num_rows > 0) { return; } // Already done
+    } catch (Exception $e) { return; } // Settings table issue — skip
+
+    // Check if in_types table exists
+    try {
+        $tbl = db_query("SHOW TABLES LIKE '{$prefix}in_types'");
+        if (!$tbl || $tbl->num_rows === 0) { return; }
+    } catch (Exception $e) { return; }
+
+    // Fix optional columns to allow NULL
+    $fixes = [
+        'protocol'         => 'TEXT DEFAULT NULL',
+        '`group`'          => 'VARCHAR(20) DEFAULT NULL',
+        'sort'             => 'INT(11) DEFAULT NULL',
+        'radius'           => 'INT(4) DEFAULT NULL',
+        'color'            => 'VARCHAR(8) DEFAULT NULL',
+        'opacity'          => 'INT(3) DEFAULT NULL',
+        'notify_mailgroup' => 'INT(4) DEFAULT NULL',
+        'notify_email'     => 'VARCHAR(256) DEFAULT NULL',
+    ];
+
+    foreach ($fixes as $col => $typedef) {
+        $colName = trim($col, '`');
+        try {
+            $info = db_query("SHOW COLUMNS FROM `{$prefix}in_types` WHERE `Field` = '$colName'");
+            if ($info && $row = $info->fetch_assoc()) {
+                if ($row['Null'] !== 'YES') {
+                    db_query("ALTER TABLE `{$prefix}in_types` MODIFY COLUMN `$colName` $typedef");
+                }
+            }
+        } catch (Exception $e) { /* skip column */ }
+    }
+
+    // Set flag so this doesn't run again
+    try {
+        db_query("INSERT INTO `{$prefix}settings` (`name`, `value`) VALUES ('{$flagKey}', '1')");
+    } catch (Exception $e) { /* flag table might not support it */ }
+})();
+
 ?>
