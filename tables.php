@@ -781,7 +781,7 @@ if (($func == "c")||($func == "u")) {            // Create and Update funcs only
                 $thename = $row['Field'];
                 $thetype = $row['Type'];
                 print "\t\ttypes['frm_' + '$thename'] = \"$thetype\";\n";
-                if (($row['Null']) !=0) {                                //
+                if ($row['Null'] !== 'YES') {                             // NOT NULL = mandatory
                     print "\t\tmands['frm_' + '$thename'] = \"$thetype\";\n";
                     }        // end if ...
                 }                // end while ...
