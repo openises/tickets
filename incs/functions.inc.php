@@ -1213,7 +1213,7 @@ function get_allocated_names($type, $resource) {
 
 function get_tickets_allocated($group) {    //    6/10/11
     $x=0;
-    $cwi = get_variable('closed_interval');            // closed window interval in hours
+    $cwi = intval(get_variable('closed_interval'));     // closed window interval in hours
     $time_back = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60) - ($cwi*3600));
     $params = [$GLOBALS['STATUS_OPEN'], $GLOBALS['STATUS_SCHEDULED'], $GLOBALS['STATUS_CLOSED'], $time_back];
     $where = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type`= 1 AND (`{$GLOBALS['mysql_prefix']}ticket`.`status`= ? OR (`{$GLOBALS['mysql_prefix']}ticket`.`status`= ? AND `{$GLOBALS['mysql_prefix']}ticket`.`booked_date` <= (NOW() + INTERVAL 2 DAY)) OR
