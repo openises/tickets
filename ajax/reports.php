@@ -2228,7 +2228,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
                 $organisation = ($row['organisation'] != "") ? $row['organisation'] : "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
                 $scope = ($row['req_scope'] != "") ? $row['req_scope'] : "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
                 $responder = ($row['responder'] != "") ? $row['responder'] : "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-                $description = ($row['req_description'] != "" && $row['req_description'] != 0) ? $row['req_description'] : "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+                $description = ($row['req_description'] != "") ? $row['req_description'] : "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
                 $table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
                 $table .= "<TD CLASS='plain_list text text_normal text_left'>" . $organisation . "</TD>";
                 $table .= "<TD CLASS='plain_list text text_normal text_left'>" . $requester . "</TD>";

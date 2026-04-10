@@ -137,7 +137,7 @@ function ck_frames() {        //  onLoad = "ck_frames()"
         theForm.frm_hour_asof.disabled = theBool;
         theForm.frm_minute_asof.disabled = theBool;
 <?php
-    if (get_variable('gmaps_api_key')==0) {                    // 2/12/09
+    if (empty(get_variable('gmaps_api_key'))) {                // 2/12/09
 ?>
         theForm.frm_meridiem_asof.disabled = theBool;        //
 <?php
