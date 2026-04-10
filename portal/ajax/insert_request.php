@@ -50,7 +50,7 @@ if($_GET['frm_patient'] == "") {
     } else {
     $theDetails = get_requester_details($_SESSION['user_id']);
     $userEmail = $theDetails[0];
-    $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
+    $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60)); // 6/20/10
     $appEmail = ($_GET['frm_app_email'] != "") ? sanitize_string($_GET['frm_app_email']) : null;
     $the_email = (($appEmail != null) && (is_email($appEmail))) ? $appEmail : $theDetails[0];
     $where = $_SERVER['REMOTE_ADDR'];

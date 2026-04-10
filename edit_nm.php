@@ -499,7 +499,7 @@ require_once('./incs/links.inc.php');
                 if($mode == 0) {
                     require_once('./forms/ticket_view_screen_NM.php');
                     } else {
-                    $now = time() - (intval(get_variable('delta_mins')*60));        // 6/20/10
+                    $now = time() - (intval(get_variable('delta_mins'))*60);        // 6/20/10
                     $ticket_name = $_POST['frm_scope'];
                     print "<BR /><BR /><BR /><CENTER><FONT CLASS='header'>Ticket: " . $ticket_name . " Updated </FONT></CENTER><BR /><BR />";
 ?>

@@ -8,3 +8,4 @@ composer.phar
 composer.lock
 .phpunit.result.cache
 mdb_pictures/.phpunit.result.cache
+.github/

@@ -10,7 +10,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 ?>
 <SCRIPT>
 <?php
-$quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
+$quick = ( (is_super() || is_administrator()) && ((intval(get_variable('quick')) == 1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 $useMDBContact = (get_mdb_variable('use_mdb_contact') && get_mdb_variable('use_mdb_contact') != "") ? get_mdb_variable('use_mdb_contact') : "0";
 $useMDBStatus =  (get_mdb_variable('use_mdb_status') && get_mdb_variable('use_mdb_status') != "") ? get_mdb_variable('use_mdb_status') : "0";

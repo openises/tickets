@@ -189,7 +189,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
                 }
             $frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  "$_POST[frm_year_problemend]-$_POST[frm_month_problemend]-$_POST[frm_day_problemend] $_POST[frm_hour_problemend]:$_POST[frm_minute_problemend]:00" : null;
 
-            $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
+            $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60)); // 6/20/10
             if(empty($post_frm_owner)) {$post_frm_owner=0;}
 
             $inc_num_ary = unserialize (get_variable('_inc_num'));                    // 11/13/10
@@ -414,7 +414,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
         </HEAD>
     <BODY onLoad = "do_notify();document.<?php print $form_name;?>.submit();">
 <?php
-    $now = time() - (intval(get_variable('delta_mins')*60));        // 6/20/10
+    $now = time() - (intval(get_variable('delta_mins'))*60);        // 6/20/10
 
     print "<BR /><BR /><BR /><CENTER><FONT CLASS='header'>Ticket: '{$ticket_name}  ' Added by '{$_SESSION['user_id']}' at " . date(get_variable("date_format"),$now) . "</FONT></CENTER><BR /><BR />";
 ?>
@@ -1268,7 +1268,7 @@ $maptype = get_variable('maptype');    // 08/02/09
         elem = $("runend1");
         elem.style.visibility = "visible";
 <?php
-        $show_ampm = (!get_variable('military_time')==1);
+        $show_ampm = ((get_variable('military_time') != 1));
         if ($show_ampm){    //put am/pm optionlist if not military time
 //            dump (get_variable('military_time'));
             print "\tdocument.add.frm_meridiem_problemend.disabled = false;\n";
@@ -1328,7 +1328,7 @@ $maptype = get_variable('maptype');    // 08/02/09
         elem = $("booking1");
         elem.style.visibility = "visible";
 <?php
-        $show_ampm = (!get_variable('military_time')==1);
+        $show_ampm = ((get_variable('military_time') != 1));
         if ($show_ampm){    //put am/pm optionlist if not military time
 //            dump (get_variable('military_time'));
             print "\tdocument.add.frm_meridiem_booked_date.disabled = false;\n";

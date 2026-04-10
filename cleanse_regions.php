@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 @session_start();
 session_write_close();
 require_once('./incs/functions.inc.php');
-$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
+$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 $func = isset($_GET['func']) ? sanitize_string($_GET['func']) : '';
 if($func=='clean') {
 ?>

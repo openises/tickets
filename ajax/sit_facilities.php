@@ -183,7 +183,7 @@ if ($facs_ct==0){
 
 // ===========================  begin major while() for FACILITIES ==========
 
-$quick = (!(is_guest()) && (intval(get_variable('quick')==1)));                // 11/27/09
+$quick = (!(is_guest()) && ((intval(get_variable('quick')) == 1)));                // 11/27/09
 $f_sb_indx = 0;                            // for fac's only 8/5/10, 12/23/13
 $i = 1;
 while($row_fac = $result_fac->fetch_assoc()){        // 7/7/10

@@ -111,7 +111,7 @@ function generate_time_dropdown($fieldname, $hour=00, $minute=00, $disabled = fa
     }        // end function generate_time_dropdown(
 
 
-$now = time() - (intval(get_variable('delta_mins')*60));
+$now = time() - (intval(get_variable('delta_mins'))*60);
 $api_key = trim(get_variable('gmaps_api_key'));
 $key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 ?>

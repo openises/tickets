@@ -8,7 +8,7 @@ if(!isset($_GET['id'])) {
 $ret_arr = array();
 $id = sanitize_int($_GET['id']);
 $by = $_SESSION['user_id'];
-$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
+$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 $from = $_SERVER['REMOTE_ADDR'];
 function get_requester_details($the_id) {
     $the_ret = array();

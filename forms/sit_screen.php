@@ -82,7 +82,7 @@ if(file_exists("./incs/modules.inc.php")) {
 <SCRIPT>
 window.onresize=function(){set_size();}
 <?php
-$quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
+$quick = ( (is_super() || is_administrator()) && ((intval(get_variable('quick')) == 1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
 var counter = 0;

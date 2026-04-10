@@ -1138,7 +1138,7 @@ function do_list($unit_id ="", $capabilities ="", $searchtype ="") {
             return false;
             }
         else {
-            var quick = <?php print (intval(get_variable("quick")==1))? "true;\n" : "false;\n";?>
+            var quick = <?php print ((intval(get_variable("quick")) == 1))? "true;\n" : "false;\n";?>
 
 //                if (confirm ("Please confirm Unit dispatch as follows\n\n" + msgstr)) {
             if ((quick) || (confirm ("Please confirm unit dispatch\n\n" + msgstr))) {        // 11/23/09

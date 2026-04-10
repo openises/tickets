@@ -2,9 +2,9 @@
 require_once('../../incs/functions.inc.php');
 @session_start();
 $by = $_SESSION['user_id'];
-$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
+$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 $regions = array();
-$nowTimestamp = time() - (intval(get_variable('delta_mins')*60));
+$nowTimestamp = time() - (intval(get_variable('delta_mins'))*60);
 
 function get_requester_details($the_id) {
     $the_ret = array();

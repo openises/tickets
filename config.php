@@ -4135,7 +4135,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                        onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' HREF="#"
                        onClick="do_audio_test();">Alarm audio test</A>            <!-- 6/22/10 -->
                     <?php
-                    if (!intval(get_variable('ics_top') == 1)) {        // 5/24/2013
+                    if (!(intval(get_variable('ics_top')) == 1)) {        // 5/24/2013
                         ?>
                         <A id='ics' class='plain text' style='clear: both; width: 150px;' HREF="#"
                            onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);'

@@ -77,7 +77,7 @@ function cleanup_codes() {
             $num_rows2 = $result2->num_rows;
             if($num_rows2 > 1) {
                 $dupeCodes++;
-                $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
+                $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
                 $by = sanitize_int($_SESSION['user_id']);
                 $from = $_SERVER['REMOTE_ADDR'];
                 $query3 = "DELETE FROM `$GLOBALS[mysql_prefix]codes` WHERE `code` = ?";
@@ -105,7 +105,7 @@ function cleanup_hints() {
             $num_rows2 = $result2->num_rows;
             if($num_rows2 > 1) {
                 $dupeHints++;
-                $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
+                $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
                 $by = sanitize_int($_SESSION['user_id']);
                 $from = $_SERVER['REMOTE_ADDR'];
                 $query3 = "DELETE FROM `$GLOBALS[mysql_prefix]hints` WHERE `tag` = ?";
@@ -133,7 +133,7 @@ function cleanup_insurance() {
             $num_rows2 = $result2->num_rows;
             if($num_rows2 > 1) {
                 $dupeInsurance++;
-                $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
+                $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
                 $by = sanitize_int($_SESSION['user_id']);
                 $from = $_SERVER['REMOTE_ADDR'];
                 $query3 = "DELETE FROM `$GLOBALS[mysql_prefix]insurance` WHERE `ins_value` = ?";

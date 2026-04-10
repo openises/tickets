@@ -95,7 +95,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 <SCRIPT>
 var showTicker = <?php print $use_ticker;?>;
 <?php
-$quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
+$quick = ( (is_super() || is_administrator()) && ((intval(get_variable('quick')) == 1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
 var board = <?php print $board;?>;

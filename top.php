@@ -1408,7 +1408,7 @@ function get_daynight() {
                 onClick = "starting = false; do_emd_card('<?php print $card_addr; ?>')"><?php print get_text("SOP's"); ?></SPAN>    <!-- 7/3/10 -->
 <?php
             }
-        if((!(is_guest())) && (!(intval(get_variable('chat_time')==0)))) {
+        if((!(is_guest())) && (!((intval(get_variable('chat_time')) == 0)))) {
 ?>
             <SPAN ID = 'chat' roll='button' tabindex=10 aria-label='Chat' CLASS = 'plain text' onMouseOver="do_hover(this.id);" onMouseOut="do_plain(this.id);"
                 onClick = "starting=false; do_chat();"><?php print get_text("Chat"); ?></SPAN>
@@ -1459,7 +1459,7 @@ function get_daynight() {
                 onClick = "go_there('./portal/requests.php', this.id);">Requests</SPAN>    <!-- 10/23/12 -->
 <?php
             }
-        if ((!(is_guest())) && (intval(get_variable('ics_top')==1))) {         // 5/21/2013
+        if ((!(is_guest())) && ((intval(get_variable('ics_top')) == 1))) {         // 5/21/2013
 ?>
 
 <!-- ================== -->            <!-- 5/13/2013 -->

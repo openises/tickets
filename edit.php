@@ -762,7 +762,7 @@ function set_size() {
             st_unlk(theForm);
             theForm.frm_phone.value=theForm.frm_phone.value.replace(/\D/g, "" ); // strip all non-digits
 <?php                /* 5/22/2013 */
-        if ((intval(get_variable('broadcast') == 1)) &&  ($_SESSION['good_internet'])) {         // 7/2/2013
+        if (((intval(get_variable('broadcast')) == 1)) &&  ($_SESSION['good_internet'])) {         // 7/2/2013
 ?>
             var theMessage = "Updated  <?php print get_text('Incident');?> (" + theForm.frm_scope.value + ") by <?php echo $_SESSION['user'];?>";
             broadcast(theMessage ) ;
@@ -962,7 +962,7 @@ function set_size() {
         }
 </SCRIPT>
 <?php                // 7/3/2013
-    if ((intval(get_variable('broadcast') == 1)) &&  ($_SESSION['good_internet'])) {
+    if (((intval(get_variable('broadcast')) == 1)) &&  ($_SESSION['good_internet'])) {
         require_once('./incs/socket2me.inc.php');        // 5/22/2013
         }
 ?>

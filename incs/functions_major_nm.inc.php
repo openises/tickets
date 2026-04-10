@@ -451,7 +451,7 @@ function list_tickets($sort_by_field='',$sort_value='', $my_offset=0) {    // li
 
 
 <?php
-    $quick = (!(is_guest()) && (intval(get_variable('quick')==1)));                // 11/27/09
+    $quick = (!(is_guest()) && ((intval(get_variable('quick')) == 1)));                // 11/27/09
     print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
 var tr_id_fixed_part = "tr_id_";        // 3/2/10
@@ -1380,7 +1380,7 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
         }
 //  ===========================  begin major while() for FACILITIES ==========
 
-    $quick = (!(is_guest()) && (intval(get_variable('quick')==1)));                // 11/27/09
+    $quick = (!(is_guest()) && ((intval(get_variable('quick')) == 1)));                // 11/27/09
     $sb_indx = 0;                                                                // for fac's only 8/5/10
 
     while($row_fac = $result_fac->fetch_assoc()){        // 7/7/10

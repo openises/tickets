@@ -256,7 +256,7 @@ if(!empty($_POST)) {    //    $_POST data exists, process the file
 
         $by = $_SESSION['user_id'];
         $from = $_SERVER['REMOTE_ADDR'];
-        $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
+        $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
         $filename = ($existing_file == "") ? $filename : $existing_file;    //    if existing file, use this file and write new db entry with it.
         $frm_title = sanitize_string($_POST['frm_title']);
         $frm_ticket_id = sanitize_int($_POST['frm_ticket_id']);

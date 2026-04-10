@@ -268,7 +268,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
                 }
             $frm_problemend  = (isset($_POST['frm_year_problemend'])) ?  "$_POST[frm_year_problemend]-$_POST[frm_month_problemend]-$_POST[frm_day_problemend] $_POST[frm_hour_problemend]:$_POST[frm_minute_problemend]:00" : null;
 
-            $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
+            $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60)); // 6/20/10
             if(empty($post_frm_owner)) {$post_frm_owner=0;}
 
             //$inc_num_ary = unserialize (get_variable('_inc_num'));                                            // 11/13/10
@@ -620,7 +620,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 <?php
 
 
-        if ((intval(get_variable('broadcast') == 1)) &&  ($_SESSION['good_internet'])) {
+        if (((intval(get_variable('broadcast')) == 1)) &&  ($_SESSION['good_internet'])) {
             require_once('./incs/socket2me.inc.php');        // 5/22/2013
             }
 ?>
@@ -640,7 +640,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
         <BODY onLoad = "<?php print $onloadStr;?>">
 <?php
 
-        $now = time() - (intval(get_variable('delta_mins')*60));        // 6/20/10
+        $now = time() - (intval(get_variable('delta_mins'))*60);        // 6/20/10
         print "<BR /><BR /><BR /><CENTER><FONT CLASS='header'>Ticket: '{$ticket_scope} ' ({$ticket_name}) Added by '{$_SESSION['user_id']}' at " . date(get_variable("date_format"),$now) . "</FONT></CENTER><BR /><BR />";
         if($in_win == 1 || get_variable("calltaker_mode") == 1) {
 ?>
@@ -1218,7 +1218,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
             theForm.frm_phone.value=theForm.frm_phone.value.replace(/\D/g, "" ); // strip all non-digits
             var theAddr = theForm.frm_street.value + " " + theForm.frm_city.value + " " + theForm.frm_state.value;
 <?php
-            if ((intval(get_variable('broadcast') == 1)) &&  ($_SESSION['good_internet'])) {
+            if (((intval(get_variable('broadcast')) == 1)) &&  ($_SESSION['good_internet'])) {
 ?>                                                                                        /*    5/22/2013 */
                 var theMessage = "New  <?php print get_text('Incident');?> (" + theForm.frm_scope.value + ") " + theAddr  + " by <?php echo $_SESSION['user'];?>";
                 broadcast(theMessage, 1);
@@ -1255,7 +1255,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
         elem = $("runend1");
         elem.style.visibility = "visible";
 <?php
-        $show_ampm = (!get_variable('military_time')==1);
+        $show_ampm = ((get_variable('military_time') != 1));
         if ($show_ampm){    //put am/pm optionlist if not military time
 //            dump (get_variable('military_time'));
             print "\tdocument.add.frm_meridiem_problemend.disabled = false;\n";
@@ -1315,7 +1315,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
             elem = $("booking1");
             elem.style.visibility = "visible";
 <?php
-            $show_ampm = (!get_variable('military_time')==1);
+            $show_ampm = ((get_variable('military_time') != 1));
             if ($show_ampm){    //put am/pm optionlist if not military time
                 print "\tdocument.add.frm_meridiem_booked_date.disabled = false;\n";
                 }
@@ -1344,7 +1344,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
             elem2 = $("wiz_booking1");
             elem2.style.visibility = "visible";
 <?php
-            $show_ampm = (!get_variable('military_time')==1);
+            $show_ampm = ((get_variable('military_time') != 1));
             if ($show_ampm){    //put am/pm optionlist if not military time
                 print "\tdocument.add.frm_meridiem_booked_date.disabled = false;\n";
                 print "\tdocument.wiz_add.frm_meridiem_booked_date.disabled = false;\n";
@@ -1598,7 +1598,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 </SCRIPT>
 <SCRIPT SRC="./js/misc_function.js" type="application/x-javascript"></SCRIPT>
 <?php
-    if ((intval(get_variable('broadcast') == 1)) &&  ($_SESSION['good_internet'])) {
+    if (((intval(get_variable('broadcast')) == 1)) &&  ($_SESSION['good_internet'])) {
         require_once('./incs/socket2me.inc.php');        // 5/22/2013
         }
 ?>

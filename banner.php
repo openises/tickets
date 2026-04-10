@@ -20,7 +20,7 @@ $_func = $_POST['_func'] ?? '';
 $_type = "t";        // text/banner
 $by = empty($_SESSION)? 0: $_SESSION['user_id'];
 $from = $_SERVER['REMOTE_ADDR'];
-$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
+$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60)); // 6/20/10
 
 if (array_key_exists("id", $_POST) && (!(empty($_POST['id'])))) {
     $safe_id = sanitize_int($_POST['id']);

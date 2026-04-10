@@ -2,7 +2,7 @@
 require_once('../../incs/functions.inc.php');
 @session_start();
 $by = $_SESSION['user_id'];
-$now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
+$now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
 $regions = array();
 $id = sanitize_int($_GET['id']);
 $declined_reason = (isset($_GET['reason'])) ? sanitize_string($_GET['reason']) : "No reason given";

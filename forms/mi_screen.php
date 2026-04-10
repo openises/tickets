@@ -31,7 +31,7 @@ require_once($the_inc);
 window.onresize=function(){set_size()};
 
 <?php
-$quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
+$quick = ( (is_super() || is_administrator()) && ((intval(get_variable('quick')) == 1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;

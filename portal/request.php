@@ -801,7 +801,7 @@ if((!empty($_POST)) && (empty($_GET))) {
     $rec_facility = ($row['rec_facility'] != 0) ? get_thefacilityname($row['rec_facility']) : "Not Set";
     $orig_facility = ($row['orig_facility'] != 0) ? get_thefacilityname($row['orig_facility']) : "Not Set";
     $onload_str = "load(" .  get_variable('def_lat') . ", " . get_variable('def_lng') . "," . get_variable('def_zoom') . ");";
-    $now = time() - (intval(get_variable('delta_mins')*60));
+    $now = time() - (intval(get_variable('delta_mins'))*60);
     $the_details = get_contact_details($row['requester']);    #
     $contact_email_p = $the_details[1];
 ?>

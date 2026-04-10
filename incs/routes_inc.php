@@ -239,7 +239,7 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
                 return false;
                 }
             else {
-                var quick = <?php print (intval(get_variable("quick")==1))? "true;\n" : "false;\n";?>
+                var quick = <?php print ((intval(get_variable("quick")) == 1))? "true;\n" : "false;\n";?>
 
                 if ((quick) || (confirm ("Please confirm unit dispatch\n\n" + msgstr))) {        // 11/23/09
 

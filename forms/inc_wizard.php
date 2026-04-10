@@ -309,7 +309,7 @@ function generate_date_select($date_suffix, $default_date=0, $theLabel="", $disa
     $tabindex++;
     $output .= "<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' tabindex=" . $tabindex . " NAME='wiz_frm_minute_" . $date_suffix . "' VALUE='" . $minute . "' " . $dis_str . " onChange='set_controlvalue(\"frm_minute_" . $date_suffix . "\", this.selectedIndex);'>";
     $tabindex++;
-    $show_ampm = (!get_variable('military_time')==1);
+    $show_ampm = ((get_variable('military_time') != 1));
     if ($show_ampm){    //put am/pm optionlist if not military time
         $output .= "<SELECT tabindex=" . $tabindex . " NAME='wiz_frm_meridiem_" . $date_suffix . "' " . $dis_str . " onChange='set_datselectvalue(\"frm_meridiem_" . $date_suffix . "\", this.selectedIndex);'><OPTION value='am'";
         if ($meridiem == 'am') {

@@ -894,7 +894,7 @@ function generate_date_dropdown($date_suffix,$default_date=0, $disabled=false) {
 
     print "\n<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_hour_$date_suffix' VALUE='$hour' $dis_str>:";
     print "\n<INPUT TYPE='text' SIZE='2' MAXLENGTH='2' NAME='frm_minute_$date_suffix' VALUE='$minute' $dis_str>";
-    $show_ampm = (!get_variable('military_time')==1);
+    $show_ampm = ((get_variable('military_time') != 1));
     if ($show_ampm){    //put am/pm optionlist if not military time
         print "\n<SELECT NAME='frm_meridiem_$date_suffix' $dis_str><OPTION value='am'";
         if ($meridiem == 'am') print ' selected';

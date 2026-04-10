@@ -587,7 +587,7 @@ function do_unload() {
 if((!isset($_SESSION)) && (empty($_POST))) {
     print "Not Logged in";
 } elseif((isset($_SESSION)) && (empty($_POST))) {
-    $now = time() - (intval(get_variable('delta_mins')*60));
+    $now = time() - (intval(get_variable('delta_mins'))*60);
 ?>
 
     <BODY style='overflow: hidden;' onLoad="out_frames();" onUnload='do_unload();'>

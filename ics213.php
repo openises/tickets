@@ -258,8 +258,8 @@ switch ($step) {
         $result = db_query($query);
         $row = stripslashes_deep($result->fetch_assoc());
 
-        $the_date = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
-        $the_time =  date( "H:i",(time()- (intval(get_variable('delta_mins')*60)) ));
+        $the_date = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
+        $the_time =  date( "H:i",(time()- (intval(get_variable('delta_mins'))*60) ));
         $the_from = "{$row['name_l']}, {$row['name_f']} {$row['name_mi']}";
         $temp = $row['name_l'].$row['name_f'].$row['name_mi'];
         $the_from = (empty($temp))? "" : "{$row['name_l']}, {$row['name_f']} {$row['name_mi']}";

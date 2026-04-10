@@ -87,7 +87,7 @@ if((isset($_GET['func'])) && ($_GET['func']=='reset')) {
     ) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;";
     $result = db_query($query);
 
-    $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60)));
+    $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
     $query_insert = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket`";
     $result_insert = db_query($query_insert);
     while ($row = stripslashes_deep($result_insert->fetch_assoc()))     {

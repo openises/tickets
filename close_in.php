@@ -332,7 +332,7 @@ function do_is_start($in_row) {                // 3/22/10
         $comments =     trim($_POST['frm_disp']);
         $description =     trim($_POST['frm_synopsis']);
         $the_id = sanitize_int($_POST['frm_ticket_id']);
-        $now = mysql_format_date(time() - (intval(get_variable('delta_mins')*60))); // 6/20/10
+        $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60)); // 6/20/10
         $by = $_SESSION['user_id'];
         $counter = 0;
 

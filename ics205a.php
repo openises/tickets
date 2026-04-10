@@ -123,7 +123,7 @@ switch ($step) {
         $row = stripslashes_deep($result->fetch_assoc());
         $the_by = "{$row['name_l']}, {$row['name_f']} {$row['name_mi']}";
 
-        $the_date_str = format_date ( strval (time() - (intval(get_variable('delta_mins')*60 ) ) ) );
+        $the_date_str = format_date ( strval (time() - (intval(get_variable('delta_mins'))*60 ) ) );
         $the_date_arr = explode (" ", $the_date_str);
         if (count ( $the_date_arr)!=2 ) {
             $the_date_arr = explode (" ", now_ts() );             // 2038-01-19 03:14:07

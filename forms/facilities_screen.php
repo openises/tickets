@@ -59,7 +59,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 ?>
 <SCRIPT>
 <?php
-$quick = ( (is_super() || is_administrator()) && (intval(get_variable('quick')==1)));
+$quick = ( (is_super() || is_administrator()) && ((intval(get_variable('quick')) == 1)));
 print ($quick)?  "var quick = true;\n": "var quick = false;\n";
 ?>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
