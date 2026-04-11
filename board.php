@@ -2013,6 +2013,7 @@ if(empty($_SESSION)) {        // expired?
             break;            // end case 'view' == } ==
 
             case 'edit':        // ====  {  ==================================================================================
+                $frm_id = $_POST['frm_id'] ?? ($_GET['frm_id'] ?? 0);
 ?>
                 <SCRIPT>
                 var incident_st = unit_st = assign_st = true;        // changes to false on activation
@@ -2085,8 +2086,21 @@ if(empty($_SESSION)) {        // expired?
                         WHERE `{$GLOBALS['mysql_prefix']}assigns`.`id` = ? LIMIT 1";
 
                     $asgn_result = db_query($query, [$frm_id]);
-                    $asgn_row = stripslashes_deep($asgn_result->fetch_array());
-                    $clear = (is_date($asgn_row['clear']))? "<FONT COLOR='red'><B>Cleared</B></FONT>": "";
+                    $asgn_row = $asgn_result ? stripslashes_deep($asgn_result->fetch_array()) : null;
+                    if (!$asgn_row) {
+                        // Provide safe defaults to prevent PHP 8 null array access warnings
+                        $asgn_row = array_fill_keys([
+                            'assign_id', 'ticket_id', 'scope', 'theticket', 'resp_id', 'handle',
+                            'theuser', 'thestatus', 'status_val', 'name', 'as_of', 'status',
+                            'un_status_id', 'assign_comments', 'start_miles', 'on_scene_miles',
+                            'end_miles', 'miles', 'dispatched', 'responding', 'on_scene', 'clear',
+                            'u2fenr', 'u2farr', 'problemstart', 'user'
+                        ], '');
+                        $asgn_row['resp_id'] = 0;
+                        $asgn_row['status'] = 0;
+                        $asgn_row['un_status_id'] = 0;
+                    }
+                    $clear = (!empty($asgn_row['clear']) && is_date($asgn_row['clear']))? "<FONT COLOR='red'><B>Cleared</B></FONT>": "";
                     $disabled = "";
 ?>
                     <FORM NAME="edit_Form" onSubmit="return validate_ed(document.edit_Form);" action = "<?php print basename(__FILE__); ?>" method = "post">
@@ -2447,14 +2461,16 @@ if(empty($_SESSION)) {        // expired?
 //                        generate log entry for each changed event - 10/20/12
                 $as_query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";
                 $as_result    = db_query($as_query, [$_POST['frm_id']]);
-                $as_row = stripslashes_deep($as_result->fetch_assoc());
+                $as_row = $as_result ? stripslashes_deep($as_result->fetch_assoc()) : null;
 
-                if ((array_key_exists('frm_db', $_POST)) && ($as_row['dispatched'] <> $frm_dispatched))     {do_log($GLOBALS['LOG_CALL_DISP'],     $frm_ticket_id, $frm_unit_id, $frm_id);}
-                if ((array_key_exists('frm_rb', $_POST)) && ($as_row['responding'] <> $frm_responding))     {do_log($GLOBALS['LOG_CALL_RESP'],     $frm_ticket_id, $frm_unit_id, $frm_id);}
-                if ((array_key_exists('frm_ob', $_POST)) && ($as_row['on_scene'] <> $frm_on_scene))         {do_log($GLOBALS['LOG_CALL_ONSCN'],    $frm_ticket_id, $frm_unit_id, $frm_id);}
-                if ((array_key_exists('frm_cb', $_POST)) && ($as_row['clear'] <> $frm_clear))                 {do_log($GLOBALS['LOG_CALL_CLR'],     $frm_ticket_id, $frm_unit_id, $frm_id);}
-                if ((array_key_exists('frm_fe', $_POST)) && ($as_row['u2fenr'] <> $frm_u2fenr))             {do_log($GLOBALS['LOG_CALL_U2FENR'],$frm_ticket_id, $frm_unit_id, $frm_id);}
-                if ((array_key_exists('frm_fa', $_POST)) && ($as_row['u2farr'] <> $frm_u2farr))             {do_log($GLOBALS['LOG_CALL_U2FARR'],$frm_ticket_id, $frm_unit_id, $frm_id);}
+                if ($as_row) {
+                    if ((array_key_exists('frm_db', $_POST)) && (($as_row['dispatched'] ?? '') <> $frm_dispatched))     {do_log($GLOBALS['LOG_CALL_DISP'],     $frm_ticket_id, $frm_unit_id, $frm_id);}
+                    if ((array_key_exists('frm_rb', $_POST)) && (($as_row['responding'] ?? '') <> $frm_responding))     {do_log($GLOBALS['LOG_CALL_RESP'],     $frm_ticket_id, $frm_unit_id, $frm_id);}
+                    if ((array_key_exists('frm_ob', $_POST)) && (($as_row['on_scene'] ?? '') <> $frm_on_scene))         {do_log($GLOBALS['LOG_CALL_ONSCN'],    $frm_ticket_id, $frm_unit_id, $frm_id);}
+                    if ((array_key_exists('frm_cb', $_POST)) && (($as_row['clear'] ?? '') <> $frm_clear))                 {do_log($GLOBALS['LOG_CALL_CLR'],     $frm_ticket_id, $frm_unit_id, $frm_id);}
+                    if ((array_key_exists('frm_fe', $_POST)) && (($as_row['u2fenr'] ?? '') <> $frm_u2fenr))             {do_log($GLOBALS['LOG_CALL_U2FENR'],$frm_ticket_id, $frm_unit_id, $frm_id);}
+                    if ((array_key_exists('frm_fa', $_POST)) && (($as_row['u2farr'] ?? '') <> $frm_u2farr))             {do_log($GLOBALS['LOG_CALL_U2FARR'],$frm_ticket_id, $frm_unit_id, $frm_id);}
+                }
 
                 $message = "Update Applied";
 ?>
