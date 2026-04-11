@@ -7,7 +7,7 @@ function get_status_selection($the_id, $status_val_in) {					// returns select l
 	$status_field = "status";
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}{$tablename}` WHERE `{$GLOBALS['mysql_prefix']}{$tablename}`.`id` = ? LIMIT 1" ;
 	$result = db_query($query, [$the_id]);
-	$row = stripslashes_deep($result->fetch_assoc());
+	$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 	$guest = is_guest();
 	$dis = ($guest)? " DISABLED": "";								// 9/17/08
 	if($row['status'] == 'Tentative') {

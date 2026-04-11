@@ -17,7 +17,7 @@ function get_mailgroup_name($theid) {
     $theid = sanitize_int($theid);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup` WHERE `id` = ?";
     $result = db_query($query, [$theid]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_ret = $row['name'];
     return $the_ret;
     }
@@ -27,7 +27,7 @@ function get_email_from_contacts($theid) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts` WHERE `id` = ?";
     $result = db_query($query, [$theid]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_ret = $row['name'] . "(" . $row['email'] . ")";
         } else {
         $the_ret = "";
@@ -40,7 +40,7 @@ function get_email_from_responder($theid) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
     $result = db_query($query, [$theid]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_ret = $row['handle'] . "(" . $row['contact_via'] . ")";
         } else {
         $the_ret = "";
@@ -272,7 +272,7 @@ if(!empty($_POST)) {
         $id = sanitize_int($id);
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup_x` WHERE `id` = ? LIMIT 1";        // 12/18/10
         $result = db_query($query, [$id]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
         <BODY onLoad='ck_frames();'>
 

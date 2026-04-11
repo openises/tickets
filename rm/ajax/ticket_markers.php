@@ -28,7 +28,7 @@ if ($result->num_rows == 0) { 				// 8/6/08
 	while ($row = stripslashes_deep($result->fetch_assoc())){
 		$query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? AND `status` = ?";
 		$result2 = db_query($query2, [$row['ticket_id'], $GLOBALS['STATUS_OPEN']]);
-		$row2 = stripslashes_deep($result2->fetch_assoc());
+		$row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
 		$ret_arr[$i][0] = $row2['id'];
 		$ret_arr[$i][1] = $row2['scope'];
 		$ret_arr[$i][2] = $row2['lat'];

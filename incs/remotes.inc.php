@@ -897,7 +897,7 @@ function do_traccar() {                // 5/30/17 - track responder locations wi
 // Find position id
         $query = 'select uniqueid, positionid from tc_devices where uniqueid = "' . $row1['callsign'] . '" limit 1';
         $result2 = db_query($query);
-        $row2 = $result2->fetch_assoc();
+        $row2 = $result2 ? $result2->fetch_assoc() : null;
         $positionid = $row2['positionid'];
         $positionids[] = $positionid;
 

@@ -33,7 +33,7 @@ $query = "SELECT *,
     LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `rf` ON (`rf`.`id` = `t`.`rec_facility`)
     WHERE `t`.`id`= ? LIMIT 1";
 $result = db_query($query, [$id]);
-$row_ticket = stripslashes_deep($result->fetch_array());
+$row_ticket = $result ? stripslashes_deep($result->fetch_array()) : null;
 $ret_arr = array();
 $ret_arr[0] = do_ticket_wm($row_ticket, "100%", false, false);
 $ret_arr[1] = "<SPAN id='edit_button' roll='button' aria-label='Edit Incident' CLASS='plain text' style='width: 100px; display: inline-block; float: right;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='open_edit_window(" . intval($id) . ");'><SPAN STYLE='float: left;'>" . get_text('Edit') . "</SPAN><IMG STYLE='float: right;' SRC='./images/edit_small.png' BORDER=0></SPAN>";

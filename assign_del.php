@@ -20,7 +20,7 @@ USERS: you may replace NULL with $now (EXACTLY THAT!) in the following sql query
 $frm_id = sanitize_int($_POST['frm_id']);
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";
 $result = db_query($query, [$frm_id]);
-$row = $result->fetch_assoc();                                                    // collect for log
+$row = $result ? $result->fetch_assoc() : null;
 
 do_log($GLOBALS['LOG_CALL_RESET'], $row['ticket_id'], $row['responder_id'], $row['id']);
 

@@ -31,7 +31,7 @@ function get_categoryName($id) {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]mmarkup_cats` WHERE `id`= ? LIMIT 1";
     $result = db_query($query, [$id]);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret = $row['category'];
         } else {
         $ret = "unk";

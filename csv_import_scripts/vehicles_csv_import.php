@@ -75,7 +75,7 @@ function get_owner_id($the_owner) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `field4` = ? LIMIT 1";
     $result = db_query($query, [$the_owner]);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $owner_id = $row['id'];
         } else {
         $owner_id = 1;

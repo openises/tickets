@@ -245,7 +245,7 @@ if(!empty($_POST)) {    //    $_POST data exists, process the file
                 $print = "Error uploading file<BR />";
                 }
             } else {
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $exists = true;
             $existing_file = $row['filename'];    //    get existing file name
             }

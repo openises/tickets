@@ -12,7 +12,7 @@ $ret_arr = array();
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]responder` WHERE `id` = ?";                                            // 2/1/10, 3/15/10, 6/10/11
 $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-$row = stripslashes_deep($result->fetch_assoc());
+$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $status_id = $row['un_status_id'];
 $icon_str = $row['icon_str'];
 

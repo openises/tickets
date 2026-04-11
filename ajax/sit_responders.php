@@ -91,7 +91,7 @@ function can_do_dispatch($the_row) {
 function unit_cat($id) {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = ?";
     $result = db_query($query, [intval($id)]);
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     return $row['name'];
     }
 
@@ -195,7 +195,7 @@ $query1 = "SELECT *, r.updated AS `r_updated`,
     {$where2} ORDER BY `unit_id` DESC LIMIT 1";
 
 $result1 = db_query($query1);
-$row1 = stripslashes_deep($result1->fetch_assoc());
+$row1 = $result1 ? stripslashes_deep($result1->fetch_assoc()) : null;
 $latest_id = ($result1->num_rows >0) ? $row1['unit_id'] : 0;        // 12/4/2021
 
 $query = "SELECT *, r.updated AS `r_updated`,
@@ -296,7 +296,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 
         $result2 = db_query($query2, [intval($row['unit_id'])]);
         if($result && $result2->num_rows == 1) {
-            $row2 = stripslashes_deep($result2->fetch_assoc());
+            $row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
             $memberID = $row2['member_id'];
             } else {
             $memberID = 0;
@@ -309,7 +309,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
         $query_updated = "SELECT `id`, `_on` FROM `$GLOBALS[mysql_prefix]member` WHERE `id` = ?";
 
         $result_updated = db_query($query_updated, [intval($memberID)]);
-        $row_updated = stripslashes_deep($result_updated->fetch_assoc());
+        $row_updated = $result_updated ? stripslashes_deep($result_updated->fetch_assoc()) : null;
         $memUpdated = safe_strtotime($row_updated['_on']);
         $responderStatusUpdated = safe_strtotime($row['status_updated']);
         $member_status = (($useMdb == "1" && $useMdbStatus && "1") && (get_member_count($row['unit_id']) == 1) && ($memberID != 0)) ? get_member_status($memberID) : 0;

@@ -36,7 +36,7 @@ $query = "SELECT * from `$GLOBALS[mysql_prefix]user` WHERE `id` = ?";
 $result = db_query($query, [$user]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 $num_rows = $result->num_rows;
 if($num_rows !=0) {
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $member = $row['member'];
     } else {
     $member = null;
@@ -63,7 +63,7 @@ if(($lev == 0) || ($lev == 1) || ($lev == 2)) {
 
 // calculate the number of rows for the query. We need this for paging the result
 $result = db_query("SELECT COUNT(*) AS count FROM `$GLOBALS[mysql_prefix]member`");
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 $count = $row['count'];
 
 // calculate the total pages for the query

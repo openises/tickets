@@ -47,7 +47,7 @@ $result = db_query($query, [$phone]) or do_error("", 'mysql query failed', db()-
 if (db()->affected_rows> 0) {                            // build return string from newest incident data
     $vals[0] = db()->affected_rows;
     $vals[10] = 1;                                        // identify data source as ticket
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     do_the_row($row);
     }
 

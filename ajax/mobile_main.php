@@ -9,7 +9,7 @@ $evenodd = array ("even", "odd", "heading");    // class names for alternating t
 function get_updated($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id` = ?";
     $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return safe_strtotime($row['updated']);
     }
 
@@ -123,7 +123,7 @@ function ticket_details($id, $theWidth, $search=false, $dist=true) {            
         exit();
         }
 
-    $theRow = stripslashes_deep($result->fetch_array());
+    $theRow = $result ? stripslashes_deep($result->fetch_array()) : null;
     $tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#" . $theRow['id'] . ")</I>" : "";            // 1/25/09
 
     switch($theRow['severity'])        {        //color tickets by severity

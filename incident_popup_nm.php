@@ -38,7 +38,7 @@ $poll_val = ($temp==0)? "none" : $temp ;
 $id =    (array_key_exists('id', ($_GET)))?    sanitize_int($_GET['id'])  :    null;
 
 $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?", [$id]);
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 $title = $row['scope'];
 $ticket_severity = get_severity($row['severity']);
 $ticket_type = get_type($row['in_types_id']);
@@ -142,28 +142,28 @@ echo $stats;
 echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
 while ($row_base= $result_dispatched->fetch_assoc()) {
     $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
     }
 
 echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
 while ($row_base= $result_responding->fetch_assoc()) {
     $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
     }
 
 echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
 while ($row_base= $result_on_scene->fetch_assoc()) {
     $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
     }
 
 echo "<BR>Units clear:&nbsp;({$num_rows_cleared})&nbsp;";
 while ($row_base= $result_cleared->fetch_assoc()) {
     $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
     }
 

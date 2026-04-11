@@ -37,13 +37,13 @@ if (array_key_exists('frm_mode', $_GET)) {
         $initScreen = (get_variable('restrict_units') == "1") ? "hide_topframe(); hide_barselect();" : "";
         } else {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `u`.`id` = ? LIMIT 1";
-        $result = db_query($query, [$_SESSION['user_id']]);        $user_row = stripslashes_deep($result->fetch_assoc());
+        $result = db_query($query, [$_SESSION['user_id']]);        $user_row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $mode = (intval ($user_row['responder_id'])>0)? MINE: ALL;        // $mode => 'all' if no unit associated this user - 10/3/10
         }
     }        // end if/else initialize $mode
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `u`.`id` = ? LIMIT 1";
-$result = db_query($query, [$_SESSION['user_id']]);$user_row = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$_SESSION['user_id']]);$user_row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $unit_id =  intval($user_row['responder_id']);
 
 $users_arr = array();
@@ -58,7 +58,7 @@ function get_unitname($id) {
 
     $result = db_query($query, [$id]);
     if($result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $return = $row['handle'];
         } else {
         $return = "Unk";

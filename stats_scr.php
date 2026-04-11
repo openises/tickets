@@ -39,7 +39,7 @@ function found_user() {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` WHERE `st_id` = ?";
         $result = db_query($query, [sanitize_int($value)]);
         if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $type_name = $row['name'];
             }
         return $type_name;
@@ -50,7 +50,7 @@ function found_user() {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` WHERE `st_id` = ?";
         $result = db_query($query, [sanitize_int($value)]);
         if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $stat_type = $row['stat_type'];
             }
         return $stat_type;
@@ -476,7 +476,7 @@ if ((isset($_GET['stats'])) && ($_GET['stats'] == "stats") && (!isset($_GET['frm
     } else {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_settings` WHERE `user_id` = ?";
         $result = db_query($query, [sanitize_int($_SESSION['user_id'])]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $refresh_time = ($row['refresh_rate'] * 1000);
         $f1 = $row['f1'];
         $f2 = $row['f2'];
@@ -847,7 +847,7 @@ if ((isset($_GET['stats'])) && ($_GET['stats'] == "stats") && (!isset($_GET['frm
 <?php
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_settings` WHERE `user_id` = ?";
         $result = db_query($query, [sanitize_int($_SESSION['user_id'])]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $name1 = get_stat_type_name($row['f1']);
         $name2 = get_stat_type_name($row['f2']);
         $name3 = get_stat_type_name($row['f3']);
@@ -971,7 +971,7 @@ if (((isset($_GET['config'])) && ($_GET['config'] == "config"))) {
 
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_settings` WHERE `user_id` = ?";
     $result = db_query($query, [sanitize_int($_SESSION['user_id'])]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $refresh_time = (isset($row['refresh_rate'])) ? ($row['refresh_rate'] * 1000) : 1000;
     $rr = found_user() ? $row['refresh_rate'] : 30;
     $f1 = found_user() ? $row['f1'] : 1;

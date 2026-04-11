@@ -51,7 +51,7 @@ $phone = (empty($_POST))? "4108498721": sanitize_string($_POST['phone']);
     $ret = $result->num_rows . ";";                        // hits - common to each return
 
     if ($result->num_rows> 0) {                            // build return string from newest incident data
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         $ret .= do_the_row($row);
         }
 

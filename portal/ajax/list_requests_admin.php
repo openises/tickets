@@ -29,7 +29,7 @@ function get_contact_details($the_id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$the_id]);
     if($result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_ret[] = (($row['name_f'] != "") && ($row['name_l'] != "")) ? $the_ret[] = $row['name_f'] . " " . $row['name_l'] : $the_ret[] = $row['user'];
         $the_ret[] = ($row['email'] != "") ? $row['email'] : "Unknown";
         $the_ret[] = ($row['email_s'] != "") ? $row['email_s'] : "Unknown";

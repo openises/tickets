@@ -76,7 +76,7 @@ function get_user_details($rosterID) {    //    9/6/13
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}personnel` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$rosterID]) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
     if(db()->affected_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_ret =  "Name: " . $row['forenames'] . " " . $row['surname'] . "<BR />";
         $the_ret .= "Street: " . $row['address'] . "<BR />";
         $the_ret .= "State: " . $row['state'] . "<BR />";
@@ -1112,7 +1112,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
                         $print .= "Error uploading file";
                         }
                     } else {
-                    $row = stripslashes_deep($result->fetch_assoc());
+                    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                     $exists = true;
                     $existing_file = $row['filename'];    //    get existing file name
                     }
@@ -1424,7 +1424,7 @@ if(get_num_groups()) {
         $id = $_GET['id'];
         $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ?";
         $result    = db_query($query, [$id]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
-        $row    = $result->fetch_array();
+        $row = $result ? $result->fetch_array() : null;
         $is_mobile = (($row['mobile']==1) && (!(empty($row['callsign']))));        // 1/27/09, 3/15/10
 
         $lat = $row['lat'];
@@ -1718,7 +1718,7 @@ if(get_num_groups()) {
                 FROM `{$GLOBALS['mysql_prefix']}responder` `r`
                 WHERE `r`.`id`= ? LIMIT 1";
             $result    = db_query($query, [$id]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
-            $row    = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 //            $is_mobile = (($row['mobile']==1) && ($row['callsign'] != ''));                // 1/27/09
             $lat = $row['lat'];
             $lng = $row['lng'];
@@ -1726,7 +1726,7 @@ if(get_num_groups()) {
             if (isset($row['un_status_id'])) {
                 $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id`= ?";    // status value
                 $result_st    = db_query($query, [$row['un_status_id']]) or do_error($query, 'db_query() failed', db()->error, __FILE__, __LINE__);
-                $row_st    = $result_st->fetch_assoc();
+                $row_st = $result_st ? $result_st->fetch_assoc() : null;
                 unset($result_st);
                 }
             $un_st_val = (isset($row['un_status_id']))? $row_st['status_val'] : "?";

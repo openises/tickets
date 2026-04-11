@@ -19,7 +19,7 @@ if ($_SESSION['user_id'] < 0 OR check_for_rows($query, [$_SESSION['user_id']]) =
 
 $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`=?";
 $result    = db_query($query, [$_SESSION['user_id']]);
-$row    = $result->fetch_array();
+$row = $result ? $result->fetch_array() : null;
 $api_key = trim(get_variable('gmaps_api_key'));
 $key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 ?>
@@ -132,7 +132,7 @@ if((!empty($_POST)) && ($get_go == 'true')) {
 
     $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`=?";
     $result    = db_query($query, [$_SESSION['user_id']]);
-    $row    = $result->fetch_array();
+    $row = $result ? $result->fetch_array() : null;
 ?>
     <TABLE BORDER="0" STYLE = 'margin-left:40px'>    <!-- 8/27/10 -->
         <TR CLASS='odd'>

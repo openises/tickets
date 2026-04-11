@@ -18,7 +18,7 @@ $portaluser = (isset($_GET['portaluser'])) ? sanitize_int($_GET['portaluser']) :
 function get_mi($id) {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]major_incidents` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return $row['name'];
     }
 

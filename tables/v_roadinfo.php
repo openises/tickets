@@ -3,7 +3,7 @@ function get_types($curr_val) {
     $curr_val = intval($curr_val);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}conditions` WHERE `id` = ?";
     $result = db_query($query, [$curr_val]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_ret = $row['title'];
     return $the_ret;
     }

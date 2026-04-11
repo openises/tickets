@@ -42,7 +42,7 @@ function fac_cat($id) {
     $id = sanitize_int($id);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` WHERE `id` = ?";    // all dispatches this unit
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     return $row['name'];
     }
 
@@ -100,7 +100,7 @@ function get_unit_name($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret = $row['name'];
         } else {
         $ret = "Unk?";
@@ -113,7 +113,7 @@ function get_unit_status($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret = $row['un_status_id'];
         } else {
         $ret = false;
@@ -126,7 +126,7 @@ function get_fac_name($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret = $row['name'];
         } else {
         $ret = "Unk?";
@@ -140,7 +140,7 @@ function get_unit_coords($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret_arr[0] = $row['lat'];
         $ret_arr[1] = $row['lng'];
         } else {
@@ -156,7 +156,7 @@ function get_fac_coords($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret_arr[0] = $row['lat'];
         $ret_arr[1] = $row['lng'];
         } else {
@@ -198,7 +198,7 @@ function do_fac($id) {
         WHERE `{$GLOBALS['mysql_prefix']}facilities`.`id` = ?";
     $result = db_query($query, [$id]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $print = "<TABLE ID='fac_inner_table' BORDER='0'ID='left' width='60%'>\n";        //
         $print .= "<TR CLASS='odd' VALIGN='top'><TD CLASS='td_label'>Description:</TD><TD CLASS='td_data'>" . $row['facility_description'] . "</TD></TR>\n";
         $print .= "<TR CLASS='even' VALIGN='top'><TD CLASS='td_label'>Capability:</TD><TD CLASS='td_data'>" . nl2br($row['capab']) . "</TD></TR>\n";

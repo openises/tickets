@@ -112,7 +112,7 @@ function get_mailgroup_name($id) {    //    8/28/13
     $id = sanitize_int($id);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_ret = $row['name'];
     return $the_ret;
     }
@@ -399,7 +399,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
                         $print .= "Error uploading file";
                         }
                     } else {
-                    $row = stripslashes_deep($result->fetch_assoc());
+                    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                     $exists = true;
                     $existing_file = $row['filename'];    //    get existing file name
                     }

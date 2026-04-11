@@ -93,7 +93,7 @@ function set_size() {
         exit();
         }
 
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     $type = get_type($row['in_types_id']);
     $severity = $row['severity'];
     $scope = $row['scope'];

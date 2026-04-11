@@ -1775,7 +1775,7 @@ function fs_get_disp_status ($row_in) {            // 3/25/11
                                     WHERE `r`.`id` = ? LIMIT 1";
 
                                 $result_unit = db_query($query, [intval($row['unit_id'])]);
-                                $row_unit = stripslashes_deep($result_unit->fetch_assoc());
+                                $row_unit = $result_unit ? stripslashes_deep($result_unit->fetch_assoc()) : null;
 ?>
                                 sidebar_line += "<DIV CLASS='unit_s' <?php print $bg_color_class;?>'><DIV class='incs' onmouseover=\"Tip('<?php print substr($row_unit['stat_descr'], 0, 12);?>')\" onmouseout=\"UnTip()\">&nbsp;<?php print substr($row_unit['stat_descr'], 0, 12);?></DIV></DIV>";
                                 sidebar_line += "</DIV><BR />";

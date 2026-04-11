@@ -54,7 +54,7 @@ if (array_key_exists("id", $_POST) && (!(empty($_POST['id'])))) {
     $result = db_query($query, [$post_id]);
 
     if ($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         extract ($row);
         $points_ary = array();
         $points = explode (";", $line_data);
@@ -922,7 +922,7 @@ function buildMap_c() {                                                         
             $review_id = sanitize_int($_POST['id']);
             $query = "SELECT * FROM `{$tablename}` WHERE `id`=? LIMIT 1";
             $result = db_query($query, [$review_id]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             extract ($row);
             $name = $row['line_name'];
 
@@ -1271,7 +1271,7 @@ function waiter() {
         $dp_id = sanitize_int($_POST['id']);
         $query = "SELECT `line_name` FROM `{$tablename}` WHERE `id` = ? LIMIT 1" ;
         $result = db_query($query, [$dp_id]);
-        $row = $result->fetch_assoc();
+        $row = $result ? $result->fetch_assoc() : null;
 
         $query = "DELETE FROM `{$tablename}` WHERE `id` = ? LIMIT 1" ;
         $result = db_query($query, [$dp_id]);

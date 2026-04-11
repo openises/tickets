@@ -1749,7 +1749,7 @@ function linkFromSumm(table, index) {
                 `_on` AS `updated`
                 FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id`=?";
             $result    = db_query($query, [$id]);
-            $row    = $result->fetch_array();
+            $row = $result ? $result->fetch_array() : null;
             $row['duedate'] = safe_strtotime($row['duedate']);
             $row['joindate'] = !empty($row['joindate']) ? safe_strtotime($row['joindate']) : false;    // 3/14/26 - null-safe
             $row['dob'] = !empty($row['dob']) ? safe_strtotime($row['dob']) : false;
@@ -1794,7 +1794,7 @@ function linkFromSumm(table, index) {
                 FROM `{$GLOBALS['mysql_prefix']}member` `m`
                 WHERE `m`.`id`=? LIMIT 1";
             $result    = db_query($query, [$id]);
-            $row    = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $row['duedate'] = safe_strtotime($row['duedate']);
             $row['joindate'] = !empty($row['joindate']) ? safe_strtotime($row['joindate']) : false;    // 3/14/26 - null-safe
             $row['dob'] = !empty($row['dob']) ? safe_strtotime($row['dob']) : false;
@@ -1804,7 +1804,7 @@ function linkFromSumm(table, index) {
             if (isset($row['field21'])) {
                 $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_status` WHERE `id`=?";    // status value
                 $result_st    = db_query($query, [$row['field21']]);
-                $row_st    = $result_st->fetch_assoc();
+                $row_st = $result_st ? $result_st->fetch_assoc() : null;
                 unset($result_st);
                 }
             $un_st_val = (isset($row_st) && $row_st)? $row_st['status_val'] : "?";                // 3/14/26 - null-safe

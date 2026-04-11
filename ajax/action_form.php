@@ -32,7 +32,7 @@ if ($get_action == 'edit') {
     $get_id = sanitize_int($_GET['id']);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1";
     $result = db_query($query, [$get_id]);
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     $responders = explode(" ", $row['responder']);
     $do_yr_asof = true;
     $heading = "Edit Action";

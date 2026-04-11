@@ -146,7 +146,7 @@ while ($row_un = stripslashes_deep($result_un->fetch_assoc()))     {    // 6/10/
 
 
 $query    = "SELECT *, r.updated AS `r_updated` FROM `{$GLOBALS['mysql_prefix']}responder` `r` WHERE `r`.`id` = ? LIMIT 1";
-$result = db_query($query, [$id]);$row = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$id]);$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $track_type = get_remote_type ($row) ;
 $is_mobile = (($row['mobile']==1) && ($row['callsign'] != ''));
 $lat = $row['lat'];
@@ -168,7 +168,7 @@ $result_ex = db_query($query_ex, [$exclzone]);while($row_ex    = stripslashes_de
 
 if (isset($row['un_status_id'])) {
     $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id` = ?" ;    // status value
-    $result_st = db_query($query, [$row['un_status_id']]);    $row_st    = $result_st->fetch_assoc();
+    $result_st = db_query($query, [$row['un_status_id']]);    $row_st = $result_st ? $result_st->fetch_assoc() : null;
     unset($result_st);
     }
 $un_st_val = (isset($row['un_status_id']))? $row_st['status_val'] : "?";
@@ -183,7 +183,7 @@ $coords =  $row['lat'] . "," . $row['lng'];        // for UTM
 $query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks`
     WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";        // newest
 $result_tr = db_query($query, [$row['callsign']]);if (db()->affected_rows>0) {                        // got track stuff?
-    $rowtr = stripslashes_deep($result_tr->fetch_array());
+    $rowtr = $result_tr ? stripslashes_deep($result_tr->fetch_array()) : null;
     $lat = $rowtr['latitude'];
     $lng = $rowtr['longitude'];
     }

@@ -18,7 +18,7 @@ $tick_id = ((isset($_GET['ticket_id'])) && ($_GET['ticket_id'] != "")) ? sanitiz
 if (empty($_POST)) {
     $query = "SELECT `id`, `scope` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$tick_id]);
-    $row = $result->fetch_array();
+    $row = $result ? $result->fetch_array() : null;
     $title = substr(stripslashes($row['scope']), 0, 60);
     unset($result);
     }

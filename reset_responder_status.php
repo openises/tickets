@@ -19,7 +19,7 @@ function get_broken_status_name($val) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id` = ?";
     $result = db_query($query, [$val]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_name = $row['group'] . " - " . $row['status_val'];
         } else {
         $the_name = "";
@@ -32,7 +32,7 @@ function get_noreset_status($val) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id` = ?";
     $result = db_query($query, [$val]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         if($row['excl_from_reset'] == "y") {
             $theRet = "y";
             } else {

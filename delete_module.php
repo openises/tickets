@@ -82,7 +82,7 @@ if (isset($_POST['module_choice'])) { // Handle the form.
     $mod_name = sanitize_string($_POST['confirmation']);
     $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}modules` WHERE `mod_name`= ?";
     $result    = db_query($query, [$mod_name]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     $module_name = $row['mod_name'];
     $table = $row['table'];
 

@@ -1,7 +1,7 @@
 <?php
 $all_id = (array_key_exists('all_id', $_GET)) ? sanitize_int($_GET['all_id']) : 0;
 $query_all = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `id` = ?";
-$result_all = db_query($query_all, [$all_id]);$row_all    = $result_all->fetch_array();
+$result_all = db_query($query_all, [$all_id]);$row_all = $result_all ? $result_all->fetch_array() : null;
 
 $id = (!array_key_exists('all_id', $_GET)) ? sanitize_int($_GET['id']) : $row_all['member_id'];
 $start_time = ((isset($row_all['start'])) && ((date("G",$row_all['start'] != "00")) && (date("i",$row_all['start'] != "00")))) ? $row_all['start'] : "";
@@ -9,7 +9,7 @@ $end_time = ((isset($row_all['end'])) && ((date("G",$row_all['end'] != "00")) &&
 $startup = "set_initial_view('" . $row_all['frequency'] . "')";
 $query    = "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m`
     WHERE `m`.`id`=? LIMIT 1";
-$result = db_query($query, [$id]);$row    = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$id]);$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
 <SCRIPT>
 window.onresize=function(){set_size()};

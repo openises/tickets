@@ -26,7 +26,7 @@ if(empty($_GET)) {
         $query = "SELECT * FROM `$GLOBALS[mysql_prefix]caller_id` WHERE `status` = 0 LIMIT 1;";
         $result = db_query($query);
         if ($result->num_rows> 0) {                            // build return string from newest incident data
-            $row = stripslashes_deep($result->fetch_array());
+            $row = $result ? stripslashes_deep($result->fetch_array()) : null;
             $result = db_query("UPDATE `$GLOBALS[mysql_prefix]caller_id` SET `status` = 1 WHERE `id` = ?", [intval($row['id'])]);
             $lookup_vals = explode (";", $row['lookup_vals']);
             $cid_calls = $lookup_vals[0];
@@ -70,7 +70,7 @@ function get_res_row() {                // writes empty ticket if none exists - 
 
     $result = db_query($query);
     if ($result->num_rows == 1) {                            // any ?
-        $row = stripslashes_deep($result->fetch_array());    // yes, return it
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         }
     else {                // insert empty STATUS_RESERVED row
         $query_insert  = "INSERT INTO `$GLOBALS[mysql_prefix]ticket` (
@@ -86,7 +86,7 @@ function get_res_row() {                // writes empty ticket if none exists - 
         }
 
     $result = db_query($query);
-    $row = stripslashes_deep($result->fetch_assoc());            // get the reserved row
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return $row;                                                    // and return it - 11/5/10
     }                        // end function get_res_row()
 

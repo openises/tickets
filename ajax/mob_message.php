@@ -57,7 +57,7 @@ $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 
 $result = db_query($query, $where_params) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 $num=$result->num_rows;
-$msg_row = stripslashes_deep($result->fetch_assoc());
+$msg_row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $fromname = ($msg_row['fromname'] != "") ? shorten($msg_row['fromname'], 80) : "TBA";
 $ret_arr[0] = $msg_row['id'];
 $ret_arr[1] = $msg_row['ticket_id'];

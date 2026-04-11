@@ -295,7 +295,7 @@ switch ($mode) {
         $ref = sanitize_int($_POST['ref']);
         $query = "SELECT `handle` FROM `{$GLOBALS['mysql_prefix']}responder` `r` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [$ref]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
 <body onload = "document.osw_form.frm_comment.focus();">        <!-- log entry  <?php echo __LINE__;?> -->
 <form name="osw_form" method = "post" action="<?php echo basename(__FILE__);?>">
@@ -353,7 +353,7 @@ switch ($mode) {
                 }
             }        // end error
         else {
-            $row = $result->fetch_assoc();
+            $row = $result ? $result->fetch_assoc() : null;
             }
 //        dump($row);
 
@@ -430,7 +430,7 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
                     WHERE  `t`.`id` = ? LIMIT 1";
 
         $result = db_query($query, [$ref]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
 <BODY onload = "setTimeout(function(){ do_can(); }, 1500);">        <!-- 1/14/10 -->
 <form name = "osw_form" method = "post"     action = "<?php echo basename(__FILE__); ?>">
@@ -455,7 +455,7 @@ Disposition &raquo; <input type = 'radio' name='frm_add_to' value='1' /><br /><b
         $ref = sanitize_int($_POST['ref']);
         $query = "SELECT `handle`, `contact_via` FROM `{$GLOBALS['mysql_prefix']}responder` `r` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [$ref]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 
         $tik_id = $_POST['ref'];
 ?>

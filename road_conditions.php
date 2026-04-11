@@ -1220,7 +1220,7 @@ var buttons_html = "";
                 LEFT JOIN `{$GLOBALS['mysql_prefix']}conditions` `c` ON `r`.`conditions`=`c`.`id`
                 WHERE `r`.`id`=?";
         $result    = db_query($query, [$id]);
-        $row    = $result->fetch_assoc();
+        $row = $result ? $result->fetch_assoc() : null;
         $lat = $row['lat'];
         $lng = $row['lng'];
 ?>
@@ -1364,7 +1364,7 @@ var buttons_html = "";
             $id = sanitize_int($_GET['id']);
             $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}roadinfo` WHERE `id`= ? LIMIT 1";    // 1/19/2013
             $result    = db_query($query, [$id]);
-            $row    = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $lat = $row['lat'];
             $lng = $row['lng'];
             $coords =  $row['lat'] . "," . $row['lng'];        // for UTM

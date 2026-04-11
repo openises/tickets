@@ -34,7 +34,7 @@ function get_name ( $the_id ) {
     $the_id = sanitize_int ( $the_id ) ;
     $query = "SELECT `name` FROM `{$GLOBALS['mysql_prefix']}ics` WHERE `id` = ? LIMIT 1";
     $result = db_query ( $query, array ( $the_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
-    $row = $result->fetch_assoc () ;
+    $row = $result ? $result->fetch_assoc() : null;
     return FORM . " '" . e ( $row ['name'] ) . "'";
     }                // end function get_name ()
 
@@ -520,7 +520,7 @@ switch ( $func ) {
     $user_id = sanitize_int ( $_SESSION['user_id'] ) ;        // 3/24/2015
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
     $result = db_query ( $query, array ( $user_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
-    $row = stripslashes_deep ( $result->fetch_assoc () ) ;
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_by = "{$row['name_l']}, {$row['name_f']} {$row['name_mi']}";
 
     $the_date_str = format_date ( strval ( time () - ( intval ( get_variable ( 'delta_mins' ) *60 ) ) ) ) ;
@@ -585,7 +585,7 @@ switch ( $func ) {
         $result = db_query ( $query, array ( $post_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
         if ( $result->num_rows <> 1 ) { dump ( $query ) ;}
 
-        $row = $result->fetch_assoc () ;
+        $row = $result ? $result->fetch_assoc() : null;
         $temp = base64_decode ( $row['payload'] ) ;
         $payload_arr = json_decode ( $temp, true ) ;        //     get payload as a PHP associative array
 
@@ -825,7 +825,7 @@ switch ( $func ) {
         $result = db_query ( $query, array ( $ics_id ) ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
         if ( $result->num_rows <> 1 ) { dump ( $query ) ;}
 
-        $row = $result->fetch_assoc () ;
+        $row = $result ? $result->fetch_assoc() : null;
         $temp = base64_decode ( $row['payload'] ) ;
         $payload_arr = json_decode ( $temp, true ) ;            // get payload as a PHP associative array
         $html_message = merge_template () ;                    // case "m2"

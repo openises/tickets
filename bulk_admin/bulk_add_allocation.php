@@ -7,7 +7,7 @@ function get_membername($id) {
     $id = sanitize_int($id);
     $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
     $result    = db_query($query, [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     $ret = $row['field2'] . " " . $row['field1'];
     return $ret;
     }

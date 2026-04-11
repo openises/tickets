@@ -34,7 +34,7 @@ if (empty($_POST)) {
     $id = sanitize_int($_GET['the_id']);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
 ?>
 <SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
 <SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>

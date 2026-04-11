@@ -332,7 +332,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
             } else {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `id`=? LIMIT 1";
             $result = db_query($query, [$_GET['id']]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             print "<FONT CLASS='header'>Really delete " . get_text("Patient") . " record ' " .shorten($row['description'], 24) . "' ?</FONT><BR /><BR />";
             // 3/14/26 - XSS fix: escape $_GET values in HTML output
             print "<FORM METHOD='post' ACTION='patient.php?action=delete&id=" . e($_GET['id']) . "&ticket_id=" . e($_GET['ticket_id']) . "&confirm=1'><INPUT TYPE='Submit' VALUE='Yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -374,7 +374,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
         $result = db_query($query, [$frm_asof, $_GET['ticket_id']]);
 
         $result = db_query("SELECT ticket_id FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=?", [$_GET['id']]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 
         if($_POST['assigns'] != "0") {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = ?";
@@ -416,7 +416,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = ?";
         $result = db_query($query, [$_GET['id']]);
         if($result->num_rows > 0) {
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $assigned_to = $row['assign_id'];
             } else {
             $assigned_to = 0;
@@ -463,7 +463,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 
         $query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=? LIMIT 1";    // 8/11/08
         $result = db_query($query, [$_GET['id']]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
         <SPAN STYLE='margin-left:83px;'><FONT CLASS="header">Edit <?php print get_text('Patient');?> Record</FONT></SPAN><BR /><BR />
         <FORM METHOD='post' NAME='patientEd' onSubmit='return validate(document.patientEd);' ACTION="patient.php?id=<?php print intval($_GET['id']);?>&ticket_id=<?php print intval($_GET['ticket_id']);?>&action=update"><TABLE BORDER="0">

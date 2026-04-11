@@ -37,7 +37,7 @@ if (array_key_exists('frm_mode', $_GET)) {$mode =  $_GET['frm_mode'];
         } else {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `u`.`id` = ? LIMIT 1";
         $result = db_query($query, [$_SESSION['user_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-        $user_row = stripslashes_deep($result->fetch_assoc());
+        $user_row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $mode = (intval ($user_row['responder_id'])>0)? MINE: ALL;        // $mode => 'all' if no unit associated this user - 10/3/10
         }
     }        // end if/else initialize $mode
@@ -48,7 +48,7 @@ if ((($mode==0) || ($mode==1))) {                                    // pull $th
         WHERE `u`.`id` = ? LIMIT 1";
 
     $result = db_query($query, [$_SESSION['user_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    $user_row = stripslashes_deep($result->fetch_assoc());
+    $user_row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_unit = $user_row['responder_id'];
     $the_unit_name = (empty($user_row['name']))? "NA": $user_row['name'];    // 'NA' if no responder this user
     }
@@ -220,7 +220,7 @@ for ($i = 0; $i<count($assigns_stack); $i++) {
     if ((is_unit()) || ((has_admin())&&(intval($unit_id)>0))) {                // do/do-not allow status change - 2/7/12
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [$unit_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-        $temp_row = $result->fetch_assoc();
+        $temp_row = $result ? $result->fetch_assoc() : null;
         $ret_arr[6] ="<DIV CLASS='sel' style='width: 152px; display:" . $display_val . ";'>" . get_text("Status") . ":<BR />" . get_status_sel($unit_id, $temp_row['un_status_id'], "u", 10) . "</DIV>";
         $ret_arr[6] ="<DIV CLASS='sel' style='width: 152px; display:" . $display_val . ";'>" . get_text("Receiving Facility") . ":<BR />" . get_recfac_sel($unit_id, $ticket_id, $assign_id) . "</DIV>";
         }
@@ -231,7 +231,7 @@ for ($i = 0; $i<count($assigns_stack); $i++) {
             LIMIT 1";
         $result = db_query($query, [$_SESSION['user_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
-        $user_row = stripslashes_deep($result->fetch_assoc());
+        $user_row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         if (intval($user_row['responder_id'])>0) {
             $ret_arr[7] = 1;
             }

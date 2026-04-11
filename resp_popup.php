@@ -35,7 +35,7 @@ function can_do_dispatch($the_row) {
 function unit_cat($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_types` WHERE `id` = ?";    // all dispatches this unit
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     return $row['name'];
     }
 
@@ -111,7 +111,7 @@ $aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $ogts = $mob_tracker
 
 $utc = gmdate ("U");                // 3/25/09
 
-$row = stripslashes_deep($result->fetch_assoc());
+$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $latitude = ($row['lat']) ? $row['lat'] : get_variable('def_lat');        // 7/18/10
 $longitude = ($row['lng']) ? $row['lng'] : get_variable('def_lng');        // 7/18/10
 
@@ -174,7 +174,7 @@ switch ($units_assigned) {
         $ass_td = " ";
         break;
     case 1:
-        $row_assign = stripslashes_deep($result_as->fetch_assoc());
+        $row_assign = $result_as ? stripslashes_deep($result_as->fetch_assoc()) : null;
         $the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
         $tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
         switch($row_assign['severity'])        {        //color tickets by severity

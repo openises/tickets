@@ -63,7 +63,7 @@ function can_do_dispatch($the_row) {
 function unit_cat($id) {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]un_types` WHERE `id` = ?";    // all dispatches this unit
     $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     return $row['name'];
     }
 
@@ -162,7 +162,7 @@ $query1 = "SELECT *, r.updated AS `r_updated`,
     {$where2} ORDER BY `unit_id` DESC LIMIT 1";
 
 $result1 = db_query($query1) or do_error($query1, 'mysql query failed', '', basename( __FILE__), __LINE__);
-$row1 = stripslashes_deep($result1->fetch_assoc());
+$row1 = $result1 ? stripslashes_deep($result1->fetch_assoc()) : null;
 $latest_id = ($result1->num_rows >0) ? $row1['unit_id'] : 0;
 
 $query = "SELECT *, r.updated AS `r_updated`,
@@ -281,7 +281,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {            // 7/7/10
             $flaginfo = "";
             break;
         case 1:
-            $row_assign = stripslashes_deep($result_as->fetch_assoc());
+            $row_assign = $result_as ? stripslashes_deep($result_as->fetch_assoc()) : null;
             $the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
             $tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
             $addrs = $row_assign['street'] . " " . $row_assign['city'] . " " . $row_assign['state'];

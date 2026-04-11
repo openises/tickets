@@ -41,7 +41,7 @@ function get_messagecolor($id) {
 function get_ticketinfo($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ?";
     $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    $theRow = stripslashes_deep($result->fetch_assoc());
+    $theRow = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $scope = $theRow['scope'];
     return $scope;
     }
@@ -49,7 +49,7 @@ function get_ticketinfo($id) {
 function get_unitinfo($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
     $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    $theRow = stripslashes_deep($result->fetch_assoc());
+    $theRow = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_unit_name = (empty($theRow['name']))? "NA": $theRow['name'];
     return $the_unit_name;
     }
@@ -59,7 +59,7 @@ $userid = (array_key_exists('user_id', $_SESSION)) ? $_SESSION['user_id'] : 0;
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `u`.`id` = ? LIMIT 1";
 $result = db_query($query, [$userid]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-$user_row = stripslashes_deep($result->fetch_assoc());
+$user_row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $unit_id =  intval($user_row['responder_id']);
 $the_unit_name = ($user_row['responder_id'] == 0)? "NA": get_unitinfo($unit_id);
 

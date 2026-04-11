@@ -951,7 +951,7 @@ function dump_db()
     if ($get_id != 0) {
         $query = "SELECT `id`, `scope` FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [$get_id]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_ticket_name = $row['scope'];
         unset($result);
     } else {
@@ -1350,7 +1350,7 @@ case 'profile' :                    //update profile
 
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ?";
         $result = db_query($query, [$_SESSION['user_id']]);
-        $row = $result->fetch_array();
+        $row = $result ? $result->fetch_array() : null;
         ?>
         <BR/>
         <BR/>
@@ -2453,7 +2453,7 @@ case 'user' :
 
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE id=? LIMIT 1";
             $result = db_query($query, [$id]);
-            $row = $result->fetch_assoc();
+            $row = $result ? $result->fetch_assoc() : null;
             // ============================                        10/28/10
             switch ($_SESSION['level']) {
                 case $GLOBALS['LEVEL_SUPER']:

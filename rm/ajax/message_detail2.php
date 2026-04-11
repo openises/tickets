@@ -14,7 +14,7 @@ $message_id = (isset($_GET['message_id'])) ? sanitize_int($_GET['message_id']) :
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` WHERE `id` = ?";
 $result = db_query($query, [$message_id]);
-$row = stripslashes_deep($result->fetch_assoc());
+$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $reply_address = $row['from_address'];
 $print = "<TABLE style='width: 100%; border: 2px outset #707070;'>";	
 $print .= "<TR style='width: 100%; color: #FFFFFF; background-color: #707070;'><TD COLSPAN=2 style='text-align: center; font-weight: bold;'>MESSAGE DETAIL";

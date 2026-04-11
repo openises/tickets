@@ -33,7 +33,7 @@ $result = db_query($query, [$frm_id]);
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";
 $result = db_query($query, [$frm_id]);
 
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 
 do_log($GLOBALS['LOG_CALL_RESET'], $row['ticket_id'], $row['responder_id'], $row['id']);
 set_u_updated ($frm_id);                                     // 9/1/10

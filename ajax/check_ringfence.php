@@ -14,7 +14,7 @@ function get_ringfence($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$id]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         if(intval($row['ring_fence']) > 0) {
             $ring_fence = intval($row['ring_fence']);
             }
@@ -27,7 +27,7 @@ function get_fencetype($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
     $result = db_query($query, [$id]);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         return $row['line_type'];
         } else {
         return false;
@@ -39,7 +39,7 @@ function get_circlecenter($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
     $result = db_query($query, [$id]);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $temp = explode(";", $row['line_data']);
         $center = explode(",", $temp[0]);
         return $center;
@@ -53,7 +53,7 @@ function get_circleradius($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
     $result = db_query($query, [$id]);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $temp = explode(";", $row['line_data']);
         $radius = $temp[1];
         return $radius;
@@ -68,7 +68,7 @@ function get_points($theZone) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
     $result = db_query($query, [$theZone]);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         return $row['line_data'];
         } else {
         return false;

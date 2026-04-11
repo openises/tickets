@@ -12,7 +12,7 @@ $the_id = sanitize_int($_GET['id']);
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]personnel` WHERE `id` = ? LIMIT 1";
 $result = db_query($query, [$the_id]) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-$row = stripslashes_deep($result->fetch_assoc());
+$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 
 $ret_arr[0] = $row['id'];
 $ret_arr[1] = $row['person_identifier'];

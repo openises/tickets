@@ -136,7 +136,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
                     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ? LIMIT 1;";
                     $result = db_query($query, [$get_name]);
                 }
-                $row = stripslashes_deep($result->fetch_assoc());
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
             <BODY scroll='auto' onLoad = "reSizeScr(1); document.mail_form.frm_subj.focus();"><CENTER>
             <FORM NAME='mail_form' METHOD='post' ACTION='<?php print basename(__FILE__); ?>'>
@@ -184,7 +184,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
             $result = db_query($query);
             $no_tickets = db()->affected_rows;
             if($no_tickets==1) {
-                $row = stripslashes_deep($result->fetch_assoc()) ;
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 //                dump($row);
 ?>
                 <BODY scroll='auto' onLoad = "document.mail_form_single.submit();">    <!-- 1/12/09 -->

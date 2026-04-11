@@ -16,7 +16,7 @@ $from = $_SERVER['REMOTE_ADDR'];
 $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}waste_basket_m` WHERE `id` = ?";
 $result = db_query($query, [sanitize_int($_GET['id'])]);
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 $old_filename = (isset($row['field5'])) ? $row['field5'] : "";
 $old_id = $row['old_id'];
 $training = explode(",", $row['training']);

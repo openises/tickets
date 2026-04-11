@@ -242,7 +242,7 @@ function get_bnd_butts() {
 function get_bound_name($value) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = '{$value}'";
     $result = db_query($query);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $bnd_name = $row['line_name'];
     return $bnd_name;
     }
@@ -378,7 +378,7 @@ function get_bnd_session() {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND `id` = " . $value;
             $result = db_query($query);
             if($result->num_rows != 0) {
-                $row = stripslashes_deep($result->fetch_assoc());
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                 $boundary_names[$row['id']] = $row['line_name'];
                 }
             }
@@ -405,7 +405,7 @@ function get_bnd_session_names() {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `line_status` = 0 AND `id`='{$value}'";
             $result = db_query($query);
             if($result->num_rows != 0) {
-                $row = stripslashes_deep($result->fetch_assoc());
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                 $boundary_names[$row['id']] = $row['line_name'];
                 }
             }

@@ -33,7 +33,7 @@ if ($istest) {
 $id =    (array_key_exists('id', ($_GET)))?    sanitize_int($_GET['id'])  :    null;
 
 $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}warnings` WHERE id=?", [$id]);
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">

@@ -67,7 +67,7 @@ $start_hr = '';
 $p1 = sanitize_string($_GET['p1']);;                //
 $query = "SELECT MIN(packet_date) AS 'min', MAX(packet_date) AS 'max' FROM `{$GLOBALS['mysql_prefix']}tracks` WHERE `source` = ?";
 $result_tr = db_query($query, [$p1]);
-$row_tr = $result_tr->fetch_assoc();
+$row_tr = $result_tr ? $result_tr->fetch_assoc() : null;
 //snap (basename( __FILE__), __LINE__);
 
 $modulus = 60*60;

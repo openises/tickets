@@ -11,7 +11,7 @@ function get_requester_details($the_id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$the_id]);
     if($result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         if($row['email'] == "") {
             if($row['email_s'] == "") {
                 $the_ret[0] = "";
@@ -33,7 +33,7 @@ function get_facname($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$id]);
     if($result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_ret[0] = ($row['name'] != "") ? $row['name'] : "NA";
         $street = ($row['street'] != "") ? $row['street'] : "";
         $the_ret[1] = ($street != "") ? $street . ", " . $row['city'] . ", " . $row['state']: "";
@@ -53,7 +53,7 @@ while ($row = stripslashes_deep($result->fetch_assoc()))     {
     }
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `id` = ? LIMIT 1";
 $result    = db_query($query, [$id]);
-$row = stripslashes_deep($result->fetch_assoc());
+$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $thePickup = ($row['pickup'] != "") ? $row['pickup'] : "";
 $theArrival = ($row['arrival'] != "") ? $row['arrival'] : "";
 

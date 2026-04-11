@@ -41,7 +41,7 @@ require_once('./incs/functions.inc.php');
             $result    = db_query($query, [$user_id]);
             $the_user_str = "";
             if ($result->num_rows>0) {        // got a name?
-                $row = stripslashes_deep($result->fetch_assoc());
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                 $the_user_str = " for {$row['user']}";
                 }
 

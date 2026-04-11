@@ -261,7 +261,7 @@ function show_ticket($id,$print='false', $search = false) {                     
         exit();
         }
 
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
 
     $locale = get_variable('locale');    // 10/29/09
     switch($locale) {
@@ -1172,7 +1172,7 @@ function popup_ticket($id,$print='false', $search = false) {                    
 
 
         $result = db_query($query, $query_params);
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
 
         $lat = $row['lat']; $lng = $row['lng'];
 ?>
@@ -1253,7 +1253,7 @@ var zoom = map.getZoom();
             WHERE `{$GLOBALS['mysql_prefix']}ticket`.`ID`= ? $restrict_ticket";            // 7/16/09, 8/12/09
 
         $result = db_query($query, $query_params);
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         $tip =  htmlentities ("{$row['contact']}/{$row['tick_street']}/{$row['tick_city']}/{$row['tick_state']}/{$row['phone']}/{$row['scope']}", ENT_QUOTES);        // tooltip string - 10/28/2012
         $sched_flag = ($row['status'] == $GLOBALS['STATUS_SCHEDULED']) ? "*" : "";
         $type = shorten($row['type'], 18);
@@ -1716,7 +1716,7 @@ function do_unit($theRow, $theWidth, $search=false, $dist=true) {               
         WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";        // newest
     $result_tr = db_query($query, [$theRow['callsign']]);
     if ($result_tr->num_rows>0) {                        // got track stuff?
-        $rowtr = stripslashes_deep($result_tr->fetch_array());
+        $rowtr = $result_tr ? stripslashes_deep($result_tr->fetch_array()) : null;
         $lat = $rowtr['latitude'];
         $lng = $rowtr['longitude'];
         }

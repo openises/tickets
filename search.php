@@ -285,7 +285,7 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
             $in_params = array_merge($year_params, array_values($id_stack), [sanitize_string($_POST['frm_querytype'])]);
             $result = db_query($query, $in_params);
             if($result->num_rows == 1) {    //    revised to redirect to main.php rather than show ticket in search.php    4/29/13
-                $row = stripslashes_deep($result->fetch_assoc());
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                 // Use JS redirect instead of header() — HTML output has already started,
                 // so header() triggers "Cannot modify header" warnings.  3/14/26
                 $url = "main.php?id=" . intval($row['id']);

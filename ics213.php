@@ -256,7 +256,7 @@ switch ($step) {
     case 1:                                /* present form to user */
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = {$_SESSION['user_id']} LIMIT 1";
         $result = db_query($query);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 
         $the_date = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
         $the_time =  date( "H:i",(time()- (intval(get_variable('delta_mins'))*60) ));

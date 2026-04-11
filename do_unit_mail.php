@@ -289,7 +289,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
                     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1;";
                     $result = db_query($query, [$get_name]);
                 }
-                $row = stripslashes_deep($result->fetch_assoc());
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                 $smsg_ids = (isset($row['smsg_id'])) ? $row['smsg_id'] : "";
 ?>
             <BODY scroll='auto' onLoad = "reSizeScr(1); document.mail_form.frm_subj.focus();"><CENTER>
@@ -409,7 +409,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
             $result = db_query($query);
             $no_tickets = db()->affected_rows;
             if($no_tickets==1) {
-                $row = stripslashes_deep($result->fetch_assoc()) ;
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 //                dump($row);
 ?>
                 <BODY scroll='auto' onLoad = "document.mail_form_single.submit();">    <!-- 1/12/09 -->
@@ -459,7 +459,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
             $tik_id = ((isset($_GET['the_ticket'])) && ($_GET['the_ticket'] != 0)) ? sanitize_int($_GET['the_ticket']) : 0;    //    10/23/12
             $t_query = "SELECT `t`.`lat` AS `t_lat`, `t`.`lng` AS `t_lng`    FROM `{$GLOBALS['mysql_prefix']}ticket` `t`    WHERE `id` = ? LIMIT 1";
             $t_result = db_query($t_query, [$tik_id]);
-            $t_row = stripslashes_deep($t_result->fetch_assoc());
+            $t_row = $t_result ? stripslashes_deep($t_result->fetch_assoc()) : null;
             $assigned_resp = array();
             $default_msg = "Ticket ID *" . $tik_id . "*";    //    10/23/12
             if ((!array_key_exists ( 'frm_sel_inc', $_POST)) || ($_POST['frm_sel_inc']==0)) {

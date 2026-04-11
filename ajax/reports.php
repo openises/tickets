@@ -394,7 +394,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
                 $statuses[$row['info']] = "";                                        // define the entry
                 $query = "SELECT `status_val` FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `id` = " . $row['info'] . " LIMIT 1" ;// status type
                 $result_val= db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
-                $row_val = stripslashes_deep($result_val->fetch_assoc());
+                $row_val = $result_val ? stripslashes_deep($result_val->fetch_assoc()) : null;
                 $the_status = (empty($row_val))? "??": shorten($row_val['status_val'], 12);         // 2/2/09
                 $table .= "\t<TH class='plain_listheader text text_left'>&nbsp;&nbsp;" . shorten($the_status, 12) . "&nbsp;&nbsp;</TH>\n";
                 }
@@ -547,7 +547,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
                     $statusvals[0] = "?";
                     } else {
                     $statuses[$row['info']] = "";
-                    $row_val = stripslashes_deep($result_val->fetch_assoc());
+                    $row_val = $result_val ? stripslashes_deep($result_val->fetch_assoc()) : null;
                     $the_status = shorten($row_val['status_val'], 9);
                     $table .= "\t<TH CLASS='plain_listheader text text_center' TITLE='" . $row_val['status_val'] . "'>" . $the_status . "</TH>\n";
                     $statusvals[$row['info']] = $the_status;
@@ -1541,7 +1541,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
         $result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
 
-        $theRow = stripslashes_deep($result->fetch_array());
+        $theRow = $result ? stripslashes_deep($result->fetch_array()) : null;
         $tickno = (get_variable('serial_no_ap')==0)?  "&nbsp;&nbsp;<I>(#" . $theRow['id'] . ")</I>" : "";            // 1/25/09
 
         switch($theRow['severity'])        {        //color tickets by severity

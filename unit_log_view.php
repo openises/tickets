@@ -93,7 +93,7 @@ if (is_guest()) {
         WHERE `l`.`id` = ?
         ORDER BY `when` ASC";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $theComment = (!is_numeric($row['comment'])) ? $row['comment'] : "";
 ?>
     <TR CLASS = 'even' ><TH COLSPAN=2 CLASS='text'>Log View</TH></TR>

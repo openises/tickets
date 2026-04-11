@@ -90,7 +90,7 @@ function get_status_selector($unit_in, $status_val_in, $tbl_in) {
         $init_txt_color = "black";
         }
     else {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $init_bg_color = $row['bg_color'];
         $init_txt_color = $row['text_color'];
         }
@@ -120,7 +120,7 @@ function get_status_selector($unit_in, $status_val_in, $tbl_in) {
 function get_responder_details($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ?";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $ret = $row['contact_via'];
     return $ret;
     }
@@ -128,7 +128,7 @@ function get_responder_details($id) {
 function get_responder_status($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ?";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $ret = $row['un_status_id'];
     return $ret;
     }
@@ -137,7 +137,7 @@ function get_responder_name($id) {
     if(($id == 0) && (isset($_SESSION['user_id']))) {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ?";
         $result = db_query($query, [$_SESSION['user_id']]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         return $row['name_f'] . " " . $row['name_l'];
         } elseif(($id == 0) && (!isset($_SESSION['user_id']))) {
         return "NA";
@@ -145,7 +145,7 @@ function get_responder_name($id) {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
         $result = db_query($query, [$id]);
         if($result->num_rows != 0) {
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $ret = $row['name'];
             return $ret;
             } else {
@@ -158,7 +158,7 @@ function get_responder_handle($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret = $row['handle'];
         return $ret;
         } else {
@@ -169,7 +169,7 @@ function get_responder_handle($id) {
 if (isset($_SESSION['user_id'])) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`= ?";
     $result = db_query($query, [$_SESSION['user_id']]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_responder = (($row['responder_id'] != 0) && ($row['responder_id'] != null) && ($row['responder_id'] != "")) ? $row['responder_id']: 0;
     $chat_user = $_SESSION['user_id'];
     $the_user = ($the_responder != 0) ? $the_responder : $_SESSION['user_id'];

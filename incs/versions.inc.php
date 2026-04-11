@@ -37,7 +37,7 @@ if (!function_exists('tickets_get_versions')) {
                         $query = "SELECT `value` FROM `{$settingsTable}` WHERE `name` = '_version' LIMIT 1";
                         $result = @$mysqli->query($query);
                         if ($result) {
-                            $row = $result->fetch_assoc();
+                            $row = $result ? $result->fetch_assoc() : null;
                             if ($row && isset($row['value']) && trim($row['value']) !== '') {
                                 $installedVersion = $row['value'];
                             } else {

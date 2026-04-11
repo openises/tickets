@@ -53,7 +53,7 @@ switch ($units_assigned) {
         $ass_td = "";
         break;
     case 1:
-        $row_assign = stripslashes_deep($result_as->fetch_assoc());
+        $row_assign = $result_as ? stripslashes_deep($result_as->fetch_assoc()) : null;
         $the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
         $tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
         switch($row_assign['severity'])        {        //color tickets by severity
@@ -80,7 +80,7 @@ $the_day = "";
 $outputstring = "";
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?";
 $result = db_query($query, [$id]);
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 $lat = $row['lat'];
 $lng = $row['lng'];
 $name = $text1 = $row['name'];

@@ -49,7 +49,7 @@ $smsg_providers = array('SMS Responder','SMS Broadcast','MOTOTRBO Text Message',
 $using_smsg = ((get_variable('use_messaging') == 2) || (get_variable('use_messaging') == 3)) ? true : false;
 $t_query = "SELECT `t`.`lat` AS `t_lat`, `t`.`lng` AS `t_lng`    FROM `$GLOBALS[mysql_prefix]ticket` `t`    WHERE `id` = ? LIMIT 1";
 $t_result = db_query($t_query, [$tik_id]);
-$t_row = stripslashes_deep($t_result->fetch_assoc());
+$t_row = $t_result ? stripslashes_deep($t_result->fetch_assoc()) : null;
 $assigned_resp = array();
 $theTickets = array();
 $func = (array_key_exists('func', $_GET)) ? sanitize_string($_GET['func']) : 0;
@@ -547,7 +547,7 @@ switch($func) {
 
         $query_t = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = ?";
         $result_t = db_query($query_t, [$tik_id]);
-        $row_t = stripslashes_deep($result_t->fetch_assoc());
+        $row_t = $result_t ? stripslashes_deep($result_t->fetch_assoc()) : null;
         $t_lat = $row_t['lat'];
         $t_lng = $row_t['lng'];
 

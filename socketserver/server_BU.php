@@ -76,7 +76,7 @@ function checkAdmin($id) {
     // 3/14/26 - Fixed SQL injection: use prepared statement instead of string concatenation
     $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1", [intval($id)]);
     if($result && $result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $level = $row['level'];
         if($level == $GLOBALS['LEVEL_ADMINISTRATOR'] || $level == $GLOBALS['LEVEL_SUPER']) {
             return true;

@@ -541,7 +541,7 @@ function get_contact_details($the_id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$the_id]);
     if($result->num_rows == 1) {
-        $row2 = stripslashes_deep($result->fetch_assoc());
+        $row2 = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_ret[] = (($row2['name_f'] != "") && ($row2['name_l'] != "")) ? $row2['name_f'] . " " . $row2['name_l'] : $row2['user'];
         $the_ret[] = ($row2['email'] != "") ? $row2['email'] : "Not Set";
         }
@@ -553,7 +553,7 @@ function get_requester_details($the_id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$the_id]);
     if($result->num_rows == 1) {
-        $row3 = stripslashes_deep($result->fetch_assoc());
+        $row3 = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         if($row3['email'] == "") {
             if($row3['email_s'] == "") {
                 $the_ret[0] = "";
@@ -573,7 +573,7 @@ function get_user_name($the_id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$the_id]);
     if($result->num_rows == 1) {
-        $row4 = stripslashes_deep($result->fetch_assoc());
+        $row4 = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_ret = (($row4['name_f'] != "") && ($row4['name_l'] != "")) ? $the_ret[] = $row4['name_f'] . " " . $row4['name_l'] : $the_ret[] = $row4['user'];
         }
     return $the_ret;
@@ -583,7 +583,7 @@ function get_thefacilityname($value) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$value]);
     if($result->num_rows != 0) {
-        $row5 = stripslashes_deep($result->fetch_assoc());
+        $row5 = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         return $row5['name'];
         } else {
         return "";
@@ -594,7 +594,7 @@ function get_facilitydetails($value) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$value]);
     if($result->num_rows != 0) {
-        $row6 = stripslashes_deep($result->fetch_assoc());
+        $row6 = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $return = array();
         $return['street'] = $row6['street'];
         $return['city'] = $row6['city'];
@@ -642,7 +642,7 @@ if((!empty($_POST)) && (empty($_GET))) {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [intval($the_ticket)]);
         if($result) {
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $the_scope = $_POST['frm_scope'];
             $new_scope = "EDITED " . $the_scope;
             $set_parts = [];
@@ -772,7 +772,7 @@ if((!empty($_POST)) && (empty($_GET))) {
             LEFT JOIN `{$GLOBALS['mysql_prefix']}assigns` `a` ON `a`.`ticket_id`=`r`.`ticket_id`
             WHERE `r`.`id` = ? LIMIT 1";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $tentative_date = $row['tentative_date'];
     $accepted_date = $row['accepted_date'];
     $declined_date = $row['declined_date'];

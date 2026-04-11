@@ -25,7 +25,7 @@ $num_assigns = $result->num_rows;
 if($num_assigns == 0) {
     $assignsStr = "";
     } else if($num_assigns == 1) {
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $assignsStr = $row['tick_scope'];
     } else {
     $assignsStr = $num_assigns;

@@ -11,7 +11,7 @@ require_once($the_inc);
 $id = sanitize_int($_GET['id']);
 $gunload = "";
 $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ?";
-$result = db_query($query, [$id]);$row = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$id]);$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 extract($row);
 $filled = ($row['filled'] == 1) ? 1: 0;
 $fill_color = ($row['fill_color'] == null) ? "": $row['fill_color'];
@@ -46,7 +46,7 @@ if($row['use_with_bm'] == 1) {
 $isVisible = ($row['line_status'] == 0) ? "Yes" : "No";
 
 $query_cat    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` WHERE `id`= ?";
-$result_cat = db_query($query_cat, [$row['line_cat_id']]);$row_cat = stripslashes_deep($result_cat->fetch_assoc());
+$result_cat = db_query($query_cat, [$row['line_cat_id']]);$row_cat = $result_cat ? stripslashes_deep($result_cat->fetch_assoc()) : null;
 $cat_name = $row_cat['category'];
 
 $temp = preg_split("/;/", $row['line_data']);

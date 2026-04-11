@@ -3,11 +3,11 @@ $file_id = sanitize_int($_GET['all_id']);
 $id = sanitize_int($_GET['mem_id']);
 
 $query_f = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mdb_files` WHERE `id` = ?";
-$result_f = db_query($query_f, [$file_id]);$row_f    = $result_f->fetch_array();
+$result_f = db_query($query_f, [$file_id]);$row_f = $result_f ? $result_f->fetch_array() : null;
 
 $query    = "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m`
     WHERE `m`.`id`=? LIMIT 1";
-$result = db_query($query, [$id]);$row    = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$id]);$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
 <SCRIPT>
 window.onresize=function(){set_size()};

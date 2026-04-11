@@ -22,7 +22,7 @@ function get_request_details($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `ticket_id` = ? LIMIT 1";
     $result = db_query($query, [$id]);
     if($result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $theReturn[0] = $row['id'];
         if ($row['status'] == 'Open') {
             $status = 1;
@@ -55,7 +55,7 @@ function get_request_details2($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$id]);
     if($result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $theReturn[0] = $row['id'];
         if ($row['status'] == 'Open') {
             $status = 1;

@@ -112,12 +112,12 @@ function get_groupbounds() {
             $query_bound = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= ? AND `boundary` <> 0 LIMIT 1";
             $result_bound = db_query($query_bound, [$value])or do_error($query_bound, db()->error, basename(__FILE__), __LINE__);
             if($result_bound->num_rows == 1) {
-                $row_bound = stripslashes_deep($result_bound->fetch_assoc());
+                $row_bound = $result_bound ? stripslashes_deep($result_bound->fetch_assoc()) : null;
                 $theBound = $row_bound['boundary'];
                 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ?";
                 $result = db_query($query, [$theBound])or do_error($query, db()->error, basename(__FILE__), __LINE__);
                 if($result->num_rows != 0) {
-                    $row = stripslashes_deep($result->fetch_assoc());
+                    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                     $ret_arr[$value]['id'] = $row['id'];
                     $ret_arr[$value]['name'] = $row['line_name'];
                     $ret_arr[$value]['status'] = $row['line_status'];
@@ -145,7 +145,7 @@ function get_otherbounds($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id`= ? LIMIT 1";
     $result = db_query($query, [$id])or do_error($query, db()->error, basename(__FILE__), __LINE__);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret_arr['id'] = $row['id'];
         $ret_arr['name'] = $row['line_name'];
         $ret_arr['status'] = $row['line_status'];
@@ -176,7 +176,7 @@ function get_exclusion_zones() {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [$val])or do_error($query, db()->error, basename(__FILE__), __LINE__);
         if($result->num_rows > 0) {
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             if(intval($row['excl_zone']) > 0) {
                 $units[$row['id']] = intval($row['excl_zone']);
                 }
@@ -199,7 +199,7 @@ function get_ring_fences() {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [$val])or do_error($query, db()->error, basename(__FILE__), __LINE__);
         if($result->num_rows > 0) {
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             if(intval($row['ring_fence']) > 0) {
                 $units[$row['id']] = intval($row['ring_fence']);
                 }
@@ -222,7 +222,7 @@ function get_facility_catchments() {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [$val])or do_error($query, db()->error, basename(__FILE__), __LINE__);
         if($result->num_rows > 0) {
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             if(intval($row['boundary']) > 0) {
                 $facilities[$row['id']] = intval($row['boundary']);
                 }

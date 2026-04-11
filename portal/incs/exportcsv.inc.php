@@ -3,7 +3,7 @@
 function get_facilityname($value) {
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
 	$result = db_query($query, [$value]);
-	$row = stripslashes_deep($result->fetch_assoc());
+	$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 	return $row['name'];
 	}
 

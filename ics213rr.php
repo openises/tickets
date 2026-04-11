@@ -18,7 +18,7 @@ if (($result->num_rows)==0) {        // copy user's date format
 
     $query_d = "SELECT `name`, `value` FROM `{$GLOBALS['mysql_prefix']}settings` WHERE `name`= 'date_format' LIMIT 1";
     $result_d = db_query($query_d);
-    $row_d = stripslashes_deep($result_d->fetch_assoc());
+    $row_d = $result_d ? stripslashes_deep($result_d->fetch_assoc()) : null;
     $date_val = $row_d['value'];
     unset($result_d);
 

@@ -232,7 +232,7 @@ $result = db_query($query, [$id]);while($row    = $result->fetch_array()) {
 $assigned_members = (count($members > 0)) ? implode(",", $members) : "";
 
 $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id`= ?";
-$result = db_query($query, [$id]);$row    = $result->fetch_array();
+$result = db_query($query, [$id]);$row = $result ? $result->fetch_array() : null;
 $track_type = get_remote_type ($row) ;            // 7/6/11
 $is_mobile = (($row['mobile']==1) && (!(empty($row['callsign']))));        // 1/27/09, 3/15/10
 

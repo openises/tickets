@@ -173,7 +173,7 @@ function installer_literal($mysqli, $value) {
 function installer_table_row_count($mysqli, $tableName) {
     $res = $mysqli->query('SELECT COUNT(*) AS `count` FROM ' . installer_ident($tableName));
     if (!$res) { return 0; }
-    $row = $res->fetch_assoc();
+    $row = $res ? $res->fetch_assoc() : null;
     $res->free();
     return isset($row['count']) ? (int)$row['count'] : 0;
 }
@@ -192,7 +192,7 @@ function installer_fetch_columns($mysqli, $tableName) {
 function installer_fetch_create_table_sql($mysqli, $tableName) {
     $res = $mysqli->query('SHOW CREATE TABLE ' . installer_ident($tableName));
     if (!$res) { return null; }
-    $row = $res->fetch_assoc();
+    $row = $res ? $res->fetch_assoc() : null;
     $res->free();
     if (!$row) { return null; }
     return isset($row['Create Table']) ? $row['Create Table'] : null;

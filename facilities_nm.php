@@ -76,7 +76,7 @@ function get_mailgroup_name($id) {    //    8/28/13
     $id = sanitize_int($id);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_ret = $row['name'];
     return $the_ret;
     }
@@ -828,7 +828,7 @@ var buttons_html = "";
                         $print .= "Error uploading file";
                         }
                     } else {
-                    $row = stripslashes_deep($result->fetch_assoc());
+                    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                     $exists = true;
                     $existing_file = $row['filename'];    //    get existing file name
                     }
@@ -1089,7 +1089,7 @@ var buttons_html = "";
         $id = sanitize_int($_GET['id']);
         $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`= ?";
         $result    = db_query($query, [$id]);
-        $row    = $result->fetch_assoc();
+        $row = $result ? $result->fetch_assoc() : null;
         $is_mobile = false;
 
         $lat = $row['lat'];
@@ -1306,14 +1306,14 @@ var buttons_html = "";
             $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`= ? LIMIT 1";
 
             $result    = db_query($query, [$id]);
-            $row    = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $lat = $row['lat'];
             $lng = $row['lng'];
 
             if (isset($row['status_id'])) {
                 $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` WHERE `id`=" . $row['status_id'];    // status value
                 $result_st    = db_query($query);
-                $row_st    = $result_st->fetch_assoc();
+                $row_st = $result_st ? $result_st->fetch_assoc() : null;
                 unset($result_st);
                 }
             $un_st_val = (isset($row['status_id']))? $row_st['status_val'] : "?";

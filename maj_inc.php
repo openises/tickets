@@ -78,7 +78,7 @@ function get_building_details($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `id` = ?";        // types in use
     $result = db_query($query, [intval($id)]);
     if($result) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret_arr[0] = $row['name'];
         $ret_arr[1] = $row['street'];
         $ret_arr[2] = $row['city'];
@@ -367,7 +367,7 @@ function get_loc_name($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `apply_to` = 'bldg' AND `id` = ? ORDER BY `name` ASC";        // types in use
     $result = db_query($query, [intval($id)]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         return $row['name'];
         }
     }
@@ -1406,7 +1406,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
         if ($_getgoedit == 'true') {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}major_incidents` WHERE `id` = ?";
             $result = db_query($query, [intval($_POST['frm_id'])]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $current_status = $row['mi_status'];
             $current_end = $row['inc_endtime'];
             if(!array_key_exists('frm_year_inc_endtime', $_POST) && $current_status == "Closed") {
@@ -1631,7 +1631,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
                         $print .= "Error uploading file";
                         }
                     } else {
-                    $row = stripslashes_deep($result->fetch_assoc());
+                    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                     $exists = true;
                     $existing_file = $row['filename'];    //    get existing file name
                     }
@@ -1889,7 +1889,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
                         $print .= "Error uploading file";
                         }
                     } else {
-                    $row = stripslashes_deep($result->fetch_assoc());
+                    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                     $exists = true;
                     $existing_file = $row['filename'];    //    get existing file name
                     }

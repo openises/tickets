@@ -52,7 +52,7 @@ if (empty ($_POST)) {
         $ticket_id = sanitize_int($_GET['ticket_id']);
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`=? LIMIT 1";
         $ticket_result = db_query($query, [$ticket_id]);
-        $t_row = stripslashes_deep($ticket_result->fetch_array());
+        $t_row = $ticket_result ? stripslashes_deep($ticket_result->fetch_array()) : null;
         $text = mail_it ("", "", "", $ticket_id, 2, true) ;        // returns msg text **ONLY**
         $temp = explode("\n", $text);
         $nr_lines = intval(count($temp) + 2);

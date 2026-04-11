@@ -32,7 +32,7 @@ function subval_sort($a,$subkey, $dd) {
 function get_categoryName($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` WHERE `id`= ? LIMIT 1";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return $row['category'];
     }
 
@@ -41,7 +41,7 @@ function get_markup($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = ?";
     $result = db_query($query, [$id]) or do_error($query,$query, db()->error, basename(__FILE__), __LINE__);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret_arr['id'] = $row['id'];
         $ret_arr['name'] = $row['line_name'];
         $ret_arr['type'] = $row['line_type'];
@@ -68,7 +68,7 @@ function get_ticket($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ?";
     $result = db_query($query, [$id]) or do_error($query,$query, db()->error, basename(__FILE__), __LINE__);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret_arr['id'] = $row['id'];
         $ret_arr['scope'] = $row['scope'];
         $ret_arr['lat'] = $row['lat'];
@@ -90,7 +90,7 @@ function get_place_details($id) {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}places` WHERE `id` = ?";
         $result = db_query($query, [$id]) or do_error($query,$query, db()->error, basename(__FILE__), __LINE__);
         if($result->num_rows > 0) {
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $ret_arr[0] = $row['id'];
             $ret_arr[1] = $row['name'];
             $ret_arr[2] = $row['lat'];

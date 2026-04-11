@@ -152,7 +152,7 @@ function get_respname($theid) {    //    Gets responder ID from SMS Gateway ID
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [intval($theid)]);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_name = $row['name'];
         } else {
         $the_name="No Name";
@@ -164,7 +164,7 @@ function get_tickname($theid) {    //    Gets responder ID from SMS Gateway ID
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [intval($theid)]);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_name = $row['scope'];
         } else {
         $the_name="No Name";
@@ -392,7 +392,7 @@ if(isset($_GET['wastebasket'])) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` `m` WHERE `id` = ?";
     $result = db_query($query, [$uid]);
     }
-$row = stripslashes_deep($result->fetch_assoc());
+$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $readby = $row['readby'];
 $message = $row['message'];
 $recipients = $row['recipients'];
@@ -523,7 +523,7 @@ if(empty($_POST)) {
         $error_msg = "No Ticket details for this message";
         } else {
         $num_tkts = $tick_result->num_rows;
-        $tick_row = stripslashes_deep($tick_result->fetch_array());
+        $tick_row = $tick_result ? stripslashes_deep($tick_result->fetch_array()) : null;
         $facility_id = ($tick_row['facility'] != 0) ? $tick_row['facility'] : 0;
         $rec_facility_id = ($tick_row['rec_facility'] != 0) ? $tick_row['rec_facility'] : 0;
         $error_msg = "";

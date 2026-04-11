@@ -20,7 +20,7 @@ $ret_arr = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]files` WHERE `id` = ?";
 $result = db_query($query, [$fileid]) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
 if(db_affected_rows() > 0) {
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $filename = $row['filename'];
     } else {
     $ret_arr[0] = 999;

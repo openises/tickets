@@ -152,7 +152,7 @@ if($curr_calls > 0) {
                 WHERE `r`.`id` = ? LIMIT 1";
 
             $result_unit = db_query($query, [$row['unit_id']]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
-            $row_unit = stripslashes_deep($result_unit->fetch_assoc());
+            $row_unit = $result_unit ? stripslashes_deep($result_unit->fetch_assoc()) : null;
             }
         $ret_arr[$i][0] = $cell1;
         $ret_arr[$i][1] = $cell2;

@@ -335,7 +335,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
             } else {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `id`=? LIMIT 1";
             $result = db_query($query, [$_GET['id']]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             print "<FONT CLASS='header text_large'>Really delete " . $patient . " record '" . shorten($row['description'], 24) . "' ? </FONT><BR /><BR />";
 ?>
             <FORM METHOD='post' NAME='delfrm' ACTION='patient_w.php?action=delete&id=<?php print intval($_GET['id']);?>&ticket_id=<?php print intval($_GET['ticket_id']);?>&confirm=1'>
@@ -376,7 +376,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
         $query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE id=?";
         $result = db_query($query, [$frm_asof, $_GET['ticket_id']]);
         $result = db_query("SELECT ticket_id FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=?", [$_GET['id']]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 
         if($_POST['assigns'] != "0") {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = ?";
@@ -416,7 +416,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient_x` WHERE `patient_id` = ?";
             $result = db_query($query, [$_GET['id']]);
             if($result->num_rows > 0) {
-                $row = stripslashes_deep($result->fetch_assoc());
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                 $assigned_to = $row['assign_id'];
                 } else {
                 $assigned_to = 0;
@@ -462,7 +462,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
                 }
             $query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=? LIMIT 1";    // 8/11/08
             $result = db_query($query, [$_GET['id']]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             if ( can_edit()) {                                        // 8/27/10
                 $hdr_str = "Edit";
                 $dis = "";
@@ -628,7 +628,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 
         if ($result->num_rows==1) {
 
-            $row = stripslashes_deep($result->fetch_assoc());        // proceed directly to edit
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
 <SCRIPT>
             document.list_form.id.value = <?php echo $row['id'];?>

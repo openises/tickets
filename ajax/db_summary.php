@@ -66,7 +66,7 @@ function get_vehicle_driver($id) {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]allocations` WHERE `skill_id` = ?";
     $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
     if($result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $member = get_member_name($row['member_id']);
         return $member;
         } else {
@@ -78,7 +78,7 @@ function get_stname($id) {
     $id = sanitize_int($id);
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]member_status` WHERE `id` = ?";
     $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return $row['status_val'];
     }
 
@@ -86,7 +86,7 @@ function get_typename($id) {
     $id = sanitize_int($id);
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]member_types` WHERE `id` = ?";
     $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return $row['name'];
     }
 

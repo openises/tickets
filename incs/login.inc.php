@@ -281,7 +281,7 @@ function do_login($requested_page, $outinfo = false, $hh = false, $na = false) {
             $login_user = strip_tags($_POST['frm_user']);
             $login_passwd = $_POST['frm_passwd'];
             $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `user` = ? LIMIT 1", [$login_user]);
-            $row = $result->fetch_assoc();
+            $row = $result ? $result->fetch_assoc() : null;
             $auth_result = $row ? verify_password($login_passwd, $row['passwd']) : ['valid' => false, 'needs_rehash' => false];
             $authenticated = $auth_result['valid'];
 

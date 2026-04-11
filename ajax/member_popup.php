@@ -77,7 +77,7 @@ $aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $ogts = $mob_tracker
 
 $utc = gmdate ("U");                // 3/25/09
 
-$row = stripslashes_deep($result->fetch_assoc());
+$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $latitude = ($row['lat']) ? $row['lat'] : get_variable('def_lat');        // 7/18/10
 $longitude = ($row['lng']) ? $row['lng'] : get_variable('def_lng');        // 7/18/10
 

@@ -144,7 +144,7 @@ $func = (empty($_POST))? "l":$_POST['func'];
             $safe_id = sanitize_int($_POST['frm_id']);
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}captions` WHERE `id` = ? LIMIT 1";
             $result = db_query($query, [$safe_id]);
-            $row =  stripslashes_deep($result->fetch_array());
+            $row = $result ? stripslashes_deep($result->fetch_array()) : null;
 ?>
             <FORM NAME = 'editForm' METHOD = 'post' ACTION = '<?php print basename(__FILE__);?>'>
             <TABLE ALIGN='center' STYLE = 'margin-top:60px'>

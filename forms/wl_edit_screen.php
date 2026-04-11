@@ -118,7 +118,7 @@ function validate(theForm) {
 
 $id = sanitize_int($_GET['id']);
 $query    = "SELECT * FROM {$GLOBALS['mysql_prefix']}warnings WHERE id=?";
-$result = db_query($query, [$id]);$row    = $result->fetch_assoc();
+$result = db_query($query, [$id]);$row = $result ? $result->fetch_assoc() : null;
 
 $lat = $row['lat'];
 $lng = $row['lng'];

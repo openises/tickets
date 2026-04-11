@@ -15,7 +15,7 @@ function get_requester_details($the_id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$the_id]);
     if($result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         if($row['email'] == "") {
             if($row['email_s'] == "") {
                 $the_ret[0] = "";
@@ -37,7 +37,7 @@ $result = db_query($query, [$id]);
 if($result->num_rows == 0) {
     exit();
     } else {
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_user = $row['requester'];
     $the_scope = $row['scope'];
     $the_ticket = (($row['ticket_id'] != null) AND ($row['ticket_id'] != 0) AND ($row['ticket_id'] != "")) ? $row['ticket_id'] : 0;

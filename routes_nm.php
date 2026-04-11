@@ -390,7 +390,7 @@ if (!empty($_POST)) {                // 77-200
 
         $query = "SELECT `id`, `contact_via`,smsg_id FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";        // 10/7/08
         $result = db_query($query, [sanitize_int($assigns[$i])]);
-        $row_addr = stripslashes_deep($result->fetch_assoc());
+        $row_addr = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         if (is_email($row_addr['contact_via'])) {array_push($addrs, $row_addr['contact_via']); }        // to array for emailing to unit
         if ($row_addr['smsg_id'] != "") {array_push($smsgaddrs, $row_addr['smsg_id']); }
         do_log($GLOBALS['LOG_UNIT_STATUS'], $frm_ticket_id, $assigns[$i], $frm_status_id);
@@ -647,7 +647,7 @@ function doReset() {
         WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id`=? LIMIT 1";            // 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
 
     $result = db_query($query, [sanitize_int($_GET['ticket_id'])]);
-    $row_ticket = stripslashes_deep($result->fetch_array());
+    $row_ticket = $result ? stripslashes_deep($result->fetch_array()) : null;
     if (!is_array($row_ticket)) { $row_ticket = array(); }
     $facility = array_key_exists('facility', $row_ticket) ? $row_ticket['facility'] : 0;
     $rec_fac = array_key_exists('rec_facility', $row_ticket) ? $row_ticket['rec_facility'] : 0;
@@ -660,7 +660,7 @@ function doReset() {
     if ($rec_fac > 0) {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`=?";            // 10/6/09
         $result_rfc = db_query($query, [sanitize_int($rec_fac)]);
-        $row_rec_fac = stripslashes_deep($result_rfc->fetch_array());
+        $row_rec_fac = $result_rfc ? stripslashes_deep($result_rfc->fetch_array()) : null;
         $rf_lat = $row_rec_fac['lat'];
         $rf_lng = $row_rec_fac['lng'];
         $rf_name = $row_rec_fac['name'];
@@ -775,7 +775,7 @@ function get_addr(){                // returns incident address
     if ($ticket_id <= 0) { return ''; }
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`= ? LIMIT 1";
     $result = db_query($query, [$ticket_id]);
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     if (!is_array($row)) { return ''; }
     return trim((string)$row['street'] . ' ' . (string)$row['city'] . ' ' . (string)$row['state']);
     }        // end function get_addr()
@@ -1027,7 +1027,7 @@ function do_list($unit_id ="", $capabilities ="", $searchtype ="") {
 //    dump($query);
 
     $result = db_query($query, [sanitize_int($_GET['ticket_id'])]);
-    $row_ticket = stripslashes_deep($result->fetch_array());
+    $row_ticket = $result ? stripslashes_deep($result->fetch_array()) : null;
     if (!is_array($row_ticket)) { $row_ticket = array(); }
     $facility = array_key_exists('facility', $row_ticket) ? $row_ticket['facility'] : 0;
     $rec_fac = array_key_exists('rec_facility', $row_ticket) ? $row_ticket['rec_facility'] : 0;
@@ -1043,7 +1043,7 @@ function do_list($unit_id ="", $capabilities ="", $searchtype ="") {
     if ($rec_fac > 0) {
         $query_rfc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`= ?";            // 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
         $result_rfc = db_query($query_rfc, [sanitize_int($rec_fac)]);
-        $row_rec_fac = stripslashes_deep($result_rfc->fetch_array());
+        $row_rec_fac = $result_rfc ? stripslashes_deep($result_rfc->fetch_array()) : null;
         $rf_lat = $row_rec_fac['lat'];
         $rf_lng = $row_rec_fac['lng'];
         $rf_name = $row_rec_fac['name'];
@@ -1231,7 +1231,7 @@ function do_list($unit_id ="", $capabilities ="", $searchtype ="") {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`=? LIMIT 1;";    // 4/5/10
         $result_pos = db_query($query, [sanitize_int($_GET['ticket_id'])]);
         if($result_pos->num_rows==1) {
-            $row_position = stripslashes_deep($result_pos->fetch_array());
+            $row_position = $result_pos ? stripslashes_deep($result_pos->fetch_array()) : null;
             $latitude = $row_position['lat'];
             $longitude = $row_position['lng'];
             unset($result_pos);

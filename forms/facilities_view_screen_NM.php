@@ -116,13 +116,13 @@ while ($row_fa = stripslashes_deep($result_fa->fetch_assoc()))     {    // 6/10/
     }
 
 $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`= ? LIMIT 1";    // 1/19/2013
-$result = db_query($query, [$id]);$row    = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$id]);$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $lat = $row['lat'];
 $lng = $row['lng'];
 
 if (isset($row['status_id'])) {
     $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` WHERE `id` = ?" ;    // status value
-    $result_st = db_query($query, [$row['status_id']]);    $row_st    = $result_st->fetch_assoc();
+    $result_st = db_query($query, [$row['status_id']]);    $row_st = $result_st ? $result_st->fetch_assoc() : null;
     unset($result_st);
     }
 $un_st_val = (isset($row['status_id']))? $row_st['status_val'] : "?";

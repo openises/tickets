@@ -224,7 +224,7 @@ function get_ticket($id) {
         WHERE `$GLOBALS[mysql_prefix]ticket`.`id`= ? LIMIT 1";
 
     $result = db_query($query, [intval($id)]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return $row;
     }
 
@@ -232,7 +232,7 @@ function get_unit_icon_id($id) {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` WHERE `id` = ?";
     $result = db_query($query, [intval($id)]);
     if($result) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         return $row['icon'];
         } else {
         return false;
@@ -243,7 +243,7 @@ function get_unit_icon_name($id) {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]unit_types` WHERE `id` = ?";
     $result = db_query($query, [intval($id)]);
     if($result) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         return $row['name'];
         } else {
         return "Unk";
@@ -259,7 +259,7 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
     if ( $result_as->num_rows == 0) {
         unset($result_as); return "<SPAN>---------</SPAN>";
         } else {
-        $row_assign = stripslashes_deep($result_as->fetch_assoc()) ;
+        $row_assign = $result_as ? stripslashes_deep($result_as->fetch_assoc()) : null;
         unset($result_as);
         $tip = str_replace ( "'", "`",    ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}   "));
 
@@ -356,7 +356,7 @@ $query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart, UNIX_TIMESTAMP
     WHERE `id`= ? LIMIT 1;";
 $result = db_query($query, [intval($ticket_id)]);
 if(db_affected_rows()==1) {
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     $latitude = $row['lat'];
     $longitude = $row['lng'];
     $problemstart = $row['problemstart'];

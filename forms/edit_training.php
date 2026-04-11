@@ -1,13 +1,13 @@
 <?php
 $all_id = sanitize_int($_GET['all_id']);
 $query_all = "SELECT `id`, `member_id`, `skill_type`, `skill_id`, `frequency`, `_on`, UNIX_TIMESTAMP(completed) AS `completed`, UNIX_TIMESTAMP(refresh_due) AS `refresh_due` FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `id` = ?";
-$result_all = db_query($query_all, [$all_id]);$row_all    = $result_all->fetch_array();
+$result_all = db_query($query_all, [$all_id]);$row_all = $result_all ? $result_all->fetch_array() : null;
 
 $id = $row_all['member_id'];
 
 $query    = "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m`
     WHERE `m`.`id`=? LIMIT 1";
-$result = db_query($query, [$id]);$row    = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$id]);$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
 <SCRIPT>
 window.onresize=function(){set_size()};

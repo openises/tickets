@@ -30,7 +30,7 @@ $sord = (strtolower($sord) === 'desc') ? 'DESC' : 'ASC';
 
 // calculate the number of rows for the query. We need this for paging the result
 $result = db_query("SELECT COUNT(*) AS count FROM `{$GLOBALS['mysql_prefix']}member`");
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 $count = $row['count'];
 
 // calculate the total pages for the query

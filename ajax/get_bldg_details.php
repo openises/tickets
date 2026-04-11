@@ -15,7 +15,7 @@ $ret_arr = array();
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]places` WHERE `id` = ?";        // types in use
 $result = db_query($query, [$the_id]);
 if($result) {
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $ret_arr[0] = $row['name'];
     $ret_arr[1] = $row['street'];
     $ret_arr[2] = $row['city'];

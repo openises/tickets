@@ -27,7 +27,7 @@ $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($int
 if (array_key_exists('unit_id', $_GET)) {    // 8/19/10
     $query = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1;";    //    8/19/10
     $result = db_query($query, [sanitize_int($_GET['unit_id'])]);
-    $row = stripslashes_deep($result->fetch_array()) ;
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     $source = $row['callsign'];
     }
 else {
@@ -37,7 +37,7 @@ else {
 
 $query_callsign    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `callsign`=?";                // 7/29/09
 $result_callsign = db_query($query_callsign, [sanitize_string($source)]);        // 7/29/09
-$row_callsign    = $result_callsign->fetch_assoc();                // 7/29/09
+$row_callsign = $result_callsign ? $result_callsign->fetch_assoc() : null;
 $handle = ($row_callsign['handle']);
 $name = ($row_callsign['name']);
 
@@ -303,7 +303,7 @@ function list_tracks($addon = '', $start = 0) {
 
 $query_callsign    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `callsign`=?";                // 7/29/09
 $result_callsign = db_query($query_callsign, [sanitize_string($source)]);        // 7/29/09
-$row_callsign    = $result_callsign->fetch_assoc();                // 7/29/09
+$row_callsign = $result_callsign ? $result_callsign->fetch_assoc() : null;
 $handle = ($row_callsign['handle']);                // 7/29/09
 $name = ($row_callsign['name']);                // 7/29/09
 ?>

@@ -26,7 +26,7 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
     $num_assigns = $result_as->num_rows;
     if ( $num_assigns == 0) {unset($result_as); return "<TD></TD>";}
     else {
-        $row_assign = stripslashes_deep($result_as->fetch_assoc()) ;
+        $row_assign = $result_as ? stripslashes_deep($result_as->fetch_assoc()) : null;
         unset($result_as);
         $tip = str_replace ( "'", "`",    ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}   "));
 
@@ -72,7 +72,7 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
             WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id`=" . get_ticket_id () . " LIMIT 1";            // 7/24/09 10/16/08 Incident location 09/25/09 Pre Booking
 
         $result = db_query($query);
-        $row_ticket = stripslashes_deep($result->fetch_array());
+        $row_ticket = $result ? stripslashes_deep($result->fetch_array()) : null;
         $facility = $row_ticket['facility'];
         $rec_fac = $row_ticket['rec_facility'];
             if(($row_ticket['lat']==$GLOBALS['NM_LAT_VAL']) && ($row_ticket['lng']==$GLOBALS['NM_LAT_VAL'])) {    // check for tickets created in no-maps mode 8/4/10
@@ -88,7 +88,7 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
         if ($rec_fac > 0) {
             $query_rfc = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`= $rec_fac ";            // 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
             $result_rfc = db_query($query_rfc);
-            $row_rec_fac = stripslashes_deep($result_rfc->fetch_array());
+            $row_rec_fac = $result_rfc ? stripslashes_deep($result_rfc->fetch_array()) : null;
             $rf_lat = $row_rec_fac['lat'];
             $rf_lng = $row_rec_fac['lng'];
             $rf_name = $row_rec_fac['name'];
@@ -348,7 +348,7 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
                 WHERE `id`= " . get_ticket_id () . " LIMIT 1;";    // 4/5/10
             $result_pos = db_query($query);
             if($result_pos->num_rows==1) {
-                $row_position = stripslashes_deep($result_pos->fetch_array());
+                $row_position = $result_pos ? stripslashes_deep($result_pos->fetch_array()) : null;
                 $latitude = $row_position['lat'];
                 $longitude = $row_position['lng'];
                 $problemstart = $row_position['problemstart'];
@@ -543,7 +543,7 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
                         $result_tr = db_query($query);
                         if ($result_tr->num_rows>0) {        // got a track?
 
-                            $track_row = stripslashes_deep($result_tr->fetch_array());            // most recent track report
+                            $track_row = $result_tr ? stripslashes_deep($result_tr->fetch_array()) : null;
 
                             $tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "px'>";
                             $tab_2 .= "<TR><TH CLASS='even' COLSPAN=2>" . $track_row['source'] . "</TH></TR>";
@@ -616,7 +616,7 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
                                     AND `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )
                                     limit 1";
                                 $result_as = db_query($query);
-                                $row_as = stripslashes_deep($result_as->fetch_assoc());
+                                $row_as = $result_as ? stripslashes_deep($result_as->fetch_assoc()) : null;
                                 $the_disp_str = "<SPAN CLASS='disp_stat'>&nbsp;" . get_disp_status ($row_as) . "&nbsp;</SPAN>&nbsp;";
                                 break;
 

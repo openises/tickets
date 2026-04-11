@@ -115,7 +115,7 @@ if (empty($_POST)) {
     $frm_ticket_id = sanitize_int($_POST['frm_ticket_id']);    //    4/4/14
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";    //    4/4/14
     $result = db_query($query, [$frm_ticket_id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $now = (time() - (get_variable('delta_mins')*60));
     $format = get_variable('date_format');
     $the_date = date($format, $now);

@@ -3,7 +3,7 @@
         $query    = "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m`
             WHERE `m`.`id`=? LIMIT 1";
         $result    = db_query($query, [$id]);
-        $row    = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
         </HEAD>
         <SCRIPT>

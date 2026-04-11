@@ -47,7 +47,7 @@ function the_ticket($id) {
 	if ($result->num_rows == 0) { 	
 		return false;
 		} else {
-		$row = stripslashes_deep($result->fetch_array());
+		$row = $result ? stripslashes_deep($result->fetch_array()) : null;
 		return $row;
 		}
 	}	
@@ -55,7 +55,7 @@ function the_ticket($id) {
 function get_assigns_id($user_id, $ticket) {
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = ? AND `ticket_id` = ?";
 	$result = db_query($query, [$user_id, $ticket]);	
-	$row = stripslashes_deep($result->fetch_assoc());
+	$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 	$assigns_arr = array();
 	$assigns_arr[0] = $row['id'];
 	$assigns_arr[1] = (($row['dispatched'] != "") && ($row['dispatched'] != NULL)) ? format_date_2(safe_strtotime($row['dispatched'])): "";
@@ -74,7 +74,7 @@ function get_recfac_address($id) {
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
 	$result = db_query($query, [$id]);
 	if ($result->num_rows != 0) { 				// 8/6/08
-		$row = stripslashes_deep($result->fetch_assoc());	
+		$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 		$ret = $row['lat'] . " " . $row['lng'];
 		} else {
 		$ret = "";

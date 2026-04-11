@@ -11,7 +11,7 @@ function get_mailgroup_name($id) {    //    8/28/13
     $id = intval($id);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mailgroup` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_ret = $row['name'];
     return $the_ret;
     }

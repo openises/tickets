@@ -14,7 +14,7 @@ $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}access_requests` WHERE `name`
 $result = db_query($query, [$theName, $theEmail, $theSec]);
 $rows = $result->num_rows;
 if($rows > 0) {
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $success = true;
     $theID = $row['id'];
     $query1    = "DELETE FROM `{$GLOBALS['mysql_prefix']}access_requests` WHERE `id` = ?";

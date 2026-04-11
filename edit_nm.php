@@ -533,7 +533,7 @@ require_once('./incs/links.inc.php');
 
             $result = db_query($query, [$id]);
 
-            $row = stripslashes_deep($result->fetch_array());
+            $row = $result ? stripslashes_deep($result->fetch_array()) : null;
             if (good_date($row['problemend'])) {
 ?>
                 <SCRIPT>
@@ -697,7 +697,7 @@ require_once('./incs/links.inc.php');
                                     $query  = "SELECT `miscellaneous` FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE `phone`= '{$row['phone']}' LIMIT 1";
                                     $result_cons = db_query($query);
                                     if (db()->affected_rows > 0) {
-                                        $row_cons = stripslashes_deep($result_cons->fetch_array());
+                                        $row_cons = $result_cons ? stripslashes_deep($result_cons->fetch_array()) : null;
 ?>
                                         <TR CLASS='even'>
                                             <TD CLASS='td_label text'>Add'l:</TD>

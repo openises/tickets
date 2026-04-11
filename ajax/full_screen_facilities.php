@@ -47,7 +47,7 @@ function isempty($arg) {
 function fac_cat($id) {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `id` = ?";
     $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     return $row['name'];
     }
 

@@ -227,7 +227,7 @@ if(!empty($_POST)) {
     $get_id = sanitize_int($_GET['id']);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_case_cat` WHERE `id` = ?";
     $result = db_query($query, [$get_id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $id = $_GET['id'];
     $category = $row['category'];
     $description = safe_htmlentities($row['description'], ENT_QUOTES);
@@ -271,7 +271,7 @@ if(!empty($_POST)) {
     $get_id = sanitize_int($_GET['id']);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_case_cat` WHERE `id` = ?";
     $result = db_query($query, [$get_id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $id = $_GET['id'];
     $category = $row['category'];
     $description = safe_htmlentities($row['description'], ENT_QUOTES);

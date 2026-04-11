@@ -12,7 +12,7 @@ function get_markup($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup` WHERE `id` = ?";
 
     $result = db_query($query, [$id]);    if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret_arr['id'] = $row['id'];
         $ret_arr['name'] = $row['line_name'];
         $ret_arr['type'] = $row['line_type'];
@@ -36,7 +36,7 @@ function get_markup($id) {
 function get_categoryName($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mmarkup_cats` WHERE `id`= ? LIMIT 1";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return $row['category'];
     }
 ?>
@@ -153,7 +153,7 @@ function validate(theForm) {                        // Responder form contents v
 
 $id = sanitize_int($_GET['id']);
 $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}major_incidents` WHERE `id`= ?";
-$result = db_query($query, [$id]);$row = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$id]);$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $lat = get_variable('def_lat');
 $lng = get_variable('def_lng');
 $existing_incs = array();
@@ -714,7 +714,7 @@ if(!$bronze_command) {
                                     WHERE `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `{$GLOBALS['mysql_prefix']}ticket`.`id`) AS `units_assigned`
                                     FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id` = ?";
                                 $result_inc = db_query($query_inc, [$val]);                                $class = "even";
-                                $row_inc = stripslashes_deep($result_inc->fetch_assoc());
+                                $row_inc = $result_inc ? stripslashes_deep($result_inc->fetch_assoc()) : null;
                                 $the_id = $row_inc['id'];
                                 $elapsed = get_elapsed_time($row_inc);
                                 print "<TR class='" . $class . "'  style='width: 100%;' onClick='do_popup(" . $the_id . ");'>";

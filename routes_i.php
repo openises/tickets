@@ -213,7 +213,7 @@ function doReset() {
         FROM `{$GLOBALS['mysql_prefix']}ticket`
         WHERE ID=? LIMIT 1";            // get Incident location
     $result = db_query($query, [$ticket_id]);
-    $row_unit = stripslashes_deep($result->fetch_array());
+    $row_unit = $result ? stripslashes_deep($result->fetch_array()) : null;
     unset ($result);
 ?>
 <!--    <BODY onLoad = "ck_frames()" onUnload='GUnload()'> -->
@@ -537,7 +537,7 @@ function do_list($unit_id ="") {
 //                    dump ($query);
                     $result_tr = db_query($query, [$unit_row['callsign']]);
                     if ($result_tr->num_rows > 0) {        // got a track?
-                        $track_row = stripslashes_deep($result_tr->fetch_array());            // most recent track report
+                        $track_row = $result_tr ? stripslashes_deep($result_tr->fetch_array()) : null;
 
                         $tab_2 = "<TABLE CLASS='infowin' width='" . $_SESSION['scr_width']/4 . "px'>";
                         $tab_2 .= "<TR><TH CLASS='even' COLSPAN=2>" . $track_row['source'] . "</TH></TR>";

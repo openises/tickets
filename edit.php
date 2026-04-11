@@ -118,7 +118,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
         $id = sanitize_int($id);
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ?";
         $result = db_query($query, [$id]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $theScope = $row['scope'];
         unset($result);
         global $addrs, $NOTIFY_TICKET;    //    8/28/13
@@ -357,7 +357,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
                             $print .= "Error uploading file";
                             }
                         } else {
-                        $row = stripslashes_deep($result->fetch_assoc());
+                        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                         $exists = true;
                         $existing_file = $row['filename'];    //    get existing file name
                         }
@@ -1037,7 +1037,7 @@ function set_size() {
             $query_mi = "SELECT * FROM `{$GLOBALS['mysql_prefix']}mi_x` WHERE `ticket_id` = ? LIMIT 1";
             $result_mi = db_query($query_mi, [$tick_id]);
             if($result_mi->num_rows > 0) {
-                $row_mi = stripslashes_deep($result_mi->fetch_assoc());
+                $row_mi = $result_mi ? stripslashes_deep($result_mi->fetch_assoc()) : null;
                 $exist_mi = $row_mi['mi_id'];
                 }
              $query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,
@@ -1054,7 +1054,7 @@ function set_size() {
                  WHERE `t`.`id`= ? LIMIT 1";
             $result = db_query($query, [$tick_id]);
 
-            $row = stripslashes_deep($result->fetch_array());
+            $row = $result ? stripslashes_deep($result->fetch_array()) : null;
             if (!$row) {
                 print "<FONT CLASS='warn'>Ticket not found.</FONT><BR />";
                 return;
@@ -1515,7 +1515,7 @@ function set_size() {
                             $query  = "SELECT `miscellaneous` FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE `phone`= '{$row['phone']}' LIMIT 1";
                             $result_cons = db_query($query);
                             if (db()->affected_rows > 0) {
-                                $row_cons = stripslashes_deep($result_cons->fetch_array());
+                                $row_cons = $result_cons ? stripslashes_deep($result_cons->fetch_array()) : null;
 ?>
                                 <DIV>Add'l:</DIV><DIV><?php print $row_cons['miscellaneous'];?></DIV><BR />
 <?php

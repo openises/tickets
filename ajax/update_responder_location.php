@@ -16,7 +16,7 @@ $resp_id = sanitize_int($_GET['resp_id']);
 $new_status = sanitize_int($_GET['status']);
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ? LIMIT 1";
 $result = db_query($query, [$resp_id]);
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 $existing_status = $row['un_status_id'];
 $response = array();
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";

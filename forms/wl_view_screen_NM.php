@@ -64,7 +64,7 @@ function set_size() {
 <?php
 $id = sanitize_int($_GET['id']);
 $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}warnings` WHERE `id`= ? LIMIT 1";    // 1/19/2013
-$result = db_query($query, [$id]);$row    = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$id]);$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $lat = $row['lat'];
 $lng = $row['lng'];
 $coords =  $row['lat'] . "," . $row['lng'];        // for UTM

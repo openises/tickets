@@ -50,7 +50,7 @@ $using_smsg = ((get_variable('use_messaging') == 2) || (get_variable('use_messag
 $tik_id = sanitize_int($tik_id);
 $t_query = "SELECT `t`.`lat` AS `t_lat`, `t`.`lng` AS `t_lng`    FROM `{$GLOBALS['mysql_prefix']}ticket` `t`    WHERE `id` = ? LIMIT 1";
 $t_result = db_query($t_query, [intval($tik_id)]);
-$t_row = stripslashes_deep($t_result->fetch_assoc());
+$t_row = $t_result ? stripslashes_deep($t_result->fetch_assoc()) : null;
 $assigned_resp = array();
 $theTickets = array();
 $func = (array_key_exists('func', $_GET)) ? $_GET['func'] : 0;

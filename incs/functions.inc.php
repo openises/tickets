@@ -579,7 +579,7 @@ function get_disps($tick_id, $resp_id) {                // 7/4/10, 10/20/12
         ORDER BY `id` DESC LIMIT 1";
     $result = db_query($query, [$tick_id, $resp_id]);
     if ($result->num_rows>0) {
-        $row = $result->fetch_assoc();
+        $row = $result ? $result->fetch_assoc() : null;
         return "dispatched " . substr ($row['dispatched'] ,11 ,5 );
         }
 
@@ -591,7 +591,7 @@ function get_disps($tick_id, $resp_id) {                // 7/4/10, 10/20/12
         ORDER BY `id` DESC LIMIT 1";
     $result = db_query($query, [$tick_id, $resp_id]);
     if ($result->num_rows>0) {
-        $row = $result->fetch_assoc();
+        $row = $result ? $result->fetch_assoc() : null;
         return "responding " . substr ($row['responding'] ,11 ,5 );
         }
 
@@ -602,7 +602,7 @@ function get_disps($tick_id, $resp_id) {                // 7/4/10, 10/20/12
         ORDER BY `id` DESC LIMIT 1";
     $result = db_query($query, [$tick_id, $resp_id]);
     if ($result->num_rows>0) {
-        $row = $result->fetch_assoc();
+        $row = $result ? $result->fetch_assoc() : null;
         return "on_scene " . substr ($row['on_scene'] ,11 ,5 );
         }
         return "???? ";
@@ -1017,7 +1017,7 @@ function get_un_status_name($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result && $result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         return $row['status_val'];
         } else {
         return "unk";
@@ -1029,7 +1029,7 @@ function get_un_status_cols($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result && $result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $stat_cols[0] = $row['bg_color'];
         $stat_cols[1] = $row['text_color'];
         } else {
@@ -1043,7 +1043,7 @@ function get_fac_status_name($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result && $result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         return $row['status_val'];
         } else {
         return "unk";
@@ -1055,7 +1055,7 @@ function get_fac_status_cols($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_status` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $stat_cols[0] = $row['bg_color'];
         $stat_cols[1] = $row['text_color'];
         } else {
@@ -1201,7 +1201,7 @@ function get_allocated_names($type, $resource) {
         while($row = stripslashes_deep($result->fetch_assoc())) {
             $query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id` = ?";
             $result2 = db_query($query2, [$row['group']]);
-            $row2 = stripslashes_deep($result2->fetch_assoc());
+            $row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
             $temp_ary[] = $row2['group_name'];
             }
         $theReturn = "Allocated to regions " . implode(", ", $temp_ary);
@@ -1519,7 +1519,7 @@ function get_owner($id){
     $query = "SELECT user FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`= ? LIMIT 1";
     $result    = db_query($query, [$id]);
     if($result) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         return ($result->num_rows==0 )? "unk?" : $row['user'];
         } else {
         return "unk";
@@ -1529,14 +1529,14 @@ function get_owner($id){
 function get_user_facility($id){                                /* get owner facility from id */
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`= ? LIMIT 1";
     $result    = db_query($query, [$id]);
-    $row    = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return ($result->num_rows==0 )? 0 : intval($row['facility_id']);
     }
 
 function get_reader($id){                                /* Add in for Messaging 10/23/12 */
     $query = "SELECT user FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`= ? LIMIT 1";
     $result    = db_query($query, [$id]);
-    $row    = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return ($result->num_rows==0 )? "None" : $row['user'];
     }
 
@@ -2510,7 +2510,7 @@ function get_type($id) {                // returns incident type given its id
     if ($id == 0) {return "TBD";}        // 1/11/09
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` WHERE `id`= ? LIMIT 1";
     $result_type = db_query($query, [$id]);
-    $row_type = stripslashes_deep($result_type->fetch_assoc());
+    $row_type = $result_type ? stripslashes_deep($result_type->fetch_assoc()) : null;
 //    unset ($result_type);
     return (isset($row_type['type']))? $row_type['type']: "?";        // 8/12/09
     }
@@ -2623,7 +2623,7 @@ function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, 
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [$_SESSION['user_id']]);
         if ($result->num_rows==1) {
-            $row = stripslashes_deep($result->fetch_array());
+            $row = $result ? stripslashes_deep($result->fetch_array()) : null;
             $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
             if ($row['expires'] > $now) {
                 return false;            // NOT expired
@@ -2770,7 +2770,7 @@ function get_display_field_size($table, $field) {
     $safe_table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}{$safe_table}`";
     $result = db_query($query);
-    $row = $result->fetch_array();
+    $row = $result ? $result->fetch_array() : null;
     $field_size  = $row['size'];
     return $field_size;
     }
@@ -2788,7 +2788,7 @@ function wizard_field_exists($field) {
 function get_wizard_field_select($current, $id = null) {
     $query = "DESCRIBE `{$GLOBALS['mysql_prefix']}ticket`";
     $result = db_query($query);
-    $row = $result->fetch_array();
+    $row = $result ? $result->fetch_array() : null;
     if($id) {
         $output = "<SELECT id='frm_fieldname_" . $id . "' NAME='frm_fieldname[" . $id . "]' STYLE='width: 90%;'>\n";
         $output .= "\t<OPTION VALUE='0'>Select One</OPTION>\n";
@@ -3532,7 +3532,7 @@ function notify_user($ticket_id, $action_id) {
                         if($row_mg['contacts'] != 0) {
                             $query_c = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts` WHERE `id` = ? LIMIT 1";
                             $result_c    = db_query($query_c, [$row_mg['contacts']]);
-                            $row_c = stripslashes_deep($result_c->fetch_assoc());
+                            $row_c = $result_c ? stripslashes_deep($result_c->fetch_assoc()) : null;
                             if (is_email($row_c['email'])) {
                                 array_push($facaddrs, $row_c['email']); // save for emailing
                                 }
@@ -3582,7 +3582,7 @@ function notify_user($ticket_id, $action_id) {
                         if($row_mg['contacts'] != 0) {
                             $query_c = "SELECT * FROM `{$GLOBALS['mysql_prefix']}contacts` WHERE `id` = ? LIMIT 1";
                             $result_c    = db_query($query_c, [$row_mg['contacts']]);
-                            $row_c = stripslashes_deep($result_c->fetch_assoc());
+                            $row_c = $result_c ? stripslashes_deep($result_c->fetch_assoc()) : null;
                             if (is_email($row_c['email'])) {
                                 array_push($intypeaddrs, $row_c['email']); // save for emailing
                                 }
@@ -3951,7 +3951,7 @@ function get_unit_icon($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $icon_str = $row['icon_str'];
         } else {
         $icon_str = "UNK";
@@ -3963,7 +3963,7 @@ function get_facility_icon($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ?";
     $result = db_query($query, [$id]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $icon_str = $row['icon_str'];
         } else {
         $icon_str = "UNK";
@@ -3999,7 +3999,7 @@ function get_status_sel($unit_in, $status_val_in, $tbl_in) {                    
         $init_txt_color = "black";
         }
     else {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $init_bg_color = $row['bg_color'];
         $init_txt_color = $row['text_color'];
         }
@@ -4409,7 +4409,7 @@ function auto_disp_status($disp_status, $responder, $tick_id=0) {    //    8/22/
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}auto_disp_status` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$disp_status]);
     if($result->num_rows >= 1) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_val = intval($row['status_val']);
         $query2 = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET `un_status_id` = ?, `user_id` = '999999', `status_updated` = ?, `updated`= ? WHERE `id`= ?";
         $result2 = db_query($query2, [$the_val, $now, $now, $responder]);
@@ -4429,7 +4429,7 @@ function auto_disp_status($disp_status, $responder, $tick_id=0) {    //    8/22/
 function set_u_updated ($in_assign) {            // given a disaptch record id, updates unit data - 9/1/10
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$in_assign]);
-    $row_temp = $result->fetch_assoc();                    //
+    $row_temp = $result ? $result->fetch_assoc() : null;
     $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));                                                        // 9/1/10
     $user = trim($_SESSION['user_id']);
     $result = db_query("UPDATE `{$GLOBALS['mysql_prefix']}responder` SET
@@ -4621,7 +4621,7 @@ function get_unit(){                                    //            returns un
             unset($result);
             return false;
             } else {
-            $row = stripslashes_deep($result->fetch_array());
+            $row = $result ? stripslashes_deep($result->fetch_array()) : null;
             $temp = explode("/", $row['name'] );
             $index = substr($temp[count($temp) -1], -6,strlen($temp[count($temp) -1]));
             unset($result);
@@ -4637,7 +4637,7 @@ function get_handle(){                                    //            returns 
         unset($result);
         return "Mobile";
         } else {
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         $handle = ($row['handle'] != "") ? $row['handle'] : "Mobile";
         unset($result);
         return $handle;
@@ -4651,7 +4651,7 @@ function get_respondername($id) {
     if (($result->num_rows)==0)  {
         $ret_val = "NA";
         } else {
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         $ret_val = $row['handle'];
         }
     return $ret_val;
@@ -4667,7 +4667,7 @@ function get_facilityname($id) {
     if (($result->num_rows)==0)  {
         $ret_val = "NA";
         } else {
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         $temp = explode("/", $row['name']);
         $ret_val = $temp[0];
         }
@@ -4680,7 +4680,7 @@ function get_facilityhandle($id) {
     if (($result->num_rows)==0)  {
         $ret_val = "NA";
         } else {
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         $temp = explode("/", $row['handle']);
         $ret_val = $temp[0];
         }
@@ -4691,7 +4691,7 @@ function get_state_abb($name) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}states_translator` WHERE `name` = ?";
     $result    = db_query($query, [$name]);
     if($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         return $row['code'];
         } else {
         return $name;
@@ -5347,7 +5347,7 @@ function get_user_details($rosterID) {    //    9/6/13
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}personnel` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$rosterID]);
     if($result->num_rows != 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_ret =  "Name: " . $row['forenames'] . " " . $row['surname'] . "<BR />";
         $the_ret .= "Street: " . $row['address'] . "<BR />";
         $the_ret .= "State: " . $row['state'] . "<BR />";
@@ -5364,7 +5364,7 @@ function get_user_details($rosterID) {    //    9/6/13
 function get_teamname($id) {
     $query = "SELECT `name` FROM `{$GLOBALS['mysql_prefix']}team` WHERE `id` = ? LIMIT 1";
     $result    = db_query($query, [$id]);
-    $row    = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return ($result->num_rows==0 )? "Error?" : $row['name'];
     }
 
@@ -5401,7 +5401,7 @@ function get_member_already_assigned($id) {
 function get_member_assigned_addons($id, $responder) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder_x_member` WHERE `member_id` = ? AND `responder_id` = ? LIMIT 1";
     $result = db_query($query, [$id, $responder]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return $row;
     }
 
@@ -5455,7 +5455,7 @@ function get_member_contact_details($id) {
     $ret_arr = array();
     $query = "SELECT `field1`, `field2`, `field24`, `field25`, `field26` FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     foreach($row as $key => $val) {
         $fieldid = substr($key, 5);
         $fieldname = get_fieldlabel($fieldid);
@@ -5468,7 +5468,7 @@ function get_member_full_details($id) {
     $ret_arr = array();
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     foreach($row as $key => $val) {
         if($key != "_on" && $key != "_by" && $key != "_from" && $key != "id") {
             $fieldid = substr($key, 5);
@@ -5497,13 +5497,13 @@ function get_mdb_email($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder_x_member` WHERE `responder_id` = ? AND `use_email` = 1 LIMIT 1";
     $result = db_query($query, [$id]);
     if($result && $result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $memberid = $row['member_id'];
         $field = preg_replace('/[^a-zA-Z0-9_]/', '', get_mdb_variable('mdb_contact_via_field'));
         $query2 = "SELECT `" . $field . "` FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
         $result2 = db_query($query2, [$memberid]);
         if($result2 && $result2->num_rows > 0) {
-            $row2 = stripslashes_deep($result2->fetch_assoc());
+            $row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
             if($row2[$field] != "") {
                 $theReturn = $row2[$field];
                 }
@@ -5525,7 +5525,7 @@ function get_contact_via($id) {
                 $query2 = "SELECT `" . preg_replace('/[^a-zA-Z0-9_]/', '', $field) . "` FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
                 $result2 = db_query($query2, [$memberid]);
                 if($result2 && $result2->num_rows > 0) {
-                    $row2 = stripslashes_deep($result2->fetch_assoc());
+                    $row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
                     if($row2[$field] != "") {
                         $ret_arr[] = $row2[$field];
                         }
@@ -5535,7 +5535,7 @@ function get_contact_via($id) {
             $query = "SELECT `contact_via` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
             $result = db_query($query, [$id]);
             if($result) {
-                $row = stripslashes_deep($result->fetch_assoc());
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                 $ret_arr[] = $row['contact_via'];
                 } else {
                 $ret_arr = "";
@@ -5545,7 +5545,7 @@ function get_contact_via($id) {
         $query = "SELECT `contact_via` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
         $result = db_query($query, [$id]);
         if($result) {
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $temp = (strpos($row['contact_via'], "|")) ? explode(" | ", $row['contact_via']) : $row['contact_via'];
             if(is_array($temp)) {
                 $ret_arr = $temp;
@@ -5572,7 +5572,7 @@ function get_smsgid($id) {
                 $query2 = "SELECT `" . preg_replace('/[^a-zA-Z0-9_]/', '', $field) . "` FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
                 $result2 = db_query($query2, [$memberid]);
                 if($result2 && $result2->num_rows > 0) {
-                    $row2 = stripslashes_deep($result2->fetch_assoc());
+                    $row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
                     if($row2[$field] != "") {
                         $ret_arr[] = $row2[$field];
                         }
@@ -5581,13 +5581,13 @@ function get_smsgid($id) {
             } else {    //    No member assigned, use information from responder table
             $query = "SELECT `smsg_id` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
             $result = db_query($query, [$id]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $ret_arr[] = $row['smsg_id'];
             }
         } else {
         $query = "SELECT `smsg_id` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
         $result = db_query($query, [$id]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret_arr[] = $row['smsg_id'];
         $temp = (strpos($row['smsg_id'], "|")) ? explode(" | ", $row['smsg_id']) : $row['smsg_id'];
         if(is_array($temp)) {
@@ -5618,7 +5618,7 @@ function get_mdb_names($id) {
                 $query2 = "SELECT `field1`, `field2` FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
                 $result2 = db_query($query2, [$memberid]);
                 if($result2 && $result2->num_rows > 0) {
-                    $row2 = stripslashes_deep($result2->fetch_assoc());
+                    $row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
                     if($row2['field1'] != "" && $row2['field2']) {
                         $ret_arr[] = $row2['field2'] . " " . $row2['field1'];
                         }
@@ -5627,14 +5627,14 @@ function get_mdb_names($id) {
             } else {    //    No member assigned, use information from responder table
             $query = "SELECT `name` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
             $result = db_query($query, [$id]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $temp = explode('/', $row['name']);
             $ret_arr[] = $temp[0];
             }
         } else {
         $query = "SELECT `name` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
         $result = db_query($query, [$id]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $temp1 = explode(',', $row['name']);
         if(is_array($temp1)) {
             foreach($temp1 as $val) {
@@ -5662,7 +5662,7 @@ function get_mdb_cell($id) {
                 $query2 = "SELECT `" . preg_replace('/[^a-zA-Z0-9_]/', '', $field) . "` FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
                 $result2 = db_query($query2, [$memberid]);
                 if($result2 && $result2->num_rows > 0) {
-                    $row2 = stripslashes_deep($result2->fetch_assoc());
+                    $row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
                     if($row2[$field] != "") {
                         $ret_arr[] = $row2[$field];
                         }
@@ -5671,7 +5671,7 @@ function get_mdb_cell($id) {
             } else {    //    No member assigned, use information from responder table
             $query = "SELECT `cellphone` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
             $result = db_query($query, [$id]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $temp = explode(',', $row['cellphone']);
             foreach($temp as $val) {
                 $ret_arr[] = $val;
@@ -5680,7 +5680,7 @@ function get_mdb_cell($id) {
         } else {
         $query = "SELECT `cellphone` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
         $result = db_query($query, [$id]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $temp = explode(',', $row['cellphone']);
         foreach($temp as $val) {
             $ret_arr[] = $val;
@@ -5703,7 +5703,7 @@ function get_mdb_phone($id) {
                 $query2 = "SELECT `" . preg_replace('/[^a-zA-Z0-9_]/', '', $field) . "` FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
                 $result2 = db_query($query2, [$memberid]);
                 if($result2 && $result2->num_rows > 0) {
-                    $row2 = stripslashes_deep($result2->fetch_assoc());
+                    $row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
                     if($row2[$field] != "") {
                         $ret_arr[] = $row2[$field];
                         }
@@ -5712,7 +5712,7 @@ function get_mdb_phone($id) {
             } else {    //    No member assigned, use information from responder table
             $query = "SELECT `phone` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
             $result = db_query($query, [$id]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $temp = explode(',', $row['phone']);
             foreach($temp as $val) {
                 $ret_arr[] = $val;
@@ -5721,7 +5721,7 @@ function get_mdb_phone($id) {
         } else {
         $query = "SELECT `phone` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
         $result = db_query($query, [$id]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $temp = explode(',', $row['phone']);
         if(is_array($temp)) {
             $ret_arr = $temp;
@@ -5746,7 +5746,7 @@ function get_members($id = null) {
                 $query2 = "SELECT `" . preg_replace('/[^a-zA-Z0-9_]/', '', $field) . "` FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
                 $result2 = db_query($query2, [$memberid]);
                 if($result2 && $result2->num_rows > 0) {
-                    $row2 = stripslashes_deep($result2->fetch_assoc());
+                    $row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
                     if($row2[$field] != "") {
                         $ret_arr[] = $row2[$field];
                         }
@@ -5755,7 +5755,7 @@ function get_members($id = null) {
             } else {    //    No member assigned, use information from responder table
             $query = "SELECT `smsg_id` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE `id` = ?";
             $result = db_query($query, [$id]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $ret_arr[] = $row['smsg_id'];
             }
         } else {

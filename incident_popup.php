@@ -87,7 +87,7 @@ function fac_cat($id) {
     $id = intval($id);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` WHERE `id` = ?";    // all dispatches this unit
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     return $row['name'];
     }
 
@@ -117,7 +117,7 @@ $poll_val = ($temp==0)? "none" : $temp ;
 $ticket_id = (array_key_exists('id', ($_GET)))?    sanitize_int($_GET['id'])  :    null;
 
 $result = db_query("SELECT *,`problemstart` AS problemstart ,`problemend` AS problemend FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?", [$ticket_id]);
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 $title = $row['scope'];
 $ticket_severity = get_severity($row['severity']);
 $ticket_type = get_type($row['in_types_id']);
@@ -398,21 +398,21 @@ $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 
                     while ($row_base= $result_dispatched->fetch_assoc()) {
                         $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-                        $row = $result->fetch_assoc();
+                        $row = $result ? $result->fetch_assoc() : null;
                         echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
                         }
                     echo "</TD></TR>";
                     echo "<TR CLASS='odd'><TD CLASS='td_label text' style='border-right: 1px outset #000000;'>Units responding:</TD><TD CLASS='td_data_wrap text'>({$num_rows_responding})&nbsp;";
                     while ($row_base= $result_responding->fetch_assoc()) {
                         $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-                        $row = $result->fetch_assoc();
+                        $row = $result ? $result->fetch_assoc() : null;
                         echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
                         }
                     echo "</TD></TR>";
                     echo "<TR CLASS='even'><TD CLASS='td_label text' style='border-right: 1px outset #000000;'>Units on scene:</TD><TD CLASS='td_data_wrap text'>({$num_rows_on_scene})&nbsp;";
                     while ($row_base= $result_on_scene->fetch_assoc()) {
                         $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-                        $row = $result->fetch_assoc();
+                        $row = $result ? $result->fetch_assoc() : null;
                         echo e($row['name']) . ":&nbsp;" . e($row['handle']) . "&nbsp;&nbsp;";
                         }
                     echo "</TD></TR>";
@@ -469,7 +469,7 @@ $colors[$GLOBALS['SEVERITY_HIGH']] = "yellow";
 
 
         $result = db_query($query, array_merge([$ticket_id], $restrict_params));
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
 
         $lat = $row['lat']; $lng = $row['lng'];
 ?>
@@ -558,7 +558,7 @@ window.onload = function() {
 
 
         $result = db_query($query, array_merge([$ticket_id], $restrict_params));
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         $tip =  htmlentities ("{$row['contact']}/{$row['tick_street']}/{$row['tick_city']}/{$row['tick_state']}/{$row['phone']}/{$row['scope']}", ENT_QUOTES);        // tooltip string - 10/28/2012
         $sched_flag = ($row['status'] == $GLOBALS['STATUS_SCHEDULED']) ? "*" : "";
         $type = shorten($row['type'], 18);

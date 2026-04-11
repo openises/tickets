@@ -6,13 +6,13 @@ do_login(basename(__FILE__));
 $all_id = sanitize_int($_GET['all_id']);
 
 $query_all = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `id` = ?";
-$result_all = db_query($query_all, [$all_id]);$row_all    = $result_all->fetch_array();
+$result_all = db_query($query_all, [$all_id]);$row_all = $result_all ? $result_all->fetch_array() : null;
 $id = $row_all['member_id'];
 $skill_id = $row_all['skill_id'];
 
 $query    = "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m`
     WHERE `m`.`id`=? LIMIT 1";
-$result = db_query($query, [$id]);$row    = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$id]);$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 ?>
 <LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <script src="../js/jquery-1.5.2.min.js" type="text/javascript"></script>
@@ -69,7 +69,7 @@ function pop_veh(veh_id) {                                // get initial values 
 <BODY onload='pop_veh(<?php print e($row_all['skill_id']);?>)'>
 <?php
     $query2 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}vehicles` WHERE `id` = ? LIMIT 1";
-    $result2 = db_query($query2, [$skill_id]);    $row2 = stripslashes_deep($result2->fetch_assoc());
+    $result2 = db_query($query2, [$skill_id]);    $row2 = $result2 ? stripslashes_deep($result2->fetch_assoc()) : null;
     $text = $row2['make'] . " " . $row2['model'] . " " . $row2['regno'];
 ?>
     <DIV id = "outer" style='position: absolute; left: 0px; width: 90%;'>

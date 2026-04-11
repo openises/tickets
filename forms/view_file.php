@@ -8,14 +8,14 @@ $file_id = (array_key_exists('id', $_GET)) ? sanitize_int($_GET['id']): 0;
 $all_id =(array_key_exists('all_id', $_GET)) ? sanitize_int($_GET['all_id']) : 0;
 
 $query_f = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `id` = ?";
-$result_f = db_query($query_f, [$file_id]);$row_f    = $result_f->fetch_array();
+$result_f = db_query($query_f, [$file_id]);$row_f = $result_f ? $result_f->fetch_array() : null;
 
 $id = $row_f['member_id'];
 $realfile = ltrim($row_f['name'],"./");
 
 $query    = "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m`
     WHERE `m`.`id`=? LIMIT 1";
-$result = db_query($query, [$id]);$row    = stripslashes_deep($result->fetch_assoc());
+$result = db_query($query, [$id]);$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 
 ?>
 <LINK REL=StyleSheet HREF="../default.css?version=<?php print time();?>" TYPE="text/css">

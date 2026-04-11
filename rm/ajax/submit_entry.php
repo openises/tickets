@@ -12,7 +12,7 @@ function get_user_name($the_id) {
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
 	$result = db_query($query, [$the_id]);
 	if($result->num_rows == 1) {
-		$row = stripslashes_deep($result->fetch_assoc());
+		$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 		$the_ret = (($row['name_f'] != "") && ($row['name_l'] != "")) ? $the_ret[] = $row['name_f'] . " " . $row['name_l'] : $the_ret[] = $row['user'];
 		}
 	return $the_ret;
@@ -30,7 +30,7 @@ $lng = sanitize_string($_GET['lng']);
 
 $query_cond = "SELECT * FROM `{$GLOBALS['mysql_prefix']}conditions` WHERE `id` = ? LIMIT 1";
 $result_cond = db_query($query_cond, [$type]);
-$row_cond = stripslashes_deep($result_cond->fetch_assoc());
+$row_cond = $result_cond ? stripslashes_deep($result_cond->fetch_assoc()) : null;
 $the_description = $row_cond['description'];
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}roadinfo` WHERE `lat` = ? AND `lng` = ?";

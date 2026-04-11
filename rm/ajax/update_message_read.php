@@ -26,7 +26,7 @@ $the_return = array();
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` `m` WHERE `id` = ? LIMIT 1";
 $result = db_query($query, [$uid]);
-$row = stripslashes_deep($result->fetch_assoc());
+$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $readby = $row['readby'];
 $message = $row['message'];
 $recipients = $row['recipients'];

@@ -7,7 +7,7 @@ require_once('../incs/functions.inc.php');
 function get_fieldid($theval) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}defined_fields` WHERE `label` = ? LIMIT 1";
     $result = db_query($query, [$theval]);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $ret_val = "field" . $row['field_id'];
     return $ret_val;
     }
@@ -15,49 +15,49 @@ function get_fieldid($theval) {
 function get_training($id) {
     $query = "SELECT `package_name`, `description`, `available`, `cost` FROM `{$GLOBALS['mysql_prefix']}training_packages` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     return $row;
     }
 
 function get_event($id) {
     $query = "SELECT `event_name`, `description` FROM `{$GLOBALS['mysql_prefix']}events` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     return $row;
     }
 
 function get_capabilities($id) {
     $query = "SELECT `name`, `description` FROM `{$GLOBALS['mysql_prefix']}capability_types` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     return $row;
     }
 
 function get_equipment($id) {
     $query = "SELECT `equipment_name`, `spec`, `serial`, `condition` FROM `{$GLOBALS['mysql_prefix']}equipment_types` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     return $row;
     }
 
 function get_clothing($id) {
     $query = "SELECT `clothing_item`, `description`, `size` FROM `{$GLOBALS['mysql_prefix']}clothing_types` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     return $row;
     }
 
 function get_memberType($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_types` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row= $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     return $row['name'];
     }
 
 function get_memberStatus($id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member_status` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row= $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     return $row['status_val'];
     }
 
@@ -66,7 +66,7 @@ function get_memberName($id) {
     $firstname = "";
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
     $result = db_query($query, [$id]);
-    $row= $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     foreach ($row as $col_name => $cell) {
         if($col_name == "_by" && $col_name != "_on" && $col_name != "_from" && $col_name != "id") {
             $col_name = substr($col_name, 5);
@@ -90,7 +90,7 @@ function get_vehicle($id) {
         LEFT JOIN `$GLOBALS[mysql_prefix]member` `m` ON ( `ve`.`owner` = `m`.`id` )
         WHERE `ve`.`id` = ?";
     $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     return $row;
     }
 

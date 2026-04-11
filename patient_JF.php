@@ -295,7 +295,7 @@ function ck_frames() {        //  onLoad = "ck_frames()"
         else {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `id`=? LIMIT 1";
             $result = db_query($query, [$_GET['id']]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             print "<FONT CLASS='header'>Really delete " . get_text("Patient") . " record ' " .shorten($row['description'], 24) . "' ?</FONT><BR /><BR />";
             // 3/14/26 - XSS fix: escape $_GET values in HTML output
             print "<FORM METHOD='post' ACTION='patient.php?action=delete&id=" . e($_GET['id']) . "&ticket_id=" . e($_GET['ticket_id']) . "&confirm=1'><INPUT TYPE='Submit' VALUE='Yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -312,7 +312,7 @@ function ck_frames() {        //  onLoad = "ck_frames()"
         $query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE id=?";
         $result = db_query($query, [$frm_asof, $_GET['ticket_id']]);
         $result = db_query("SELECT ticket_id FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=?", [$_GET['id']]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 
         print '<br><br><FONT CLASS="header">' . get_text("Patient") . ' record updated</FONT><BR /><BR />';
         add_header($_GET['ticket_id']);                // 8/16/08
@@ -321,7 +321,7 @@ function ck_frames() {        //  onLoad = "ck_frames()"
     else if ($get_action == 'edit') {        //get and show action to update
         $query = "SELECT *, UNIX_TIMESTAMP(date) AS `date` FROM `{$GLOBALS['mysql_prefix']}patient` WHERE id=? LIMIT 1";    // 8/11/08
         $result = db_query($query, [$_GET['id']]);
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 //        dump($row);
 //        dump(stripslashes($row['description']));
 ?>

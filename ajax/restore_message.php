@@ -10,7 +10,7 @@ $ret_arr = array();
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages_bin` WHERE `id` = ?";
 $result = db_query($query, [$id]);
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 $msg_type = $row['msg_type'];
 $message_id = $row['message_id'];
 $ticket_id = $row['ticket_id'];

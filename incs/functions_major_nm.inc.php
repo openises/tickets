@@ -1536,7 +1536,7 @@ function show_ticket($id,$print='false', $search = false) {                     
         exit();
         }
 
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
 
     if ($print == 'true') {                // 1/7/10 - 11/16/10
 
@@ -1945,7 +1945,7 @@ function do_unit($theRow, $theWidth, $search=false, $dist=true) {               
         WHERE `source`= '$theRow[callsign]' ORDER BY `packet_date` DESC LIMIT 1";        // newest
     $result_tr = db_query($query);
     if ($result_tr->num_rows>0) {                        // got track stuff?
-        $rowtr = stripslashes_deep($result_tr->fetch_array());
+        $rowtr = $result_tr ? stripslashes_deep($result_tr->fetch_array()) : null;
         $lat = $rowtr['latitude'];
         $lng = $rowtr['longitude'];
         }

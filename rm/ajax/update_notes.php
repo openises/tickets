@@ -20,7 +20,7 @@ $now = mysql_format_date(time() - (get_variable('delta_mins')*60));
 if($value != "") {
 	$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
 	$result	= db_query($query, [$ticket_id]);
-	$row = stripslashes_deep($result->fetch_assoc());
+	$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 	$notes = (($row['comments'] != "New") && ($row['comments'] != "")) ? $row['comments'] . "\n\r" : "";
 	$notes .= "Comment Added by " . $user_name . "\nDate" . $now . ": ";
 	$notes .= $value . "\n---\n";

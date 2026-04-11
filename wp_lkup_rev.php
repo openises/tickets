@@ -42,7 +42,7 @@ $query  = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE `phone`
 $result = db_query($query, [$phone, $phone, $phone, $phone]) or do_error("", 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
 if ($result->num_rows==1) {
-    $cons_row = stripslashes_deep($result->fetch_array());
+    $cons_row = $result ? stripslashes_deep($result->fetch_array()) : null;
     $apartment =     $aptStr . $cons_row['apartment'];                         // note brackets
     $misc =         $cons_row['miscellaneous'];
     }
@@ -53,7 +53,7 @@ $result = db_query($query, [$phone]) or do_error("", 'mysql query failed', db()-
 $ret = db()->affected_rows . ";";                        // common to each  return
 //dump(db()->affected_rows);
 if (db()->affected_rows> 0) {                            // build return string from newest incident data
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     $ret .= do_the_row($row);
     }
 

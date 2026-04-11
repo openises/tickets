@@ -19,7 +19,7 @@ $the_other = sanitize_string(isset($_GET['other']) && $_GET['other'] != "" ? $_G
 
 $query = "SELECT `id`, `scope` FROM `$GLOBALS[mysql_prefix]ticket` WHERE `id` = ? LIMIT 1";
 $result = db_query($query, [$ticket_id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-$row = $result->fetch_array();
+$row = $result ? $result->fetch_array() : null;
 $title = substr(stripslashes($row['scope']), 0, 60);
 $title = (isset($row)) ? substr(stripslashes($row['scope']), 0, 60): sanitize_string($_POST['frm_title']);
 $smsg_provider = return_provider_name(get_msg_variable('smsg_provider'));

@@ -194,7 +194,7 @@ function db_fetch_one(string $sql, array $params = [], ?string $types = null): ?
         return null;
     }
 
-    $row = $result->fetch_array();
+    $row = $result ? $result->fetch_array() : null;
     $result->free();
 
     return $row ?: null;

@@ -49,7 +49,7 @@ function isempty($arg) {
 function fac_cat($id) {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_types` WHERE `id` = " . $id;
     $result = db_query($query);
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     return $row['name'];
     }
 
@@ -81,7 +81,7 @@ function closedStatus() {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `status_unavailable` = 1 LIMIT 1";
     $result = db_query($query);
     if($result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         return $row['id'];
         } else {
         return 0;
@@ -92,7 +92,7 @@ function openStatus() {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]fac_status` WHERE `status_available` = 1 LIMIT 1";
     $result = db_query($query);
     if($result->num_rows == 1) {
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         return $row['id'];
         } else {
         return 0;

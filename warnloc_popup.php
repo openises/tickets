@@ -33,7 +33,7 @@ if ($istest) {
 $id =    (array_key_exists('id', ($_GET)))?    sanitize_int($_GET['id'])  :    null;
 
 $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}warnings` WHERE id=?", [$id]);
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 $lat = $row['lat'];
 $lng = $row['lng'];
 ?>

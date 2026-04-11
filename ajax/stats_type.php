@@ -14,7 +14,7 @@ function get_stat_type_type($value) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}stats_type` WHERE `st_id` = ?";
     $result = db_query($query, [intval($value)]);
     if($result->num_rows != 0) {
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $stat_type = $row['stat_type'];
         }
     return $stat_type;

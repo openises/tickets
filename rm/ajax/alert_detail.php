@@ -15,7 +15,7 @@ $alert_id = (isset($_GET['alert_id'])) ? sanitize_int($_GET['alert_id']) : NULL;
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}roadinfo` WHERE `id` = ?";
 $result = db_query($query, [$alert_id]);
 $num=$result->num_rows;
-$row = stripslashes_deep($result->fetch_assoc());
+$row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 $print = "<TABLE style='width: 100%; border: 2px outset #707070;'>";	
 $print .= "<TR style='width: 100%; color: #FFFFFF; background-color: #707070;'><TD COLSPAN=2 style='text-align: center; font-weight: bold;'>ALERT DETAIL";
 $print .= "<SPAN id='close_alert_but' class='plain' style='float: right; z-index: 999999; text-align: center;' onMouseOver='do_hover(this.id);' onMouseOut='do_plain(this.id);' onClick='close_alert_detail();'>Close Detail<IMG SRC = './images/close.png' BORDER=0 STYLE = 'vertical-align: middle'></span>";

@@ -42,7 +42,7 @@ require_once($_SESSION['fmp']);        // 7/28/10, 8/10/10
         LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `rf` ON (`rf`.`id` = `t`.`rec_facility`)
         WHERE `t`.`id`=? LIMIT 1";            // 7/24/09 10/16/08 Incident location 10/06/09 Multi point routing
     $result = db_query($query, [$ticket_id]);
-    $row_ticket = stripslashes_deep($result->fetch_array());
+    $row_ticket = $result ? stripslashes_deep($result->fetch_array()) : null;
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

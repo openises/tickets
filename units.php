@@ -469,7 +469,7 @@ if(file_exists("./incs/modules.inc.php")) {
                     $query_fac = "SELECT `lat`, `lng`, `id` FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
                     $result_fac = db_query($query_fac, [intval($_POST['frm_facility_sel'])]) or do_error($query_fac, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
                     if ($result_fac->num_rows ==1) {
-                        $row_fac = stripslashes_deep($result_fac->fetch_assoc());
+                        $row_fac = $result_fac ? stripslashes_deep($result_fac->fetch_assoc()) : null;
                         $the_lat = doubleval($row_fac['lat']);                            // apply to unit location
                         $the_lng = doubleval($row_fac['lng']);
                         }
@@ -690,7 +690,7 @@ if(file_exists("./incs/modules.inc.php")) {
             $query_fac = "SELECT `lat`, `lng`, `id` FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id` = ? LIMIT 1";
             $result_fac = db_query($query_fac, [intval($_POST['frm_facility_sel'])]) or do_error($query_fac, 'db_query() failed', db()->error,basename( __FILE__), __LINE__);
             if ($result_fac->num_rows ==1) {
-                $row_fac = stripslashes_deep($result_fac->fetch_assoc());
+                $row_fac = $result_fac ? stripslashes_deep($result_fac->fetch_assoc()) : null;
                 $the_lat = doubleval($row_fac['lat']);                            // apply to unit location
                 $the_lng = doubleval($row_fac['lng']);
                 }
@@ -782,7 +782,7 @@ if(file_exists("./incs/modules.inc.php")) {
                         $print .= "Error uploading file";
                         }
                     } else {
-                    $row = stripslashes_deep($result->fetch_assoc());
+                    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
                     $exists = true;
                     $existing_file = $row['filename'];    //    get existing file name
                     }

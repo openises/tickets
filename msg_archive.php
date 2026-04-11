@@ -21,7 +21,7 @@ if ($handle = opendir('./message_archives')) {
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` ORDER by `date` ASC LIMIT 1";
 $result = db_query($query);
 if($result->num_rows != 0) {
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $oldest_date = $row['date'];
     } else {
     $oldest_date = 0;
@@ -30,7 +30,7 @@ if($result->num_rows != 0) {
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` ORDER by `date` DESC LIMIT 1";
 $result = db_query($query);
 if($result->num_rows != 0) {
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $newest_date = $row['date'];
     } else {
     $newest_date = 0;

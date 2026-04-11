@@ -58,7 +58,7 @@ if($id == 0 || count($selected_arr) > 1) {    // It's a read or unread all
         foreach($selected_arr as $theID) {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` WHERE `id` = ?";
             $result = db_query($query, [sanitize_int($theID)]) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
             $the_id = $row['id'];
             $the_messages[$the_id][0] = $row['id'];
             $the_messages[$the_id][1] = $row['readby'];
@@ -112,7 +112,7 @@ if($id == 0 || count($selected_arr) > 1) {    // It's a read or unread all
 } else { //    it's an individual message read status change
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}messages` WHERE `id` = ?";
     $result = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename(__FILE__), __LINE__);
-    $row = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $readby = $row['readby'];
 
     if($status == "read") {

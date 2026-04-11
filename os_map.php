@@ -91,7 +91,7 @@ if($popup_type == 'ticket') {
     unset($result_ras);
     $query = "SELECT *, UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?";
     $result = db_query($query, [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     $theRow = $row;
     $lat = $row['lat'];
     $lng = $row['lng'];
@@ -140,7 +140,7 @@ if($popup_type == 'ticket') {
             $ass_td = "";
             break;
         case 1:
-            $row_assign = stripslashes_deep($result_as->fetch_assoc());
+            $row_assign = $result_as ? stripslashes_deep($result_as->fetch_assoc()) : null;
             $the_disp_stat =  get_disp_status ($row_assign) . "&nbsp;";
             $tip = htmlentities ("{$row_assign['contact']}/{$row_assign['street']}/{$row_assign['city']}/{$row_assign['phone']}/{$row_assign['scope']}", ENT_QUOTES );
             switch($row_assign['severity'])        {        //color tickets by severity
@@ -166,7 +166,7 @@ if($popup_type == 'ticket') {
     $the_day = "";
     $outputstring = "";
     $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     $theRow = $row;
     $lat = $row['lat'];
     $lng = $row['lng'];
@@ -209,7 +209,7 @@ if($popup_type == 'ticket') {
     $label7 = get_text('Contact Email');
     $label8 = get_text('Updated');
     $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE id=?", [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     $theRow = $row;
     $opening_arr_serial = base64_decode($row['opening_hours']);
     $opening_arr = unserialize($opening_arr_serial);
@@ -543,21 +543,21 @@ switch($popup_type) {
                                         echo "<BR>Units dispatched:&nbsp;({$num_rows_dispatched})&nbsp;";
                                         while ($row_base= $result_dispatched->fetch_assoc()) {
                                             $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-                                            $row = $result->fetch_assoc();
+                                            $row = $result ? $result->fetch_assoc() : null;
                                             echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
                                             }
 
                                         echo "<BR>Units responding: ($num_rows_responding)&nbsp;";
                                         while ($row_base= $result_responding->fetch_assoc()) {
                                             $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-                                            $row = $result->fetch_assoc();
+                                            $row = $result ? $result->fetch_assoc() : null;
                                             echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
                                             }
 
                                         echo "<BR>Units on scene: ($num_rows_on_scene)&nbsp;";
                                         while ($row_base= $result_on_scene->fetch_assoc()) {
                                             $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=?", [$row_base['responder_id']]);
-                                            $row = $result->fetch_assoc();
+                                            $row = $result ? $result->fetch_assoc() : null;
                                             echo "{$row['name']}:&nbsp;{$row['handle']}&nbsp;&nbsp;";
                                             }
 

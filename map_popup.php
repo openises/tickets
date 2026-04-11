@@ -49,7 +49,7 @@ if (empty($id)) {
 }
 
 $result = db_query("SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart ,UNIX_TIMESTAMP(problemend) AS problemend FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE id=?", [$id]);
-$row = $result->fetch_assoc();
+$row = $result ? $result->fetch_assoc() : null;
 if(!is_array($row)) { $row = array(); }
 $title = array_key_exists('scope', $row) ? $row['scope'] : '';
 $ticket_addr = trim((array_key_exists('street', $row)?$row['street']:'') . ', ' . (array_key_exists('city', $row)?$row['city']:'') . ' ' . (array_key_exists('state', $row)?$row['state']:''));
@@ -132,7 +132,7 @@ function fac_cat($id) {
     $id = intval($id);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}fac_types` WHERE `id` = ?";    // all dispatches this unit
     $result = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_array());
+    $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     return $row['name'];
     }
 

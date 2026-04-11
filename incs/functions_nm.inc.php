@@ -681,7 +681,7 @@ function get_status($status){                            /* return status text f
 function get_owner($id){                                /* get owner name from id */
     $query = "SELECT user FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id`=? LIMIT 1";
     $result    = db_query($query, [$id]);
-    $row    = stripslashes_deep($result->fetch_assoc());
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return ($result->num_rows==0 )? "unk?" : $row['user'];
 //    return $row['user'];
     }
@@ -698,7 +698,7 @@ function get_severity($severity){            /* return severity string from valu
 function get_responder($id){            /* return responder-type string from value */
     $query = "SELECT `name` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id=? LIMIT 1";
     $result    = db_query($query, [$id]);
-    $temprow    = stripslashes_deep($result->fetch_assoc());
+    $temprow = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     return $temprow['name'];
     }
 
@@ -1015,7 +1015,7 @@ function get_type($id) {                // returns incident type given its id
     if ($id == 0) {return "TBD";}        // 1/11/09
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` WHERE `id`= ? LIMIT 1";
     $result_type = db_query($query, [$id]);
-    $row_type = stripslashes_deep($result_type->fetch_assoc());
+    $row_type = $result_type ? stripslashes_deep($result_type->fetch_assoc()) : null;
 //    unset ($result_type);
     return (isset($row_type['type']))? $row_type['type']: "?";        // 8/12/09
     }
@@ -1092,7 +1092,7 @@ function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, 
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` =? LIMIT 1";
         $result = db_query($query, [$_SESSION['user_id']]);
         if ($result->num_rows==1) {
-            $row = stripslashes_deep($result->fetch_array());
+            $row = $result ? stripslashes_deep($result->fetch_array()) : null;
             $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));
             if ($row['expires'] > $now) {
                 return false;            // NOT expired
@@ -1289,7 +1289,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id`=? LIMIT 1";
     snap(__LINE__, $query );
     $ticket_result = db_query($query, [$ticket_id]);
-    $t_row = stripslashes_deep($ticket_result->fetch_array());
+    $t_row = $ticket_result ? stripslashes_deep($ticket_result->fetch_array()) : null;
     $the_scope = safe_strlen(trim($t_row['scope']))>0? trim($t_row['scope']) : "[#{$ticket_id}]" ;    // possibly empty
     $eol = PHP_EOL;
     $locale = get_variable('locale');
@@ -1433,7 +1433,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
                         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities` WHERE `id`=? LIMIT 1";
                         $result = db_query($query, [$the_facility]);    // 3/22/09
                         if ($result->num_rows>0) {
-                            $f_row = stripslashes_deep($result->fetch_array());
+                            $f_row = $result ? stripslashes_deep($result->fetch_array()) : null;
                             $message .= "{$gt}: {$f_row['handle']}\n";
                             $message .= "{$gt}: {$f_row['beds_info']}\n";
                             }
@@ -1789,7 +1789,7 @@ function get_status_sel($unit_in, $status_val_in, $tbl_in) {                    
         $init_txt_color = "black";
         }
     else {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $init_bg_color = $row['bg_color'];
         $init_txt_color = $row['text_color'];
         }
@@ -2082,7 +2082,7 @@ function set_u_updated ($in_assign) {            // given a disaptch record id, 
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$in_assign]);
 
-    $row_temp = $result->fetch_assoc();                    //
+    $row_temp = $result ? $result->fetch_assoc() : null;
     $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60));                                                        // 9/1/10
     $user = trim($_SESSION['user_id']);
     $query = "UPDATE `{$GLOBALS['mysql_prefix']}responder` SET

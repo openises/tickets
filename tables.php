@@ -314,7 +314,7 @@ $result = db_query($sql);    // $mysql_db
 while ($row = $result->fetch_row()) {
     $sql ="SELECT * FROM `$row[0]` LIMIT 1";
     $result2 = db_query($sql);    // $mysql_db
-    $row2 = $result2->fetch_array();
+    $row2 = $result2 ? $result2->fetch_array() : null;
     $gotit = false;
     for ($i = 0; $i < $result2->field_count; $i++) {            // look at each field
         if (strtolower(substr(mysqli_fetch_field_direct($result2, $i)->name, -$id_lg)) == $FK_id) {    // find any foreign key
@@ -949,7 +949,7 @@ switch ($func) {        // ================================== case "c" =========
             $query = "SELECT * FROM `$mysql_prefix$tablename` WHERE `$the_id` = (SELECT MAX(`$the_id`) FROM `$mysql_prefix$tablename`)";
             $result = db_query($query);
             if ($result->num_rows == 0)     {$row = null ;}
-            else                            {$row = $result->fetch_array();}
+            else                            {$row = $result ? $result->fetch_array() : null;}
             unset ($result);
             }
         else {$row = null;}
@@ -1425,7 +1425,7 @@ case "u":    // =======================================  Update     ============
     $post_id = sanitize_int($_POST['id']);
     $query ="SELECT * FROM `$mysql_prefix$tablename` WHERE `" . $indexname . "` = ? LIMIT 1";                    // target row
     $result = db_query($query, [$post_id]);            // use $result for meta-information reference
-    $row = $result->fetch_array();                                                                        // $row has data
+    $row = $result ? $result->fetch_array() : null;
     $lineno = 0;                                                            // for alternating row colors
     $thetemp = get_defined_constants(true);
     $the_custom = "./tables/u_" . $tablename . ".php";                // 12/20/08
@@ -1669,7 +1669,7 @@ case "u":    // =======================================  Update     ============
 <?php
     $query = "SELECT MAX(id) AS id FROM `$mysql_prefix$tablename`" ;
     $result = db_query($query);
-    $row = $result->fetch_array();
+    $row = $result ? $result->fetch_array() : null;
     $id = $row['id'];
     unset ($result);
 //    break;
@@ -1678,7 +1678,7 @@ case "u":    // =======================================  Update     ============
     $id = (array_key_exists('id', $_POST)) ? sanitize_int($_POST['id']) : $id;
     $query ="SELECT * FROM `$mysql_prefix" . $tablename . "` WHERE `" . $indexname . "` = ? LIMIT 1";
     $result = db_query($query, [$id]);
-    $row = $result->fetch_array();
+    $row = $result ? $result->fetch_array() : null;
     if (!(isset($srch_str))) {$srch_str="";}    // 10/31/10
     $ary_srch = explode ("|", $srch_str);        // 9/13/10
     $srch_term = isset($ary_srch) ? array_shift ($ary_srch): "";
@@ -1718,7 +1718,7 @@ case "u":    // =======================================  Update     ============
             $query ="SELECT * FROM `$mysql_prefix" . $temp . "` WHERE `" . $indexname . "` = ? LIMIT 1";
             $temp_result = db_query($query, [intval($row[$i])]);
             if ($temp_result->num_rows > 0)     {                                        // defined?
-                $temp_row = $temp_result->fetch_array();                        // yes
+                $temp_row = $temp_result ? $temp_result->fetch_array() : null;
                 dump($temp_row);
                 print (($temp == 'user')&&(array_key_exists('user', $temp_row)))? $temp_row['user']: $temp_row[1];        // 12/12/11 - special case
                 } else {                                                                     // no
@@ -1731,7 +1731,7 @@ case "u":    // =======================================  Update     ============
             $fko_query = "SELECT {$fko['display_expr']} AS `{$fko['display_alias']}` FROM `{$mysql_prefix}{$fko['table']}` WHERE `id` = ? LIMIT 1";
             $fko_result = db_query($fko_query, [intval($row[$i])]);
             if ($fko_result->num_rows > 0) {
-                $fko_row = $fko_result->fetch_array();
+                $fko_row = $fko_result ? $fko_result->fetch_array() : null;
                 print $fko_row[$fko['display_alias']];
             } else {
                 print $row[$i];
@@ -2069,7 +2069,7 @@ function fnTables () {                            /// displays tables comprising
     while ($row = $result->fetch_row()) {
         $sql ="SELECT * FROM `$row[0]` LIMIT 1";
         $result2 = db_query($sql);    // $mysql_db
-        $row2 = $result2->fetch_array();
+        $row2 = $result2 ? $result2->fetch_array() : null;
         $gotit = false;
         for ($i = 0; $i < $result2->field_count; $i++) {            // look at each field - substr ( string, start, 999)
 

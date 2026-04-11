@@ -147,7 +147,7 @@ if (empty($_POST)) {
                         GROUP BY `tick_id` ORDER BY `severity` DESC, `problemstart` ASC "; // highest severity, oldest open
                 $result = db_query($query);
                 if ($result->num_rows >= 1) {            // if a single, do it
-                    $row = $result->fetch_assoc();
+                    $row = $result ? $result->fetch_assoc() : null;
                     $inc_ctr = $result->num_rows;
                     print "<TR CLASS='even'><TD CLASS='td_label text'>Select Ticket</TD><TD class='td_label text'>";
                     print "<SELECT CLASS='text' NAME='frm_ticket_sel' onChange='document.log_form.ticket.value=this.value;'>";

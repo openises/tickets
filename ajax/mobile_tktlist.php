@@ -33,7 +33,7 @@ if (array_key_exists('frm_mode', $_GET)) {$mode =  $_GET['frm_mode'];
         } else {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `u`.`id` = ? LIMIT 1";
         $result = db_query($query, [$_SESSION['user_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-        $user_row = stripslashes_deep($result->fetch_assoc());
+        $user_row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $mode = (intval ($user_row['responder_id'])>0)? MINE: ALL;        // $mode => 'all' if no unit associated this user - 10/3/10
         }
     }        // end if/else initialize $mode
@@ -51,7 +51,7 @@ if ((($mode==0) || ($mode==1))) {                                    // pull $th
         WHERE `u`.`id` = ? LIMIT 1";
 
     $result = db_query($query, [$_SESSION['user_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    $user_row = stripslashes_deep($result->fetch_assoc());
+    $user_row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
     $the_unit = $user_row['responder_id'];
     $the_unit_name = (empty($user_row['name']))? "NA": $user_row['name'];    // 'NA' if no responder this user
     } else {

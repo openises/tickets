@@ -9,7 +9,7 @@ if(!array_key_exists("code", $_GET)) {
     $query = "SELECT * FROM `$GLOBALS[mysql_prefix]codes` WHERE `code` = ? LIMIT 1";
     $result = db_query($query, [$theID]) or do_error($query, 'mysql query_sigs failed', db()->error,basename( __FILE__), __LINE__);
     if ($result->num_rows > 0) {
-        $row = stripslashes_deep($result->fetch_assoc());
+        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $ret_arr[0] = $row['text'];
         } else {
         $ret_arr[0] = "Not Found";

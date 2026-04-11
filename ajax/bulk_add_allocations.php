@@ -5,7 +5,7 @@ function get_membername($id) {
     $id = sanitize_int($id);
     $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ?";
     $result    = db_query($query, [$id]);
-    $row = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     $ret = $row['field2'] . " " . $row['field1'];
     return $ret;
     }
@@ -61,7 +61,7 @@ function check_training_allocation($id, $type, $skill_id) {
     $query    = "SELECT *, `completed` AS `completed`, `refresh_due` AS `refresh_due` FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `member_id` = ? AND `skill_type` = ? AND `skill_id` = ?";
     $result    = db_query($query, [$id, $type, $skill_id]);
     if($result->num_rows != 0) {
-        $row = $result->fetch_assoc();
+        $row = $result ? $result->fetch_assoc() : null;
         $ret[0] = safe_strtotime($row['completed']);
         $ret[1] = safe_strtotime($row['refresh_due']);
         } else {

@@ -660,7 +660,7 @@ if(empty($_SESSION)) {        // expired?
                     GROUP BY `tick_id` ORDER BY `severity` DESC, `problemstart` ASC "; // highest severity, oldest open
             $result = db_query($query);
             if ($result->num_rows==1) {            // if a single, do it
-                $row = $result->fetch_assoc();
+                $row = $result ? $result->fetch_assoc() : null;
 ?>
 <SCRIPT>
                 function do_post() {
@@ -2165,7 +2165,7 @@ if(empty($_SESSION)) {        // expired?
                                     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}un_status` WHERE `id`= ?";
                                     $result = db_query($query, [$asgn_row['un_status_id']]);
                                     if($result->num_rows > 0) {
-                                        $temprow = stripslashes_deep($result->fetch_array());
+                                        $temprow = $result ? stripslashes_deep($result->fetch_array()) : null;
                                         $set_color[0] = $temprow['bg_color'];
                                         $set_color[1] = $temprow['text_color'];
                                         } else {
