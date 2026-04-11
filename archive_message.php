@@ -5,8 +5,8 @@ archive_message.php - view and handle an archive message - loads message using .
 */
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
-require_once('./incs/messaging.inc.php');
+require_once './incs/functions.inc.php';
+require_once './incs/messaging.inc.php';
 
 $the_contacts = array();
 $i = 1;

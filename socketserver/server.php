@@ -4,7 +4,7 @@
 12/15/15    New File - Websocket server using core PHP stream sockets.
 */
 error_reporting(0);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 
 $temp1  = (get_variable('socketserver_url') != "") ? get_variable('socketserver_url') : "localhost";
 $temp2 = get_variable('socketserver_port');

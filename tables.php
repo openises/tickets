@@ -60,7 +60,7 @@ if (empty($_SESSION)) {                // 1/6/2013
     header("Location: index.php");
     }
 
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 $query = "SET @@session.sql_mode= '';";        // 6/25/10
 $result = db_query($query);
 
@@ -418,7 +418,7 @@ if (($func == "c")||($func == "u")) {            // not required for all functio
 </SCRIPT>
 </HEAD>
 <?php
-    require_once('./incs/all_forms_js_variables.inc.php');
+    require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
     function set_size() {

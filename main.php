@@ -18,7 +18,7 @@ $do_blink = true;                    // or FALSE , only - 4/11/10
 $ld_ticker = "";
 session_start();                        //
 session_write_close();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
@@ -133,36 +133,36 @@ $get_sort_value =         (array_key_exists('sort_value', ($_GET)))?        $_GE
 $alt_sit = (intval(get_variable('alternate_sit')) == 1) ? true : false;
     if ($get_print) {
         if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
-            require_once('./forms/ticket_view_screen.php');
+            require_once './forms/ticket_view_screen.php';
             print "<BR /><P ALIGN='left'>";
             } else {
-            require_once('./forms/ticket_view_screen_NM.php');
+            require_once './forms/ticket_view_screen_NM.php';
             print "<BR /><P ALIGN='left'>";
             }
         } elseif ($get_id) {
         if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
-            require_once('./forms/ticket_view_screen.php');
+            require_once './forms/ticket_view_screen.php';
             } else {
             add_header($get_id, false, true);
-            require_once('./forms/ticket_view_screen_NM.php');
+            require_once './forms/ticket_view_screen_NM.php';
             print "<BR /><P ALIGN='left'>";
             }
 
         } elseif ($get_sort_by_field && $get_sort_value) {
         if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
-            require_once('./forms/sit_screen.php');
+            require_once './forms/sit_screen.php';
             } else {
-            require_once('./forms/sit_screen_NM.php');
+            require_once './forms/sit_screen_NM.php';
             }
         } else {
         if((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet'])) {
             if($alt_sit) {
-                require_once('full_sit_scr.php');
+                require_once 'full_sit_scr.php';
                 } else {
-                require_once('./forms/sit_screen.php');
+                require_once './forms/sit_screen.php';
                 }
             } else {
-            require_once('./forms/sit_screen_NM.php');
+            require_once './forms/sit_screen_NM.php';
             }
 
         }

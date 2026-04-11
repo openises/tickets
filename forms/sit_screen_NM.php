@@ -1,12 +1,12 @@
 <?php
 
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 $units_side_bar_height = .6;
 $board = get_variable('call_board');
 
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 $use_ticker = (($_SESSION['good_internet']) && (module_active("Ticker")==1) && (!($not_sit))) ? 1 : 0;
 /*
@@ -47,7 +47,7 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
 <?php
 
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 ?>
     <script type="application/x-javascript" src="./js/proj4js.js"></script>
@@ -90,7 +90,7 @@ if(file_exists("./incs/modules.inc.php")) {
 window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var showTicker = <?php print $use_ticker;?>;
@@ -591,7 +591,7 @@ if (is_guest()) {
 ?>
 <BODY style="overflow-y: scroll;" onLoad = "loadData(); ck_frames(); <?php print $ld_ticker;?> parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top'; <?php print $do_mu_init;?>" onUnload = "<?php print $gunload;?>";>
 <?php
-    include("./incs/links.inc.php");
+    include "./incs/links.inc.php";
 ?>
 
 <A NAME='top'></A>

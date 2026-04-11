@@ -4,7 +4,7 @@
 */
 error_reporting(E_ALL);
 @session_start();
-require_once('../incs/functions.inc.php');        //7/28/10
+require_once '../incs/functions.inc.php';        //7/28/10
 //do_login(basename(__FILE__));
 
 $hours = (intval(get_variable('chat_time'))>0)? intval(get_variable('chat_time')) : 4;    // force to default

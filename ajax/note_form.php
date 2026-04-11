@@ -2,7 +2,7 @@
 /*
 */
 error_reporting(E_ALL);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 @session_start();
 session_write_close();
 $sess_id = $_SESSION['id'];

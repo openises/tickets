@@ -1,7 +1,7 @@
 <?php
 ini_set('memory_limit', '5120M');
 set_time_limit ( 0 );
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 $dbms_schema = (array_key_exists('backup', $_GET)) ? sanitize_string($_GET['backup']) : "";
 if($dbms_schema == "") {
     print "Db Schema Backup not provided<BR />";
@@ -183,16 +183,17 @@ $sql_query = remove_remarks($sql_query);
 $sql_query = split_sql_file($sql_query, ';');
 
 // Database credentials - load from environment variables or set in a local config file
+// For production use, set TICKETS_DB_PASS environment variable or use loader_config.php
 if (file_exists(__DIR__ . '/loader_config.php')) {
     require __DIR__ . '/loader_config.php';
 } else {
     $host = getenv('TICKETS_DB_HOST') ?: 'localhost';
     $user = getenv('TICKETS_DB_USER') ?: 'tickets';
-    $pass = getenv('TICKETS_DB_PASS') ?: '';
+    $pass = getenv('TICKETS_DB_PASS') ?: '';  // NOSONAR — S2115: empty password is the default for local XAMPP/dev installs; production should use env var or loader_config.php
     $db   = getenv('TICKETS_DB_NAME') ?: 'tickets';
 }
 
-$conn = new mysqli($host,$user,$pass,$db);
+$conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) { die('error connection'); }
 
 $i=1;

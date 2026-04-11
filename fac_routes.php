@@ -10,7 +10,7 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 do_login(basename(__FILE__));
 if($istest) {
     print "GET<br />\n";
@@ -355,7 +355,7 @@ function do_fac($id) {
     <script type="application/x-javascript" src="./js/osgb.js"></script>
     <script type="application/x-javascript" src="./js/geotools2.js"></script>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var map;

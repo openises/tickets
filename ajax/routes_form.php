@@ -1,7 +1,7 @@
 <?php
 @session_start();
 session_write_close();
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $_GET = stripslashes_deep($_GET);
 // Replaced extract — explicit variable assignments (Phase 2 cleanup)
 $sortby_distance = true;

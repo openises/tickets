@@ -4,7 +4,7 @@ if(empty($_GET)) {
     print $failed;
     exit();
     }
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 
 do_login(basename(__FILE__));
 error_reporting(E_ALL);

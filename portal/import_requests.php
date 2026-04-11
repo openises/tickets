@@ -8,7 +8,7 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 if (empty($_SESSION)) {
     header("Location: index.php");
     }
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 function get_user_name($the_id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$the_id]);

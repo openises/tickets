@@ -134,7 +134,7 @@ window.onresize=function(){set_size()};
 window.onload = function(){set_size();};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;

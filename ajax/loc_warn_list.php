@@ -4,7 +4,7 @@
 11/18/13 - Fixed inccorrect <DENTER> !!
 */
 //    error_reporting(E_ALL);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 @session_start();
 session_write_close();
 if(empty($_GET)) {

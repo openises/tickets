@@ -6,7 +6,7 @@
 6/14/11    First version
 */
 error_reporting(0);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $type = (isset($type)) ? sanitize_int($type) : "";
 
 function get_stat_type_type($value) {

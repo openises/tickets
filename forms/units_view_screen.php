@@ -5,7 +5,7 @@ $do_blink = true;                    // or FALSE , only - 4/11/10
 $temp = get_variable('auto_poll');                // 1/28/09
 $poll_val = ($temp==0)? "none" : $temp ;
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';    //    3/15/11
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
@@ -16,7 +16,7 @@ require_once($the_inc);
 window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
@@ -197,11 +197,11 @@ $get_messages = ((get_variable('use_messaging') == 1) || (get_variable('use_mess
 <?php
         if ($_dodisp == 'true') {                // dispatch
             print "\t<BODY onLoad = 'loadData(); ck_frames(); do_disp();'> <!-- 3281 do_disp -->\n";
-            require_once('./incs/links.inc.php');
+            require_once './incs/links.inc.php';
             }
         else {
             print "\t<BODY onLoad = 'loadData(); ck_frames()'><!-- 3289  view --> \n";
-            require_once('./incs/links.inc.php');
+            require_once './incs/links.inc.php';
             }
 
 ?>

@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 // Declare arrays for all resource ids
 $status_ids = array();

@@ -10,7 +10,7 @@
 
 session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 // Auth gate: redirect unauthenticated users
 if (empty($_SESSION) || !array_key_exists('user_id', $_SESSION)) {
     echo "<script>window.location='main.php';</script>";
@@ -63,7 +63,7 @@ function ck_frames() {        //  onLoad = "ck_frames()"
 
 </HEAD>
 <BODY onLoad = "ck_frames()">
-<?php include("./incs/links.inc.php"); ?>
+<?php include "./incs/links.inc.php"; ?>
 <DIV ID='outer' style='position: relative; left: 5%; top: 5%; width: 90%;'>
 <FONT CLASS="header text">Tickets Help</FONT><BR /><BR />
 <LI><A CLASS="text" HREF="help.php?q=tickets">Background</A>

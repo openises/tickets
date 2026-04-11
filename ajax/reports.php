@@ -1,8 +1,8 @@
 <?php
 @session_start();
 session_write_close();
-require_once('../incs/functions.inc.php');        //7/28/10
-require_once('../incs/log_codes.inc.php');                 // 3/25/10
+require_once '../incs/functions.inc.php';        //7/28/10
+require_once '../incs/log_codes.inc.php';                 // 3/25/10
 $func = (array_key_exists('func', $_GET)) ? sanitize_string($_GET['func']) : "";
 $report = (array_key_exists('report', $_GET)) ? sanitize_string($_GET['report']) : "";
 $startdate = (array_key_exists('startdate', $_GET)) ? sanitize_string($_GET['startdate']) : "";
@@ -1725,7 +1725,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
         global $theWidth, $doprint;
         global $startdate, $enddate;
 
-        require_once('../incs/functions_major.inc.php');        // 7/28/10
+        require_once '../incs/functions_major.inc.php';        // 7/28/10
         $table = "";
         $from_to = date_range($date_in,$func_in);            // get date range as array
         $where = " WHERE `problemstart` >= '{$from_to[0]}' AND `problemstart` < '{$from_to[1]}'";

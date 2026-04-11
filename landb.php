@@ -8,7 +8,7 @@
 */
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}        // 11/8/09
 error_reporting (E_ALL  ^ E_DEPRECATED);
-require_once('incs/functions.inc.php');
+require_once 'incs/functions.inc.php';
 //    dump ($_POST);
     $tablename = "{$GLOBALS['mysql_prefix']}mmarkup";        // 7/30/11
 

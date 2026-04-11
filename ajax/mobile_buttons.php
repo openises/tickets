@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 session_start();
 session_write_close();
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 function adj_time($time_stamp) {
     $temp = mysql2timestamp($time_stamp);                    // MySQL to integer form
     return date ("H:i", $temp);

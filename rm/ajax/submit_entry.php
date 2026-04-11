@@ -3,7 +3,7 @@
 9/10/13 - New file, submits a new road condition alert from mobile screen
 */
 error_reporting(E_ALL);
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 @session_start();
 $the_session = $_GET['session'];
 

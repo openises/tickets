@@ -3,7 +3,7 @@
 9/10/13 - new file, lists road condition alerts (text) for mobile page - sorts by distance from current position.
 */
 @session_start();
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 $filter = "";
 
 $ret_arr = array();

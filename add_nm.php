@@ -11,7 +11,7 @@ if (!($_SESSION['internet'])) {                // 8/22/10
     header("Location: add_nm.php");
     }
 */
-require_once('incs/functions.inc.php');        //7/28/10
+require_once 'incs/functions.inc.php';        //7/28/10
 do_login(basename(__FILE__));
 $gmaps = $_SESSION['internet'];
 if($istest) {print "_GET"; dump($_GET);}
@@ -1455,7 +1455,7 @@ $maptype = get_variable('maptype');    // 08/02/09
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 
 <?php
-require_once('./incs/links.inc.php');
+require_once './incs/links.inc.php';
 
 $city = (!(empty($res_row['city'])))?    $res_row['city']  : get_variable('def_city');        // 11/5/10
 $st =   (!(empty($res_row['state'])))?    $res_row['state'] : get_variable('def_st') ;

@@ -21,7 +21,7 @@ error_reporting(E_ALL);            // 10/1/08
 
 @session_start();
 session_write_close();
-require_once('incs/functions.inc.php');
+require_once 'incs/functions.inc.php';
 do_login(basename(__FILE__));
 if ((isset($_REQUEST['ticket_id'])) &&     (safe_strlen(trim($_REQUEST['ticket_id']))>6)) {    shut_down();}            // 5/26/11
 //require_once($_SESSION['fmp']);        // 8/27/10

@@ -48,7 +48,7 @@ Badge: <INPUT TYPE='text' NAME = 'frm_badge' SIZE = '24' value='' />    <!-- ex:
 <?php
         }                // end if (empty($_POST)) {
     else {
-        require_once('./incs/functions.inc.php');
+        require_once './incs/functions.inc.php';
 
 function do_glat_test($user) {                // given user id,  returns Google Latitude id, timestamp and coords as a 4-element array, if found - else FALSE
     $ret_val = array("", "", "", "");

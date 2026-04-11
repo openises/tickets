@@ -36,7 +36,7 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once('incs/functions.inc.php');        //7/28/10
+require_once 'incs/functions.inc.php';        //7/28/10
 do_login(basename(__FILE__));
 $mode = ((array_key_exists('mode',$_REQUEST)) && ($_REQUEST['mode'] ==1))? 1: 0;        // 9/8/10
 
@@ -481,7 +481,7 @@ function edit_ticket($id) {                            /* post changes */
 <BODY onLoad = "ck_frames(); FormValidator.init(document.edit);" >
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <?php
-require_once('./incs/links.inc.php');
+require_once './incs/links.inc.php';
 
     $id = sanitize_int($_GET['id']);
     if ((isset($_GET['action'])) && ($_GET['action'] == 'update')) {        /* update ticket */
@@ -497,7 +497,7 @@ require_once('./incs/links.inc.php');
 
             if($_SESSION['internet'] || ($mode == 1)) {
                 if($mode == 0) {
-                    require_once('./forms/ticket_view_screen_NM.php');
+                    require_once './forms/ticket_view_screen_NM.php';
                     } else {
                     $now = time() - (intval(get_variable('delta_mins'))*60);        // 6/20/10
                     $ticket_name = $_POST['frm_scope'];

@@ -1,7 +1,7 @@
 <?php
 
 error_reporting(E_ALL);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 @session_start();
 $the_session = sanitize_string($_GET['session']);
 if(!(secure_page($the_session))) {

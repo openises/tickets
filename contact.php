@@ -6,7 +6,7 @@ error_reporting(E_ALL);        // 10/1/08
 */
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');        //7/28/10
+require_once './incs/functions.inc.php';        //7/28/10
 
 $query = "CREATE TABLE IF NOT EXISTS `{$GLOBALS['mysql_prefix']}access_requests` (
   `id` int(6) NOT NULL auto_increment,

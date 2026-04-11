@@ -2,7 +2,7 @@
 /*
 */
 error_reporting(E_ALL);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $id = (array_key_exists('id', $_GET)) ? strip_tags($_GET['id']) : 0;
 
 if($id == 0) {

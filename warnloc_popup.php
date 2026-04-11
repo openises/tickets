@@ -88,7 +88,7 @@ $lng = $row['lng'];
     window.onload = function(){set_size();};
     </SCRIPT>
 <?php
-    require_once('./incs/all_forms_js_variables.inc.php');
+    require_once './incs/all_forms_js_variables.inc.php';
 ?>
     <SCRIPT>
     var layercontrol;

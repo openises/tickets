@@ -7,7 +7,7 @@ if (empty($_SESSION)) {
     header("Location: index.php");
     }
 
-require_once('incs/functions.inc.php');
+require_once 'incs/functions.inc.php';
 /*
 */
 

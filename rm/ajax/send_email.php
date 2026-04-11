@@ -3,7 +3,7 @@
 9/10/13 - new file - sends email from mobile screen.
 */
 error_reporting(E_ALL);
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 @session_start();
 $the_session = $_GET['session'];
 $ret_arr = array();

@@ -1,5 +1,5 @@
 <?php
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 
 function get_membername($id) {
     $id = sanitize_int($id);

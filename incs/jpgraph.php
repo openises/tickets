@@ -8,10 +8,10 @@
 // Copyright (c) Aditus Consulting. All rights reserved.
 //========================================================================
 
-require_once('jpg-config.inc.php');
-require_once('jpgraph_gradient.php');
-require_once('jpgraph_errhandler.inc.php');
-require_once('jpgraph_ttf.inc.php');
+require_once 'jpg-config.inc.php';
+require_once 'jpgraph_gradient.php';
+require_once 'jpgraph_errhandler.inc.php';
+require_once 'jpgraph_ttf.inc.php';
 
 // Version info
 DEFINE('JPG_VERSION','2.3.3');
@@ -185,7 +185,7 @@ DEFINE("_JPG_DEBUG",false);
 DEFINE("_FORCE_IMGTOFILE",false);
 DEFINE("_FORCE_IMGDIR",'/tmp/jpgimg/');
 
-require_once('gd_image.inc.php');
+require_once 'gd_image.inc.php';
 
 function CheckPHPVersion($aMinVersion)
 {
@@ -1989,7 +1989,7 @@ class Graph {
         // Should we do any final image transformation
         if( $this->iImgTrans ) {
         if( !class_exists('ImgTrans',false) ) {
-            require_once('jpgraph_imgtrans.php');
+            require_once 'jpgraph_imgtrans.php';
             //JpGraphError::Raise('In order to use image transformation you must include the file jpgraph_imgtrans.php in your script.');
         }
 

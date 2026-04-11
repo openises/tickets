@@ -8,8 +8,8 @@ session_write_close();
 if($_GET['q'] != $_SESSION['id']) {
     exit();
     }
-require_once('../incs/functions.inc.php');
-include('../incs/html2text.php');
+require_once '../incs/functions.inc.php';
+include '../incs/html2text.php';
 $ret_arr = array();
 $i = 0;
 function br2nl($input) {

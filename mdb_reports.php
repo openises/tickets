@@ -3,7 +3,7 @@
 12/22/11    New file, main page
 */
 
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 @session_start();
 $sess_id = session_id();
 if (isset($_GET['logout'])) {
@@ -27,7 +27,7 @@ else {
 window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 function set_size() {

@@ -1,5 +1,5 @@
 <?php
-require_once("../nusoap/lib/nusoap.php");
+require_once "../nusoap/lib/nusoap.php";
 define("tab",  "\t");
 // Replaced extract — only $phone needed (Phase 2 cleanup)
 // Also removed legacy $HTTP_POST_VARS reference (deprecated since PHP 5.0)

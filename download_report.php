@@ -1,5 +1,5 @@
 <?php
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 include_once './incs/html_to_doc.inc.php';
 $randomnumber = random_int(0, 9999999);
 $currDate = date('m,d,Y');

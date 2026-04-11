@@ -2,7 +2,7 @@
 if(empty($_GET)) {
     exit();
     }
-require_once('../../../incs/functions.inc.php');
+require_once '../../../incs/functions.inc.php';
 
 $filename = "../../files/" . sanitize_string($_GET['filename']);
 $properFilename = sanitize_string($_GET['origname']);

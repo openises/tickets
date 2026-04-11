@@ -24,8 +24,8 @@ set_time_limit(90);
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
-require_once('./incs/full_scr.inc.php');
+require_once './incs/functions.inc.php';
+require_once './incs/full_scr.inc.php';
 $api_key = get_variable('gmaps_api_key');
 
 //dump($_GET);
@@ -54,4 +54,4 @@ if(($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('rest
     exit();
     }
 
-include("./forms/full_screen.php");
+include "./forms/full_screen.php";

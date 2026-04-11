@@ -6,7 +6,7 @@ set_time_limit(90);
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 error_reporting(E_ALL);
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';
@@ -32,7 +32,7 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
     <SCRIPT TYPE="application/x-javascript" SRC="./js/jss.js"></SCRIPT>
     <SCRIPT TYPE="application/x-javascript" SRC="./js/misc_function.js"></SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 window.onresize=function(){set_size();}
@@ -73,7 +73,7 @@ function set_size() {
 </SCRIPT>
 </HEAD>
 <?php
-include("./forms/callboard.php");
+include "./forms/callboard.php";
 ?>
 <SCRIPT>
 if (typeof window.innerWidth != 'undefined') {

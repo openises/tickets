@@ -8,7 +8,7 @@ if (empty($_SESSION)) {
     header("Location: index.php");
     }
 
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $ret_arr = array();
 $good_internet = ($_SESSION['good_internet']) ? $_SESSION['good_internet'] : 0;
 $gmaps = $_SESSION['internet'];

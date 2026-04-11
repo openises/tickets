@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 session_start();
 session_write_close();
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $incident = get_text('Incident');
 $evenodd = array ("even", "odd", "heading");    // class names for alternating table row css colors
 

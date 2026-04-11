@@ -6,7 +6,7 @@
 
 @session_start();
 
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 error_reporting(E_ALL);                // 2/3/09
 do_login(basename(__FILE__));    // session_start()
 $tickets_dir = getcwd();

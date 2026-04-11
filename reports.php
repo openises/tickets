@@ -57,9 +57,9 @@ $asof = "3/24/10";
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');        //7/28/10
+require_once './incs/functions.inc.php';        //7/28/10
 do_login(basename(__FILE__));
-require_once('./incs/log_codes.inc.php');                 // 3/25/10
+require_once './incs/log_codes.inc.php';                 // 3/25/10
 $img_width  = round(.7*$_SESSION['scr_width']/3);        //8/9/08
 
 if((($istest)) && (!empty($_GET))) {dump ($_GET);}
@@ -573,7 +573,7 @@ div.scrollingArea { max-height: 500px; overflow: auto; overflow-x: hidden;}
 
     </HEAD>
 <BODY onLoad = "ck_frames();" style='overflow-x: hidden;'>
-<?php include("./incs/links.inc.php"); ?>
+<?php include "./incs/links.inc.php"; ?>
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT> <!-- 10/2/10 -->
 
 <A NAME="top" />

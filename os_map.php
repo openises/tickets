@@ -1,5 +1,5 @@
 <?php
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 @session_start();
 session_write_close();
 $server_name = "http://www." . $_SERVER['SERVER_NAME'];
@@ -321,7 +321,7 @@ $_SERVER['HTTP_REFERER'] = $server_name;
 <script type= "application/x-javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/script/mapbuilder/basicmap.js"></script>
 <script type= "application/x-javascript" src="https://openspace.ordnancesurvey.co.uk/osmapapi/script/mapbuilder/searchbox.js"></script>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <script type="application/x-javascript">
 window.onresize=function(){set_size()};

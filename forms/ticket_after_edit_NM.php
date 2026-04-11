@@ -3,7 +3,7 @@
 <SCRIPT>
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 function set_size() {

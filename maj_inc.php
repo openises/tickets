@@ -429,7 +429,7 @@ function get_loc_name($id) {
     <script type="application/x-javascript" src="./js/osgb.js"></script>
     <script type="application/x-javascript" src="./js/geotools2.js"></script>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
     var sortby = '`date`';    //    11/18/13
@@ -1945,11 +1945,11 @@ require_once('./incs/all_forms_js_variables.inc.php');
 // add ===========================================================================================================================
 
     if ($_getadd == 'true') {
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         if (!($_SESSION['internet'])) {
-            require_once('./forms/mi_add_screen_NM.php');
+            require_once './forms/mi_add_screen_NM.php';
             } else {
-            require_once('./forms/mi_add_screen.php');
+            require_once './forms/mi_add_screen.php';
             }
         exit();
         }        // end if ($_GET['add'])
@@ -1959,11 +1959,11 @@ require_once('./incs/all_forms_js_variables.inc.php');
 // edit =================================================================================================================
 
     if ($_getedit == 'true') {
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         if (!($_SESSION['internet'])) {
-            require_once('./forms/mi_edit_screen_NM.php');
+            require_once './forms/mi_edit_screen_NM.php';
             } else {
-            require_once('./forms/mi_edit_screen.php');
+            require_once './forms/mi_edit_screen.php';
             }
         exit();
         }        // end if ($_GET['edit'])
@@ -1971,21 +1971,21 @@ require_once('./incs/all_forms_js_variables.inc.php');
 // view =================================================================================================================
 
     if ($_getview == 'true') {
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         if (!($_SESSION['internet'])) {
-            require_once('./forms/mi_view_screen_NM.php');
+            require_once './forms/mi_view_screen_NM.php';
             } else {
-            require_once('./forms/mi_view_screen.php');
+            require_once './forms/mi_view_screen.php';
             }
         exit();
         }
 // ============================================= initial display =======================
     if (!isset($mapmode)) {$mapmode="a";}
-    require_once('./incs/links.inc.php');
+    require_once './incs/links.inc.php';
     if (!($_SESSION['internet'])) {
-        require_once('./forms/mi_screen_NM.php');
+        require_once './forms/mi_screen_NM.php';
         } else {
-        require_once('./forms/mi_screen.php');
+        require_once './forms/mi_screen.php';
         }
     exit();
 ?>

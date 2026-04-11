@@ -54,7 +54,7 @@ Gtrack URL: <INPUT TYPE='text' NAME = 'frm_gtrack_url' SIZE = '40'/>
 <?php
         }                // end if (empty($_POST)) {
     else {
-        require_once('./incs/functions.inc.php');
+        require_once './incs/functions.inc.php';
 
 function do_gt($user, $url) {
 

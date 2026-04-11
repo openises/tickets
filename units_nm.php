@@ -29,9 +29,9 @@ $zoom_tight = false;        // replace with a decimal number to over-ride the st
 
 session_start();
 session_write_close();
-require_once("./incs/functions.inc.php");        //7/28/10
+require_once "./incs/functions.inc.php";        //7/28/10
 if(file_exists("./incs/modules.inc.php")) {    //    10/28/10
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 do_login(basename(__FILE__));
 require_once($_SESSION['fmp']);        // 8/27/10
@@ -104,7 +104,7 @@ function get_user_details($rosterID) {    //    9/6/13
     <SCRIPT  SRC='./js/misc_function.js' type='application/x-javascript'></SCRIPT>  <!-- 4/14/10 -->
     <script type="application/x-javascript" src="./js/osm_map_functions.js"></script>
 <?php
-    require_once('./incs/all_forms_js_variables.inc.php');
+    require_once './incs/all_forms_js_variables.inc.php';
 ?>
     <SCRIPT>
 
@@ -874,7 +874,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
     function finished ($caption) {
         print "</HEAD><BODY>";
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         print "<FORM NAME='fin_form' METHOD='get' ACTION='" . basename(__FILE__) . "'>";
         print "<INPUT TYPE='hidden' NAME='caption' VALUE='" . $caption . "'>";
         print "<INPUT TYPE='hidden' NAME='func' VALUE='responder'>";
@@ -1165,7 +1165,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
         <A NAME='top'>        <!-- 11/11/09 -->
         <DIV ID='to_bottom' style="position:fixed; top:2px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png"  BORDER=0></div>
         <?php
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         ?>
         <TABLE BORDER=0 ID='outer'><TR><TD>
         <TABLE BORDER="0" ID='addform'>
@@ -1458,7 +1458,7 @@ if(get_num_groups()) {
         <A NAME='top'>        <!-- 11/11/09 -->
         <DIV ID='to_bottom' style="position:fixed; top:2px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png"  BORDER=0></div>
         <?php
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         ?>
         <TABLE BORDER=0 ID='outer'><TR><TD>
         <TABLE BORDER=0 ID='editform'>
@@ -1758,15 +1758,15 @@ if(get_num_groups()) {
 <?php
         if ($_dodisp == 'true') {                // dispatch
             print "\t<BODY onLoad = 'ck_frames(); do_disp();' >\n";
-            require_once('./incs/links.inc.php');
+            require_once './incs/links.inc.php';
             }
         if ($_dodispfac == 'true') {                // dispatch to facility
             print "\t<BODY onLoad = 'ck_frames(); do_dispfac();' onUnload='GUnload()'>\n";
-            require_once('./incs/links.inc.php');
+            require_once './incs/links.inc.php';
             }
         else {
             print "\t<BODY onLoad = 'ck_frames()'>\n";
-            require_once('./incs/links.inc.php');
+            require_once './incs/links.inc.php';
             }
 
         $temp = $u_types[$row['type']];
@@ -2000,7 +2000,7 @@ if(get_num_groups()) {
             <DIV ID='to_bottom' style="position:fixed; top:2px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png"  BORDER=0></div>
 
 <?php
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         $query = "SELECT `id` FROM `{$GLOBALS['mysql_prefix']}responder`";        // 12/17/08
         $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
         unset($result);

@@ -2,7 +2,7 @@
 /*
 */
 error_reporting(E_ALL);
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 $tick_id = sanitize_int($_GET['ticket_id']);
 $fac_id = sanitize_int($_GET['recfac']);
 $ret_arr = array();

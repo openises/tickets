@@ -1,5 +1,5 @@
 <?php
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 @session_start();
 session_write_close();
 //if($_GET['q'] != $_SESSION['id']) {//

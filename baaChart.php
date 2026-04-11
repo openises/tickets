@@ -10,7 +10,7 @@
 ***********************************************************
 USAGE SAMPLE
 
-    include('baaChart.php');
+    include 'baaChart.php';
     $mygraph = new baaChart(600);
     $mygraph->setTitle('Regional Sales','Jan - Jun 2002');
     $mygraph->setXLabels("Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec");

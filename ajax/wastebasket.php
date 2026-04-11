@@ -1,5 +1,5 @@
 <?php
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 @session_start();
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}waste_basket_m`";

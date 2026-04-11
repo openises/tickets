@@ -1,6 +1,6 @@
 <?php
-require_once('../incs/functions.inc.php');
-require_once('../incs/functions_major.inc.php');
+require_once '../incs/functions.inc.php';
+require_once '../incs/functions_major.inc.php';
 @session_start();
 session_write_close();
 $user_id = $_SESSION['user_id'];

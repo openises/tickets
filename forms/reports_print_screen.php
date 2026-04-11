@@ -24,7 +24,7 @@ $locale = get_variable('locale');    // 08/03/09
 window.onresize=function(){set_size();}
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var which='<?php print $report;?>';                    // global - which report default

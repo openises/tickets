@@ -5,13 +5,13 @@
 error_reporting(E_ALL);
 
 @session_start();
-require_once('functions.inc.php');
+require_once 'functions.inc.php';
 
 
 //snap (__FILE__, __LINE__);
-include ("./jpgraph.php");
-include ("./jpgraph_line.php");
-include ("./jpgraph_error.php");
+include "./jpgraph.php";
+include "./jpgraph_line.php";
+include "./jpgraph_error.php";
 
 function getRiemannDistance($lat_from, $long_from, $lat_to, $long_to, $unit='k'){
     switch ($unit): /*** distance unit ***/

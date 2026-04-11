@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) { 
 	define("PROTOCOL", "https://");
 	} else { 

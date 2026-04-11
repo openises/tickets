@@ -3,8 +3,8 @@
 get_replacetext.php, gets replacement text data for standard messages
 2/4/13    New File
 */
-require_once('../incs/functions.inc.php');
-require_once('../incs/messaging.inc.php');
+require_once '../incs/functions.inc.php';
+require_once '../incs/messaging.inc.php';
 
 @session_start();
 session_write_close();

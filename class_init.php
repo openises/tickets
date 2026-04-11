@@ -4,7 +4,7 @@
 12/19/11 'group' => 'group_name'
 */
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 ?>
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
     <HTML>

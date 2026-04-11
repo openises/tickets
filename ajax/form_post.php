@@ -6,7 +6,7 @@
  * Security: All SQL queries migrated to prepared statements (2026-03)
  */
 error_reporting(E_ALL);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 @session_start();
 session_write_close();
 $func = sanitize_string($_GET['function'] ?? '');

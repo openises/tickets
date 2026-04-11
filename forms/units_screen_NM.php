@@ -6,7 +6,7 @@ error_reporting(E_ALL);                // 9/13/08
 window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 <?php
@@ -113,7 +113,7 @@ function pageLoaded() {
 ?>
 <BODY style="overflow-y: scroll;" onLoad = "ck_frames(); <?php print $ld_ticker;?> loadData(); parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top';" onUnload = "<?php print $gunload;?>";>
 <?php
-    include("./incs/links.inc.php");        // 8/13/10
+    include "./incs/links.inc.php";        // 8/13/10
 ?>
 
 <A NAME='top'></A>

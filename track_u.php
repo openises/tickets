@@ -19,7 +19,7 @@ original, converted from tracks.php
 session_write_close();
 if (!array_key_exists ("user_id", $_SESSION)) {exit();}        //3/6/2015 - if logged out then kill this window
 
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 //do_login(basename(__FILE__));        // in a window
 $interval = intval(get_variable('auto_poll'));
 $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>": "";    //10/4/08
@@ -97,7 +97,7 @@ window.onresize=function(){set_size()};
 window.onload=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var viewportwidth;

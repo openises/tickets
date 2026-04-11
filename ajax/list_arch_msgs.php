@@ -3,8 +3,8 @@
 list_arch_messages.php - gets archive messages from stored csv files for display in message window and ticket view and unit view
 10/23/12 - new file
 */
-require_once('../incs/functions.inc.php');
-include('../incs/html2text.php');
+require_once '../incs/functions.inc.php';
+include '../incs/html2text.php';
 $filter = "";
 
 $cols_width = array(30,30,120,120,150,250,90,90);

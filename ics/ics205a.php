@@ -22,8 +22,8 @@ if ( empty ($_SESSION) ) {
 else {            // NOTE!
 
 session_write_close () ;
-require_once ( '../incs/functions.inc.php' ) ;        //7/28/10
-include ( './ics.css.php' ) ;
+require_once '../incs/functions.inc.php';        //7/28/10
+include './ics.css.php';
 
 // Phase 2 security cleanup: removed extract — $func set explicitly below
 /*
@@ -111,7 +111,7 @@ function set_input_strings () {
 
 function merge_template () {        // merge argument array with template -- e.g., <td> $my_inputs_arr['fn'] </td>
 
-    include ( './ics.css.php' ) ;
+    include './ics.css.php';
 
     $my_inputs_arr = set_input_strings () ;
 

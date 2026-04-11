@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $ret_arr = array();
 if(!array_key_exists("code", $_GET)) {
     $ret_arr[0] = "Error";

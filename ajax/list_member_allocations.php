@@ -1,5 +1,5 @@
 <?php
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $key = sanitize_int($_GET['key']);
 $theType = sanitize_int($_GET['type']);
 

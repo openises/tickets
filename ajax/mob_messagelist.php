@@ -4,8 +4,8 @@ mobile_list_messages.
 */
 @session_start();
 session_write_close();
-require_once('../incs/functions.inc.php');
-include('../incs/html2text.php');
+require_once '../incs/functions.inc.php';
+include '../incs/html2text.php';
 $ret_arr = array();
 
 function get_messagetype($id) {

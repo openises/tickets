@@ -3,7 +3,7 @@
 list messages.php - gets messages from messages table for display in message window and ticket view and unit view
 10/23/12 - new file
 */
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 
 if(empty($_GET)) {
     exit();

@@ -26,7 +26,7 @@ session_start();
 session_write_close();
 if (!array_key_exists ("user_id", $_SESSION)) {exit();}        //3/6/2015 - if logged out then kill this window
 
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 do_login(basename(__FILE__));
 require_once($_SESSION['fmp']);        // 8/27/10
 

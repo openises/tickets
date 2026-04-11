@@ -16,7 +16,7 @@ $list_length = 99;        // chat list length maximum
 */
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');        //7/28/10
+require_once './incs/functions.inc.php';        //7/28/10
 do_login(basename(__FILE__));
 // Phase 2 security cleanup: removed extract — no GET variables are used
 

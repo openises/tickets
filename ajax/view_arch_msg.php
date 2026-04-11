@@ -1,9 +1,9 @@
 <?php
 @session_start();
 session_write_close();
-require_once('../incs/functions.inc.php');
-require_once('../incs/messaging.inc.php');
-include('../incs/html2text.php');
+require_once '../incs/functions.inc.php';
+require_once '../incs/messaging.inc.php';
+include '../incs/html2text.php';
 
 $filename = "../message_archives/" . sanitize_string($_GET['filename']);
 $the_row = sanitize_int($_GET['rownum']);

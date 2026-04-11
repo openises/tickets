@@ -3,9 +3,9 @@
 9/10/13 New file - Index for mobile page
 4/24/14 Revised to load map with default position and then move on location found.
 */
-require_once('../incs/functions.inc.php');
-require_once('./incs/mobile_login.inc.php');
-require_once('../incs/browser.inc.php');            // 6/12/10
+require_once '../incs/functions.inc.php';
+require_once './incs/mobile_login.inc.php';
+require_once '../incs/browser.inc.php';            // 6/12/10
 $https = (array_key_exists('HTTPS', $_SERVER)) ? true : false;
 @session_start();
 $c_types = array();
@@ -198,7 +198,7 @@ $respondername = get_responder_handle($the_responder);
 
 if(get_variable('map_on_rm') == "1" && $https) {
 //if(get_variable('map_on_rm') == "1") {
-    include('./forms/mapindex.php');
+    include './forms/mapindex.php';
     } else {
-    include('./forms/nomapindex.php');
+    include './forms/nomapindex.php';
     }

@@ -4,7 +4,7 @@
 */
 error_reporting(E_ALL);
 
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $ret_arr = array();
 
 function update_setting ($which, $what) {        //    3/15/11

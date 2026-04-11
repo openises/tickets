@@ -1,7 +1,7 @@
 <?php
 // Load PHP version compatibility layer FIRST — polyfills removed functions
 // for PHP 7.0 through 8.4+ (utf8_encode, each, create_function, etc.)
-require_once(__DIR__ . '/compat.inc.php');
+require_once __DIR__ . '/compat.inc.php';
 
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
@@ -204,16 +204,16 @@ error_reporting(E_ALL);
 //    {                        -- dummy
 //
 // mysql2i shim removed — all code migrated to db_query() and mysqli
-require_once('istest.inc.php');
-require_once('mysql.inc.php');
-require_once(__DIR__ . '/db.inc.php');          // Secure database abstraction layer
-require_once(__DIR__ . '/security.inc.php');    // Security helpers (XSS, CSRF, etc.)
+require_once 'istest.inc.php';
+require_once 'mysql.inc.php';
+require_once __DIR__ . '/db.inc.php';          // Secure database abstraction layer
+require_once __DIR__ . '/security.inc.php';    // Security helpers (XSS, CSRF, etc.)
 set_security_headers();                         // 3/14/26 - Deploy security headers globally
-require_once("phpcoord.php");                // UTM converter
-require_once("usng.inc.php");                // USNG converter 9/12/08
-require_once("browser.inc.php");            // added 1/23/10
-require_once("messaging.inc.php");            // added 10/23/12
-require_once("member.inc.php");            // added 10/23/12
+require_once "phpcoord.php";                // UTM converter
+require_once "usng.inc.php";                // USNG converter 9/12/08
+require_once "browser.inc.php";            // added 1/23/10
+require_once "messaging.inc.php";            // added 10/23/12
+require_once "member.inc.php";            // added 10/23/12
 
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}        // 11/7/09
 error_reporting (E_ALL  ^ E_DEPRECATED);
@@ -462,8 +462,8 @@ $timezone = (get_variable('timezone') != "") ? get_variable('timezone') : "Ameri
 date_default_timezone_set($timezone);
 $internet = intval(get_variable("internet"));
 
-require_once ('login.inc.php');
-require_once('status_cats.inc.php');
+require_once 'login.inc.php';
+require_once 'status_cats.inc.php';
 
 $useMdb = get_variable('use_mdb');
 $useMdbContact = (get_mdb_variable('use_mdb_contact')) ? get_mdb_variable('use_mdb_contact'): 0;
@@ -2546,7 +2546,7 @@ function mysql2timestamp($m) {                // 9/29/10
                     );
     }
 
-require_once('remotes.inc.php');    // 8/21/10
+require_once 'remotes.inc.php';    // 8/21/10
 
 /**
  * Write an entry to the system log table.
@@ -3257,7 +3257,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 // ________________________________________________________
 
 function smtp ($my_to, $my_subject, $my_message, $my_params, $my_from) {
-    require_once('smtp.inc.php');                                        // defer load until required - 8/2/10
+    require_once 'smtp.inc.php';                                        // defer load until required - 8/2/10
     real_smtp ($my_to, $my_subject, $my_message, $my_params, $my_from);
     }                         // end function smtp
 
@@ -3303,8 +3303,8 @@ function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $r
     $count_cells = $count_ll = $count_smsg = $count_tweets = 0;;                 // counters
     $theaddresses = "";
     global $istest;
-    require_once('smtp.inc.php');                                         // defer load until required - 8/2/10
-    require_once("messaging.inc.php");                                         // defer load until required - 4/24/12
+    require_once 'smtp.inc.php';                                         // defer load until required - 8/2/10
+    require_once "messaging.inc.php";                                         // defer load until required - 4/24/12
     $sleep = 4;                                                            // seconds delay between text messages
     $now = time() - (intval(intval(get_variable('delta_mins')))*60);
     $my_smtp_ary = explode ("/",  trim(get_variable('smtp_acct')));
@@ -3328,14 +3328,14 @@ function do_send ($to_str, $smsg_to_str, $subject_str, $text_str, $ticket_id, $r
         }
     $to_array = array_values(array_unique(explode ("|", ($to_str))));        // input is pipe-delimited string  - 10/17/08
     $to_smsg_array = ($smsg_to_str != null) ? array_values(array_unique(explode (",", ($smsg_to_str)))) : null;        // input is comma string  - 4/24/12
-    require_once("cell_addrs.inc.php");                                        // 10/22/08
+    require_once "cell_addrs.inc.php";                                        // 10/22/08
     $ary_cell_addrs = $ary_ll_addrs = $ary_twitter_addrs = array();
     if($to_str != "") {
         if(count($to_array) > 0) {
             for ($i = 0; $i < count($to_array); $i++) {                                // walk down the input address string/array
                 $isTwitter = (substr($to_array[$i], 0, 1) == "@") ? true : false;
                 $temp =  explode ( "@", $to_array[$i]);
-                include('cell_addrs.inc.php');                                        // 10/22/08
+                include 'cell_addrs.inc.php';                                        // 10/22/08
                 if ($isTwitter) {
                     $screen_name = substr($to_array[$i], 1);
                     array_push ($ary_twitter_addrs, $screen_name);                        // yes

@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 
 @session_start();
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $user = ($_SESSION['level'] == "7") ? $_SESSION['user_id']: 0;
 session_write_close();
 

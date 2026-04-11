@@ -2,7 +2,7 @@
 /*
 9/10/13 - new file, lists stored files allocated to General Tickets use
 */
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 
 if(empty($_GET)) {
     exit;

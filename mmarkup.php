@@ -103,7 +103,7 @@ $mapmode = $_GET['mapmode'] ?? $_POST['mapmode'] ?? null;
     <script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
 
 <?php
-    require_once('./incs/all_forms_js_variables.inc.php');
+    require_once './incs/all_forms_js_variables.inc.php';
 ?>
     <SCRIPT>
     var map, label;
@@ -517,8 +517,8 @@ $mapmode = $_GET['mapmode'] ?? $_POST['mapmode'] ?? null;
             print "Not usable in No-Maps mode<BR />";
             exit();
             } else {
-            require_once('./incs/links.inc.php');
-            require_once('./forms/mmarkup_add_screen.php');
+            require_once './incs/links.inc.php';
+            require_once './forms/mmarkup_add_screen.php';
             }
         exit();
         }        // end if ($_GET['add'])
@@ -532,8 +532,8 @@ $mapmode = $_GET['mapmode'] ?? $_POST['mapmode'] ?? null;
             print "Not usable in No-Maps mode<BR />";
             exit();
             } else {
-            require_once('./incs/links.inc.php');
-            require_once('./forms/mmarkup_edit_screen.php');
+            require_once './incs/links.inc.php';
+            require_once './forms/mmarkup_edit_screen.php';
             }
         }        // end if ($_GET['edit'])
 
@@ -546,8 +546,8 @@ $mapmode = $_GET['mapmode'] ?? $_POST['mapmode'] ?? null;
             print "Not usable in No-Maps mode<BR />";
             exit();
             } else {
-            require_once('./incs/links.inc.php');
-            require_once('./forms/mmarkup_view_screen.php');
+            require_once './incs/links.inc.php';
+            require_once './forms/mmarkup_view_screen.php';
             }
         }
 // Initial display ======================================================================================================
@@ -559,8 +559,8 @@ $mapmode = $_GET['mapmode'] ?? $_POST['mapmode'] ?? null;
         print "Not usable in No-Maps mode<BR />";
         exit();
         } else {
-        require_once('./incs/links.inc.php');
-        require_once('./forms/mmarkup_screen.php');
+        require_once './incs/links.inc.php';
+        require_once './forms/mmarkup_screen.php';
         }
     exit();
 ?>

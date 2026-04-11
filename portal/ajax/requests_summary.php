@@ -1,7 +1,7 @@
 <?php
 @session_start();
-require_once('../../incs/functions.inc.php');
-require_once('../incs/portal.inc.php');
+require_once '../../incs/functions.inc.php';
+require_once '../incs/portal.inc.php';
 
 if(empty($_GET)) {
     exit();

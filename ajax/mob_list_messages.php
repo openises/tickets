@@ -4,8 +4,8 @@ mobile_list_messages.
 */
 @session_start();
 session_write_close();
-require_once('../incs/functions.inc.php');
-include('../incs/html2text.php');
+require_once '../incs/functions.inc.php';
+include '../incs/html2text.php';
 $ret_arr = array();
 $userid = ((!empty($_SESSION)) && ((isset($_SESSION['user_id'])) && ($_SESSION['user_id'] != 0))) ? $_SESSION['user_id'] : 0;
 $where = ($userid != 0) ? "WHERE (`_by` = '" . $userid . "')" : "";

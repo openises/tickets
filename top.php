@@ -61,12 +61,12 @@
 */
 
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
-require_once('./incs/browser.inc.php');
+require_once './incs/functions.inc.php';
+require_once './incs/browser.inc.php';
 @session_start();
 session_write_close();
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 $poll_cycle_time = 5000;    // 5 seconds to ms - 4/13/18
 $resps_arr = array();
@@ -1550,7 +1550,7 @@ function get_daynight() {
 <!-- <button onclick = "show_has_message('asasasasas ERERERERER ')">Test</button> -->
 <?php                            // 7/2/2013
     if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) {
-        require_once('./incs/socket2me.inc.php');        // 5/24/2013
+        require_once './incs/socket2me.inc.php';        // 5/24/2013
         }
 ?>
 <SCRIPT>

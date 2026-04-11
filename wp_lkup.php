@@ -15,7 +15,7 @@
 11/28/2013 handle null WP returns
 */
 
-require_once('incs/functions.inc.php');        //7/28/10
+require_once 'incs/functions.inc.php';        //7/28/10
 
 $phone = (empty($_POST))? "1234560000": sanitize_string($_POST['phone']);
 $vals = array("", "", "{$phone}", "", "", "", "", "", "", "", "");        // output values

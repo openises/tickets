@@ -4,7 +4,7 @@
 */
 error_reporting(E_ALL);
 
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $ret_arr = array();
 $theError = sanitize_string($_GET['debugtxt']);
 $filename = "../debuglog.txt";

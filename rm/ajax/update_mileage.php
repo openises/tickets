@@ -5,7 +5,7 @@
 error_reporting(E_ALL);
 
 @session_start();
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 $ret_arr = array();
 $type = sanitize_string($_GET['type']);
 $value = sanitize_string($_GET['value']);

@@ -1,7 +1,7 @@
 <?php
 @session_start();
-require_once('../../incs/functions.inc.php');
-require_once('../incs/portal.inc.php');
+require_once '../../incs/functions.inc.php';
+require_once '../incs/portal.inc.php';
 
 //    requests not yet accepted
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE (`accepted_date` = '' OR `accepted_date` IS NULL) AND `status` != 'Cancelled' AND (`closed` = '' OR `closed` IS NULL)";

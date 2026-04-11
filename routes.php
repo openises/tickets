@@ -9,7 +9,7 @@ $sortby_distance = true;            // user: set to TRUE or FALSE to determine u
 $units_side_bar_height = .6;        // max height of units sidebar as decimal fraction of screen height - default is 0.6 (60%)
 @session_start();            // 1/7/10
 
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 require_once($_SESSION['fmp']);        //8/25/10
 $locale = get_variable('locale');
 $routesUnits = (($locale == 0) || ($locale == 1)) ? 'imperial' : 'metric';
@@ -498,7 +498,7 @@ else {
 //    =============================  major split =============================== 7/9/10
 
 else {
-    require_once ('./incs/routes_inc.php');        // 7/8/10
+    require_once './incs/routes_inc.php';        // 7/8/10
 
     $the_ticket_id = get_ticket_id ();
 ?>
@@ -542,7 +542,7 @@ else {
     <script type="application/x-javascript" src="./js/osgb.js"></script>
     <script type="application/x-javascript" src="./js/geotools2.js"></script>
 <?php
-    require_once('./incs/all_forms_js_variables.inc.php');
+    require_once './incs/all_forms_js_variables.inc.php';
 ?>
     <SCRIPT>
     var baseIcon = L.Icon.extend({options: {shadowUrl: './our_icons/shadow.png',

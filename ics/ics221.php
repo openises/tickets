@@ -16,8 +16,8 @@ error_reporting ( E_ALL ^ E_DEPRECATED ) ;
 @session_start () ;
 if ( ! ( array_key_exists ( 'user_id ', $_SESSION ) ) ) { $POST ['func'] = 'x'; }
 session_write_close () ;
-require_once ( '../incs/functions.inc.php' ) ;
-include ( './ics.css.php' ) ;
+require_once '../incs/functions.inc.php';
+include './ics.css.php';
 $now_ts = now_ts();
 // Phase 2 security cleanup: removed extract — $func set explicitly below
 /*
@@ -211,7 +211,7 @@ function set_input_strings () {
 
 function merge_template () {        // merge argument array with template -- e.g., <td> $my_inputs_arr['fn'] </td>
 
-    include ( './ics.css.php' ) ;
+    include './ics.css.php';
 
     $my_inputs_arr = set_input_strings () ;
 

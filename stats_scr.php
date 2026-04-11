@@ -9,7 +9,7 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';    //    3/15/11
 $userid = (isset($_SESSION['user_id'])) ? $_SESSION['user_id'] : 0;
 

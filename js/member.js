@@ -496,7 +496,7 @@ function memberlist_setwidths() {
 	var viewableRow = 1;
 	var resptbl = document.getElementById('respondertable');
 	var headerRow = resptbl.rows[0];
-	for (i = 1; i < resptbl.rows.length; i++) {
+	for (var i = 1; i < resptbl.rows.length; i++) {
 		if(!isViewable(resptbl.rows[i])) {
 			} else {
 			viewableRow = i;

@@ -5,8 +5,8 @@ list messages.php - gets messages from messages table for display in message win
 */
 @session_start();
 session_write_close();
-require_once('../incs/functions.inc.php');
-include('../incs/html2text.php');
+require_once '../incs/functions.inc.php';
+include '../incs/html2text.php';
 $filter = "";
 
 $cols_width = array(30,30,120,120,150,250,90,90);

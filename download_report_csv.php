@@ -9,7 +9,7 @@
  *
  * 3/14/2026 - New file
  */
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 $report      = isset($_GET['report'])       ? sanitize_string($_GET['report'])       : '';
 $func        = isset($_GET['func'])         ? sanitize_string($_GET['func'])         : '';

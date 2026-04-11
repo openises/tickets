@@ -7,7 +7,7 @@
 
 // Phase 2 security cleanup: removed extract — no extracted variables were used
 set_time_limit(90);
-require_once('functions.inc.php');
+require_once 'functions.inc.php';
 $txtlocal_time = "-2 hours";
 function get_provider_name($val) {
     switch($val) {

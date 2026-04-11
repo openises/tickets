@@ -5,7 +5,7 @@ error_reporting(E_ALL);
 */
 
 @session_start();
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 $last_id = sanitize_int($_REQUEST['last_id']);
 $max_ct = sanitize_int($_REQUEST['max_ct']);
 //	snap(basename(__FILE__),$last_id );

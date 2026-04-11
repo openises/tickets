@@ -4,7 +4,7 @@
 
 /* database stuff from here - MUST  be changed */
 
-require_once('./incs/mysql.inc.php');            // database settings - edit per yr installation
+require_once './incs/mysql.inc.php';            // database settings - edit per yr installation
 
 $key_str            = "_id";            // FOREIGN KEY (parent_id) REFERENCES parent(id) relationship terminal string identifier
 //                                        e.g., if field 'sometable_id' relates to table 'sometable' then string '_id' is the $FK_id value

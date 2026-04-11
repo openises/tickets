@@ -2,7 +2,7 @@
 /*
 */
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 $memberid = sanitize_int($_GET['member_id']);
 $responder_id = (array_key_exists('responder_id', $_GET)) ? sanitize_int($_GET['responder_id']) : 0;
 $searchstring = (array_key_exists('searchstring', $_GET)) ? sanitize_string($_GET['searchstring']) : "";

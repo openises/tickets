@@ -1,6 +1,6 @@
 <?php
-require_once('./incs/functions.inc.php');
-require_once('./incs/messaging.inc.php');
+require_once './incs/functions.inc.php';
+require_once './incs/messaging.inc.php';
 require_once './lib/xpm/POP3.php';
 require_once './lib/xpm/MIME.php';
 error_reporting(E_ALL);                // 9/13/08

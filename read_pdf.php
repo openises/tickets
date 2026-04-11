@@ -1,6 +1,6 @@
 <?php
 $file = sanitize_string($_GET['file']);
-    include ( './lib/PdfToText.phpclass' ) ;
+    include './lib/PdfToText.phpclass';
 
     function  output ( $message )
        {

@@ -3,7 +3,7 @@
 get_messages.php - AJAX file gets email and SMS Gateway messages in background - called from top.php
 10/23/12 - new file
 */
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 require_once './lib/xpm/POP3.php';
 require_once './lib/xpm/MIME.php';
 error_reporting(E_ALL);                // 9/13/08

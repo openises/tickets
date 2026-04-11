@@ -12,7 +12,7 @@ $incidents = get_text("Incidents");
 $gt_status = get_text("Status");
 $isGuest = (is_guest()) ? 1 : 0;
 
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
@@ -28,7 +28,7 @@ $facs_exp_butt = ((isset($_SESSION['facs_list'])) && ($_SESSION['facs_list'] == 
 $columns_arr = explode(',', get_msg_variable('columns'));
 $not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : null;
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 $sess_id = $_SESSION['id'];
 $curr_cats = get_category_butts();    //    get current categories.
@@ -92,7 +92,7 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
     <SCRIPT TYPE="application/x-javascript" SRC="./js/messaging.js"></SCRIPT>
 <?php
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 ?>
     <script type="application/x-javascript" src="./js/proj4js.js"></script>
@@ -134,7 +134,7 @@ if(file_exists("./incs/modules.inc.php")) {
 window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 <?php
@@ -590,7 +590,7 @@ do_kml();
 <?php
     $sit_scr = (array_key_exists('id', ($_GET)))? $_GET['id'] :    null;        //    10/23/12
     if(($_SESSION['good_internet']) && (module_active("Ticker")==1) && (!($sit_scr))) {            //    10/23/12
-        require_once('./modules/Ticker/incs/ticker.inc.php');
+        require_once './modules/Ticker/incs/ticker.inc.php';
         $the_markers = buildmarkers();
         foreach($the_markers AS $value) {
             if(my_is_float($value[3]) && my_is_float($value[3])) {

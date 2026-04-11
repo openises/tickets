@@ -3,7 +3,7 @@
 update_responder_status.php - used by fac_routes.php to change location of responder to a facility and add facility located at to responder table field "at_facility"
 09/03/15 - new file
 */
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 @session_start();
 session_write_close();
 if($_GET['q'] != $_SESSION['id']) {

@@ -3,7 +3,7 @@
 9/10/13 - new file - gets message detail for mobile screen - for messages associated with a particular ticket and listed from that ticket detail
 */
 @session_start();
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 $filter = "";
 
 $ret_arr = array();

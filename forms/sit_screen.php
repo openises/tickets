@@ -1,11 +1,11 @@
 <?php
 
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 $units_side_bar_height = .6;
 $not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : null;
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 
 // set auto-refresh if any mobile units
@@ -39,9 +39,9 @@ $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_ni
     <SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
     <SCRIPT TYPE="application/x-javascript" SRC="./js/messaging.js"></SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 ?>
     <script type="application/x-javascript" src="./js/proj4js.js"></script>
@@ -639,7 +639,7 @@ if (array_key_exists('log_in', $_GET)) {
 ?>
 <BODY style="overflow-y: scroll;" onLoad = "loadData(); ck_frames(); <?php print $ld_ticker;?> parent.frames['upper'].document.getElementById('gout').style.display = 'inline-block'; location.href = '#top'; <?php print $do_mu_init;?>" onUnload = "<?php print $gunload;?>";>
 <?php
-    include("./incs/links.inc.php");
+    include "./incs/links.inc.php";
 ?>
 
 <A NAME='top'></A>
@@ -926,7 +926,7 @@ do_kml();
 <?php
     $sit_scr = (array_key_exists('id', ($_GET)))? $_GET['id'] :    null;        //    10/23/12
     if(($_SESSION['good_internet']) && (module_active("Ticker")==1) && (!($sit_scr))) {            //    10/23/12
-        require_once('./modules/Ticker/incs/ticker.inc.php');
+        require_once './modules/Ticker/incs/ticker.inc.php';
         $the_markers = buildmarkers();
         foreach($the_markers AS $value) {
             if(my_is_float($value[3]) && my_is_float($value[3])) {

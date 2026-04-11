@@ -161,11 +161,11 @@ $tester = (((isset($_REQUEST['edit'])) && $_REQUEST['edit'] == true) || ((isset(
 require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
 $column_arr = explode(',', get_msg_variable('columns'));    //    11/18/13
 if(file_exists("./incs/modules.inc.php")) {    //    10/28/10
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 do_login(basename(__FILE__));
 
-require_once('./incs/messaging.inc.php');    //    11/18/13
+require_once './incs/messaging.inc.php';    //    11/18/13
 $key_field_size = 30;                        // 7/23/09
 $st_size = (get_variable("locale") ==0)?  2: 4;
 $gt_handle = get_text("Handle");            // 7/20/12
@@ -221,7 +221,7 @@ function get_icon_legend (){            // returns legend string - 1/1/09
     }            // end function get_icon_legend ()
 
 if(file_exists("./incs/modules.inc.php")) {    //    10/28/10
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 ?>
 <!DOCTYPE HTML>
@@ -250,9 +250,9 @@ if(file_exists("./incs/modules.inc.php")) {    //    10/28/10
     <SCRIPT TYPE="application/x-javascript" SRC="./js/domready.js"></script>
     <SCRIPT TYPE="application/x-javascript" SRC="./js/messaging.js"></SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 ?>
     <script type="application/x-javascript" src="./js/proj4js.js"></script>
@@ -854,11 +854,11 @@ if(file_exists("./incs/modules.inc.php")) {
 // add ===========================================================================================================================
 
     if ($_getadd == 'true') {
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         if (!($_SESSION['internet'])) {
-            require_once('./forms/units_add_screen_NM.php');
+            require_once './forms/units_add_screen_NM.php';
             } else {
-            require_once('./forms/units_add_screen.php');
+            require_once './forms/units_add_screen.php';
             }
         if((is_super()) || (is_administrator())) {    //    10/28/10 Added for add on modules
             if(file_exists("./incs/modules.inc.php")) {
@@ -873,11 +873,11 @@ if(file_exists("./incs/modules.inc.php")) {
 // edit =================================================================================================================
 
     if ($_getedit == 'true') {
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         if (!($_SESSION['internet'])) {
-            require_once('./forms/units_edit_screen_NM.php');
+            require_once './forms/units_edit_screen_NM.php';
             } else {
-            require_once('./forms/units_edit_screen.php');
+            require_once './forms/units_edit_screen.php';
             }
         if((is_super()) || (is_administrator())) {    //    10/28/10 Added for add on modules
             if(file_exists("./incs/modules.inc.php")) {
@@ -889,11 +889,11 @@ if(file_exists("./incs/modules.inc.php")) {
 // view =================================================================================================================
 
     if ($_getview == 'true') {
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         if (!($_SESSION['internet'])) {
-            require_once('./forms/units_view_screen_NM.php');
+            require_once './forms/units_view_screen_NM.php';
             } else {
-            require_once('./forms/units_view_screen.php');
+            require_once './forms/units_view_screen.php';
             }
         if((is_super()) || (is_administrator())) {    //    10/28/10 Added for add on modules
             if(file_exists("./incs/modules.inc.php")) {
@@ -903,11 +903,11 @@ if(file_exists("./incs/modules.inc.php")) {
     }
 // ============================================= initial display =======================
     if (!isset($mapmode)) {$mapmode="a";}
-    require_once('./incs/links.inc.php');
+    require_once './incs/links.inc.php';
     if (!($_SESSION['internet'])) {
-        require_once('./forms/units_screen_NM.php');
+        require_once './forms/units_screen_NM.php';
         } else {
-        require_once('./forms/units_screen.php');
+        require_once './forms/units_screen.php';
         }
     if((is_super()) || (is_administrator())) {    //    10/28/10 Added for add on modules
         if(file_exists("./incs/modules.inc.php")) {

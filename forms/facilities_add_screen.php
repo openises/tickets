@@ -23,7 +23,7 @@ $cat_sess_stat = get_session_status($curr_cats);    //    get session current st
 $hidden = find_hidden($curr_cats);
 $shown = find_showing($curr_cats);
 $un_stat_cats = get_all_categories();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
@@ -35,7 +35,7 @@ print do_calls();        // call signs to JS array for validation
 window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 window.onload = function(){set_size(); if(document.res_add_Form){FormValidator.init(document.res_add_Form);}};

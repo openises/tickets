@@ -14,7 +14,7 @@
 error_reporting(E_ALL);
 @session_start();
 session_write_close();
-require_once('incs/functions.inc.php');        //7/28/10
+require_once 'incs/functions.inc.php';        //7/28/10
 
 if($istest) {
     print "GET<br />\n";

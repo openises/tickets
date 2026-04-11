@@ -3,8 +3,8 @@
 6/7/12    New file, allows upload of existing csv file with member details on, processing of this and adding to DB.
 */
 
-require_once('../incs/functions.inc.php');
-require_once('../incs/mysql.inc.php');
+require_once '../incs/functions.inc.php';
+require_once '../incs/mysql.inc.php';
 
 ?>
 

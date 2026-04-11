@@ -10,7 +10,7 @@ $iw_width= "300px";                    // map infowindow with
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');        //7/28/10
+require_once './incs/functions.inc.php';        //7/28/10
 do_login(basename(__FILE__));
 $key_field_size = 30;
 $st_size = (get_variable("locale") ==0)?  2: 4;
@@ -983,7 +983,7 @@ var buttons_html = "";
 
     function finished ($caption) {
         print "</HEAD><BODY><!--" . __LINE__ . " -->";
-        require_once('./incs/links.inc.php');    // 10/6/09
+        require_once './incs/links.inc.php';    // 10/6/09
         print "\n<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>\n";
         print "<FORM NAME='fin_form' METHOD='get' ACTION='" . basename(__FILE__) . "'>";
         print "<INPUT TYPE='hidden' NAME='caption' VALUE='" . $caption . "'>";
@@ -1083,7 +1083,7 @@ var buttons_html = "";
         <BODY onLoad = "ck_frames();">        <!-- <?php echo __LINE__; ?> -->
         <A NAME='top'>
 <?php
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         print "\n<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>\n";
 ?>
         <TABLE BORDER=0 ID='outer' WIDTH='80%'><TR><TD WIDTH='50%'>
@@ -1228,7 +1228,7 @@ var buttons_html = "";
         <BODY onLoad = "ck_frames(); " >     <!-- <?php echo __LINE__; ?> -->
         <A NAME='top'>
 <?php
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         print "\n<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>\n";
 ?>
         <TABLE BORDER=0 ID='outer' WIDTH='80%'><TR><TD WIDTH='50%'>
@@ -1394,7 +1394,7 @@ var buttons_html = "";
 <?php
             print "\t<BODY onLoad = 'ck_frames()' > <!-- " . __LINE__ . "-->\n";
             print "<A NAME='top'>\n";            // 11/11/09
-            require_once('./incs/links.inc.php');
+            require_once './incs/links.inc.php';
             print "\n<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>\n";
 
 ?>
@@ -1505,7 +1505,7 @@ var buttons_html = "";
 ?>
         <DIV ID='to_bottom' style="position:fixed; top:2px; left:50px; height: 12px; width: 10px;z-index: 1;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png"  BORDER=0></DIV>
 <?php
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         $required = 250 + (db()->affected_rows*40);
         $facs_side_bar_height = .9;        // max height of units sidebar as decimal fraction of screen height - default is 0.6 (60%)
         $the_height = (integer)  min (round($facs_side_bar_height * $_SESSION['scr_height']), $required );        // set the max

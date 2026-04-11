@@ -67,8 +67,8 @@ if ($z < 0 || $z > 20 || $x < 0 || $y < 0) {
 
 // ---- Load application ----
 
-require_once('./incs/functions.inc.php');
-require_once('./incs/versions.inc.php');
+require_once './incs/functions.inc.php';
+require_once './incs/versions.inc.php';
 
 // ---- Check that proxy mode is enabled ----
 

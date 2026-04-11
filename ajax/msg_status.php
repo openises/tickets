@@ -3,7 +3,7 @@
 msg_status.php - used by message.php to change read status of a message
 10/23/12 - new file
 */
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 @session_start();
 session_write_close();
 $result_code = 0;

@@ -41,7 +41,7 @@ class Image {
     protected $iInterlace=false;
     //---------------
     // CONSTRUCTOR
-    function Image($aWidth,$aHeight,$aFormat=DEFAULT_GFORMAT,$aSetAutoMargin=true) {
+    function __construct($aWidth,$aHeight,$aFormat=DEFAULT_GFORMAT,$aSetAutoMargin=true) {
     $this->CreateImgCanvas($aWidth,$aHeight);
     if( $aSetAutoMargin )
         $this->SetAutoMargin();
@@ -1317,8 +1317,8 @@ class RotImage extends Image {
     public $dx=0,$dy=0,$transx=0,$transy=0;
     private $m=array();
 
-    function RotImage($aWidth,$aHeight,$a=0,$aFormat=DEFAULT_GFORMAT,$aSetAutoMargin=true) {
-    $this->Image($aWidth,$aHeight,$aFormat,$aSetAutoMargin);
+    function __construct($aWidth,$aHeight,$a=0,$aFormat=DEFAULT_GFORMAT,$aSetAutoMargin=true) {
+    parent::__construct($aWidth,$aHeight,$aFormat,$aSetAutoMargin);
     $this->dx=$this->left_margin+$this->plotwidth/2;
     $this->dy=$this->top_margin+$this->plotheight/2;
     $this->SetAngle($a);
@@ -1476,7 +1476,7 @@ class ImgStreamCache {
     private $cache_dir, $img=null, $timeout=0;     // Infinite timeout
     //---------------
     // CONSTRUCTOR
-    function ImgStreamCache($aImg, $aCacheDir=CACHE_DIR) {
+    function __construct($aImg, $aCacheDir=CACHE_DIR) {
     $this->img = $aImg;
     $this->cache_dir = $aCacheDir;
     }

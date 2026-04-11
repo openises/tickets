@@ -3,7 +3,7 @@
 9/10/13 - new file - gets message list for mobile screen
 */
 @session_start();
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 $filter = "";
 
 $ret_arr = array();

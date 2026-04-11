@@ -6,7 +6,7 @@ $zoom_tight = false;        // replace with a decimal number to over-ride the st
 /*
 */
 
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 @session_start();
 session_write_close();
 $sess_id = session_id();
@@ -16,7 +16,7 @@ if (is_guest() || !isset($_SESSION['level']) || $_SESSION['level'] > $GLOBALS['L
     header('Location: main.php');
     exit();
 }
-//require_once('./incs/all_forms_js_variables.inc.php');
+//require_once './incs/all_forms_js_variables.inc.php';
 $key_field_size = 30;
 $email_text = "";
 // Phase 2 security cleanup: removed extract — all variables already accessed explicitly
@@ -108,7 +108,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var colors = new Array ('odd', 'even');
@@ -394,11 +394,20 @@ function linkFromSumm(table, index) {
         $frm_field13 = (isset($_POST['frm_field13']) && $_POST['frm_field13'] !== '') ? floatval($_POST['frm_field13']) : null;    // 3/14/26 - lng (double)
         $frm_field21 = isset($_POST['frm_field21']) ? intval($_POST['frm_field21']) : 0;    // 3/14/26 - null-safe for int column
         // 3/14/26 - Enum fields (Yes/No) default to schema defaults when empty (MySQL strict mode)
-        $enum_defaults = array(8 => 'Yes', 15 => 'No', 19 => 'No', 46 => 'No', 47 => 'No', 48 => 'No', 49 => 'No', 50 => 'No', 51 => 'No', 52 => 'No', 53 => 'No', 54 => 'No', 55 => 'No');
-        foreach ($enum_defaults as $_ef => $_ed) {
-            $vname = 'frm_field' . $_ef;
-            $$vname = (isset($_POST[$vname]) && in_array($_POST[$vname], array('Yes', 'No'))) ? $_POST[$vname] : $_ed;
-        }
+        // 4/11/26 - Replaced $$vname variable-variable pattern with explicit assignments (SonarQube php:S1599)
+        $frm_field8  = (isset($_POST['frm_field8'])  && in_array($_POST['frm_field8'],  array('Yes', 'No'))) ? $_POST['frm_field8']  : 'Yes';
+        $frm_field15 = (isset($_POST['frm_field15']) && in_array($_POST['frm_field15'], array('Yes', 'No'))) ? $_POST['frm_field15'] : 'No';
+        $frm_field19 = (isset($_POST['frm_field19']) && in_array($_POST['frm_field19'], array('Yes', 'No'))) ? $_POST['frm_field19'] : 'No';
+        $frm_field46 = (isset($_POST['frm_field46']) && in_array($_POST['frm_field46'], array('Yes', 'No'))) ? $_POST['frm_field46'] : 'No';
+        $frm_field47 = (isset($_POST['frm_field47']) && in_array($_POST['frm_field47'], array('Yes', 'No'))) ? $_POST['frm_field47'] : 'No';
+        $frm_field48 = (isset($_POST['frm_field48']) && in_array($_POST['frm_field48'], array('Yes', 'No'))) ? $_POST['frm_field48'] : 'No';
+        $frm_field49 = (isset($_POST['frm_field49']) && in_array($_POST['frm_field49'], array('Yes', 'No'))) ? $_POST['frm_field49'] : 'No';
+        $frm_field50 = (isset($_POST['frm_field50']) && in_array($_POST['frm_field50'], array('Yes', 'No'))) ? $_POST['frm_field50'] : 'No';
+        $frm_field51 = (isset($_POST['frm_field51']) && in_array($_POST['frm_field51'], array('Yes', 'No'))) ? $_POST['frm_field51'] : 'No';
+        $frm_field52 = (isset($_POST['frm_field52']) && in_array($_POST['frm_field52'], array('Yes', 'No'))) ? $_POST['frm_field52'] : 'No';
+        $frm_field53 = (isset($_POST['frm_field53']) && in_array($_POST['frm_field53'], array('Yes', 'No'))) ? $_POST['frm_field53'] : 'No';
+        $frm_field54 = (isset($_POST['frm_field54']) && in_array($_POST['frm_field54'], array('Yes', 'No'))) ? $_POST['frm_field54'] : 'No';
+        $frm_field55 = (isset($_POST['frm_field55']) && in_array($_POST['frm_field55'], array('Yes', 'No'))) ? $_POST['frm_field55'] : 'No';
         $frm_field18 = "$_POST[frm_year_frm_field18]-$_POST[frm_month_frm_field18]-$_POST[frm_day_frm_field18] 00:00:00";
         $frm_field17 = "$_POST[frm_year_frm_field17]-$_POST[frm_month_frm_field17]-$_POST[frm_day_frm_field17] 00:00:00";
         $frm_field16 = "$_POST[frm_year_frm_field16]-$_POST[frm_month_frm_field16]-$_POST[frm_day_frm_field16] 00:00:00";
@@ -738,11 +747,20 @@ function linkFromSumm(table, index) {
             $frm_field13 = (isset($_POST['frm_field13']) && $_POST['frm_field13'] !== '') ? floatval($_POST['frm_field13']) : null;    // 3/14/26 - lng (double)
             $frm_field21 = isset($_POST['frm_field21']) ? intval($_POST['frm_field21']) : 0;    // 3/14/26 - null-safe for int column
             // 3/14/26 - Enum fields (Yes/No) default to schema defaults when empty (MySQL strict mode)
-            $enum_defaults = array(8 => 'Yes', 15 => 'No', 19 => 'No', 46 => 'No', 47 => 'No', 48 => 'No', 49 => 'No', 50 => 'No', 51 => 'No', 52 => 'No', 53 => 'No', 54 => 'No', 55 => 'No');
-            foreach ($enum_defaults as $_ef => $_ed) {
-                $vname = 'frm_field' . $_ef;
-                $$vname = (isset($_POST[$vname]) && in_array($_POST[$vname], array('Yes', 'No'))) ? $_POST[$vname] : $_ed;
-            }
+            // 4/11/26 - Replaced $$vname variable-variable pattern with explicit assignments (SonarQube php:S1599)
+            $frm_field8  = (isset($_POST['frm_field8'])  && in_array($_POST['frm_field8'],  array('Yes', 'No'))) ? $_POST['frm_field8']  : 'Yes';
+            $frm_field15 = (isset($_POST['frm_field15']) && in_array($_POST['frm_field15'], array('Yes', 'No'))) ? $_POST['frm_field15'] : 'No';
+            $frm_field19 = (isset($_POST['frm_field19']) && in_array($_POST['frm_field19'], array('Yes', 'No'))) ? $_POST['frm_field19'] : 'No';
+            $frm_field46 = (isset($_POST['frm_field46']) && in_array($_POST['frm_field46'], array('Yes', 'No'))) ? $_POST['frm_field46'] : 'No';
+            $frm_field47 = (isset($_POST['frm_field47']) && in_array($_POST['frm_field47'], array('Yes', 'No'))) ? $_POST['frm_field47'] : 'No';
+            $frm_field48 = (isset($_POST['frm_field48']) && in_array($_POST['frm_field48'], array('Yes', 'No'))) ? $_POST['frm_field48'] : 'No';
+            $frm_field49 = (isset($_POST['frm_field49']) && in_array($_POST['frm_field49'], array('Yes', 'No'))) ? $_POST['frm_field49'] : 'No';
+            $frm_field50 = (isset($_POST['frm_field50']) && in_array($_POST['frm_field50'], array('Yes', 'No'))) ? $_POST['frm_field50'] : 'No';
+            $frm_field51 = (isset($_POST['frm_field51']) && in_array($_POST['frm_field51'], array('Yes', 'No'))) ? $_POST['frm_field51'] : 'No';
+            $frm_field52 = (isset($_POST['frm_field52']) && in_array($_POST['frm_field52'], array('Yes', 'No'))) ? $_POST['frm_field52'] : 'No';
+            $frm_field53 = (isset($_POST['frm_field53']) && in_array($_POST['frm_field53'], array('Yes', 'No'))) ? $_POST['frm_field53'] : 'No';
+            $frm_field54 = (isset($_POST['frm_field54']) && in_array($_POST['frm_field54'], array('Yes', 'No'))) ? $_POST['frm_field54'] : 'No';
+            $frm_field55 = (isset($_POST['frm_field55']) && in_array($_POST['frm_field55'], array('Yes', 'No'))) ? $_POST['frm_field55'] : 'No';
             $frm_field18 = "$_POST[frm_year_frm_field18]-$_POST[frm_month_frm_field18]-$_POST[frm_day_frm_field18] 00:00:00";
             $frm_field17 = "$_POST[frm_year_frm_field17]-$_POST[frm_month_frm_field17]-$_POST[frm_day_frm_field17] 00:00:00";
             $frm_field16 = "$_POST[frm_year_frm_field16]-$_POST[frm_month_frm_field16]-$_POST[frm_day_frm_field16] 00:00:00";
@@ -900,11 +918,20 @@ function linkFromSumm(table, index) {
             $frm_field13 = (isset($_POST['frm_field13']) && $_POST['frm_field13'] !== '') ? floatval($_POST['frm_field13']) : null;    // 3/14/26 - lng (double)
             $frm_field21 = isset($_POST['frm_field21']) ? intval($_POST['frm_field21']) : 0;    // 3/14/26 - null-safe for int column
             // 3/14/26 - Enum fields (Yes/No) default to schema defaults when empty (MySQL strict mode)
-            $enum_defaults = array(8 => 'Yes', 15 => 'No', 19 => 'No', 46 => 'No', 47 => 'No', 48 => 'No', 49 => 'No', 50 => 'No', 51 => 'No', 52 => 'No', 53 => 'No', 54 => 'No', 55 => 'No');
-            foreach ($enum_defaults as $_ef => $_ed) {
-                $vname = 'frm_field' . $_ef;
-                $$vname = (isset($_POST[$vname]) && in_array($_POST[$vname], array('Yes', 'No'))) ? $_POST[$vname] : $_ed;
-            }
+            // 4/11/26 - Replaced $$vname variable-variable pattern with explicit assignments (SonarQube php:S1599)
+            $frm_field8  = (isset($_POST['frm_field8'])  && in_array($_POST['frm_field8'],  array('Yes', 'No'))) ? $_POST['frm_field8']  : 'Yes';
+            $frm_field15 = (isset($_POST['frm_field15']) && in_array($_POST['frm_field15'], array('Yes', 'No'))) ? $_POST['frm_field15'] : 'No';
+            $frm_field19 = (isset($_POST['frm_field19']) && in_array($_POST['frm_field19'], array('Yes', 'No'))) ? $_POST['frm_field19'] : 'No';
+            $frm_field46 = (isset($_POST['frm_field46']) && in_array($_POST['frm_field46'], array('Yes', 'No'))) ? $_POST['frm_field46'] : 'No';
+            $frm_field47 = (isset($_POST['frm_field47']) && in_array($_POST['frm_field47'], array('Yes', 'No'))) ? $_POST['frm_field47'] : 'No';
+            $frm_field48 = (isset($_POST['frm_field48']) && in_array($_POST['frm_field48'], array('Yes', 'No'))) ? $_POST['frm_field48'] : 'No';
+            $frm_field49 = (isset($_POST['frm_field49']) && in_array($_POST['frm_field49'], array('Yes', 'No'))) ? $_POST['frm_field49'] : 'No';
+            $frm_field50 = (isset($_POST['frm_field50']) && in_array($_POST['frm_field50'], array('Yes', 'No'))) ? $_POST['frm_field50'] : 'No';
+            $frm_field51 = (isset($_POST['frm_field51']) && in_array($_POST['frm_field51'], array('Yes', 'No'))) ? $_POST['frm_field51'] : 'No';
+            $frm_field52 = (isset($_POST['frm_field52']) && in_array($_POST['frm_field52'], array('Yes', 'No'))) ? $_POST['frm_field52'] : 'No';
+            $frm_field53 = (isset($_POST['frm_field53']) && in_array($_POST['frm_field53'], array('Yes', 'No'))) ? $_POST['frm_field53'] : 'No';
+            $frm_field54 = (isset($_POST['frm_field54']) && in_array($_POST['frm_field54'], array('Yes', 'No'))) ? $_POST['frm_field54'] : 'No';
+            $frm_field55 = (isset($_POST['frm_field55']) && in_array($_POST['frm_field55'], array('Yes', 'No'))) ? $_POST['frm_field55'] : 'No';
             $frm_field18 = "$_POST[frm_year_frm_field18]-$_POST[frm_month_frm_field18]-$_POST[frm_day_frm_field18] 00:00:00";
             $frm_field17 = "$_POST[frm_year_frm_field17]-$_POST[frm_month_frm_field17]-$_POST[frm_day_frm_field17] 00:00:00";
             $frm_field16 = "$_POST[frm_year_frm_field16]-$_POST[frm_month_frm_field16]-$_POST[frm_day_frm_field16] 00:00:00";
@@ -1595,7 +1622,7 @@ function linkFromSumm(table, index) {
     if ($_get_training == 'true') {
         $id=sanitize_int($_GET['id']);
         $disallow = is_user() ;
-        include('./forms/add_training.php');
+        include './forms/add_training.php';
 ?>
 <?php
     exit();
@@ -1604,7 +1631,7 @@ function linkFromSumm(table, index) {
     if ($_get_event == 'true') {
         $id=sanitize_int($_GET['id']);
         $disallow = is_user() ;
-        include('./forms/add_event.php');
+        include './forms/add_event.php';
 ?>
 <?php
     exit();
@@ -1613,7 +1640,7 @@ function linkFromSumm(table, index) {
     if ($_get_capability == 'true') {
         $id=sanitize_int($_GET['id']);
         $disallow = is_user() ;
-        include('./forms/add_capability.php');
+        include './forms/add_capability.php';
 ?>
 <?php
         exit();
@@ -1622,7 +1649,7 @@ function linkFromSumm(table, index) {
     if ($_get_clothing == 'true') {
         $id=sanitize_int($_GET['id']);
         $disallow = is_user() ;
-        include('./forms/add_clothing.php');
+        include './forms/add_clothing.php';
 ?>
 <?php
         exit();
@@ -1630,7 +1657,7 @@ function linkFromSumm(table, index) {
     if ($_get_equipment == 'true') {
         $id=sanitize_int($_GET['id']);
         $disallow = is_user() ;
-        include('./forms/add_equipment.php');
+        include './forms/add_equipment.php';
 ?>
 <?php
         exit();
@@ -1638,7 +1665,7 @@ function linkFromSumm(table, index) {
     if ($_get_vehicle == 'true') {
         $id=sanitize_int($_GET['id']);
         $disallow = is_user() ;
-        include('./forms/add_vehicle.php');
+        include './forms/add_vehicle.php';
 ?>
 <?php
         exit();
@@ -1646,7 +1673,7 @@ function linkFromSumm(table, index) {
     if ($_get_files == 'true') {
         $id=sanitize_int($_GET['id']);
         $disallow = is_user() ;
-        include('./forms/add_file.php');
+        include './forms/add_file.php';
 ?>
 <?php
         exit();
@@ -1657,7 +1684,7 @@ function linkFromSumm(table, index) {
     if ($_get_e_training == 'true') {
         $id=sanitize_int($_GET['mem_id']);
         $disallow = is_user() ;
-        include('./forms/edit_training.php');
+        include './forms/edit_training.php';
 ?>
 <?php
     exit();
@@ -1666,7 +1693,7 @@ function linkFromSumm(table, index) {
     if ($_get_e_event == 'true') {
         $id=sanitize_int($_GET['mem_id']);
         $disallow = is_user() ;
-        include('./forms/edit_event.php');
+        include './forms/edit_event.php';
 ?>
 <?php
     exit();
@@ -1675,7 +1702,7 @@ function linkFromSumm(table, index) {
     if ($_get_e_capability == 'true') {
         $id=sanitize_int($_GET['mem_id']);
         $disallow = is_user() ;
-        include('./forms/edit_capability.php');
+        include './forms/edit_capability.php';
 ?>
 <?php
         exit();
@@ -1684,7 +1711,7 @@ function linkFromSumm(table, index) {
     if ($_get_e_clothing == 'true') {
         $id=sanitize_int($_GET['mem_id']);
         $disallow = is_user() ;
-        include('./forms/edit_clothing.php');
+        include './forms/edit_clothing.php';
 ?>
 <?php
         exit();
@@ -1692,7 +1719,7 @@ function linkFromSumm(table, index) {
     if ($_get_e_equipment == 'true') {
         $id=sanitize_int($_GET['mem_id']);
         $disallow = is_user() ;
-        include('./forms/edit_equipment.php');
+        include './forms/edit_equipment.php';
 ?>
 <?php
         exit();
@@ -1700,7 +1727,7 @@ function linkFromSumm(table, index) {
     if ($_get_e_vehicle == 'true') {
         $id=sanitize_int($_GET['mem_id']);
         $disallow = is_user() ;
-        include('./forms/edit_vehicle.php');
+        include './forms/edit_vehicle.php';
 ?>
 <?php
         exit();
@@ -1708,7 +1735,7 @@ function linkFromSumm(table, index) {
     if ($_get_e_files == 'true') {
         $id=sanitize_int($_GET['mem_id']);
         $disallow = is_user() ;
-        include('./forms/edit_file.php');
+        include './forms/edit_file.php';
 ?>
 <?php
         exit();
@@ -1723,8 +1750,8 @@ function linkFromSumm(table, index) {
         </HEAD>
         <BODY onLoad = "ck_frames();"> <!-- <?php print __LINE__;?> -->
 <?php
-        include("./incs/links.inc.php");
-        include('./forms/add_form.php');
+        include "./incs/links.inc.php";
+        include './forms/add_form.php';
 ?>
         <!-- 1100 -->
         </BODY>
@@ -1764,9 +1791,9 @@ function linkFromSumm(table, index) {
             </HEAD>
             <BODY onLoad = "ck_frames();"> <!-- <?php print __LINE__;?> -->
 <?php
-            include("./incs/links.inc.php");
+            include "./incs/links.inc.php";
 
-            include('./forms/edit_form.php');
+            include './forms/edit_form.php';
 ?>
             </BODY>
             </HTML>
@@ -1816,14 +1843,14 @@ function linkFromSumm(table, index) {
             $fullname = $row['field2'] . " " . $row['field1'];
 
             print "\t<BODY onLoad = 'ck_frames();'>\n";
-            include("./incs/links.inc.php");
+            include "./incs/links.inc.php";
 
             $temp = isset($u_types[$row['field7']]) ? $u_types[$row['field7']] : null;    // 3/14/26 - null-safe when no member types configured
             $the_type = ($temp !== null) ? $temp[0] : "";            // name of type
             $fullname = $row['field2'] . " " . $row['field1'];
             $disallow = true ;
 
-            include('./forms/view_form.php');
+            include './forms/view_form.php';
 ?>
                             <!-- END UNIT VIEW -->
 <?php
@@ -1850,7 +1877,7 @@ function linkFromSumm(table, index) {
             }
 ?>
         <BODY>
-        <?php include("./incs/links.inc.php"); ?>
+        <?php include "./incs/links.inc.php"; ?>
         <A NAME='top'>
         <DIV ID='outer' style='position: absolute; left: 1%; width: 100%;'>
             <DIV CLASS='header' style = "height:32px; width: 100%; float: none; text-align: center;">

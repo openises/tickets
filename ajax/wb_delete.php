@@ -3,7 +3,7 @@
 */
 error_reporting(E_ALL);
 
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 @session_start();
 if(isset($_GET['id'])) {
     $addon = " WHERE `id` = ?";

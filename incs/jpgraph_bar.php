@@ -9,7 +9,7 @@
 //========================================================================
 */
 
-require_once('jpgraph_plotband.php');
+require_once 'jpgraph_plotband.php';
 
 // Pattern for Bars
 DEFINE('PATTERN_DIAG1',1);

@@ -5,7 +5,7 @@
 
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}        // 11/8/09
 error_reporting (E_ALL  ^ E_DEPRECATED);
-require_once('incs/functions.inc.php');        //7/28/10
+require_once 'incs/functions.inc.php';        //7/28/10
 
 $speed_type = 1;    //    Speed Measure - 1 = mph, 2 = kph, 3 = knots
 $measurements = 1;    //    Measuments - 1 = feet, 2 = meters

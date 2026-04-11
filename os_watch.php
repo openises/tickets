@@ -6,7 +6,7 @@
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED', 8192 );}        //
 error_reporting (E_ALL  ^ E_DEPRECATED);
 @session_start();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 if (!array_key_exists ("user_id", $_SESSION)) {$_POST['mode'] = 0;}        //3/6/2015 - close this window
 

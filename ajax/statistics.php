@@ -6,7 +6,7 @@
 6/14/11    First version
 */
 error_reporting(E_ALL);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 @session_start();
 session_write_close();
 $user_id = (isset($_GET['user'])) ? clean_string($_GET['user']) : "";

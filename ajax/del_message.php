@@ -3,7 +3,7 @@
 del_message.php - deletes single message - called from messages window.
 10/23/12 - new file
 */
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 
 $id = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : null;
 $ret_arr = array();

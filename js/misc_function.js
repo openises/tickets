@@ -785,7 +785,7 @@ var max=18;
 function increaseFontSize() {
  
    var p = document.getElementsByTagName('p');
-   for(i=0;i<p.length;i++) {
+   for (var i =0;i<p.length;i++) {
  
       if(p[i].style.fontSize) {
          var s = parseInt(p[i].style.fontSize.replace("px",""));
@@ -803,7 +803,7 @@ function increaseFontSize() {
 }
 function decreaseFontSize() {
    var p = document.getElementsByTagName('p');
-   for(i=0;i<p.length;i++) {
+   for (var i =0;i<p.length;i++) {
  
       if(p[i].style.fontSize) {
          var s = parseInt(p[i].style.fontSize.replace("px",""));

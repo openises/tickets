@@ -29,7 +29,7 @@ function do_updated ($instr) {        // 11/1/2012
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 do_login(basename(__FILE__));
 
 $key_field_size = 30;                        // 7/23/09
@@ -687,7 +687,7 @@ var buttons_html = "";
 
     function finished ($caption) {
         print "</HEAD><BODY>";
-        require_once('./incs/links.inc.php');    // 10/6/09
+        require_once './incs/links.inc.php';    // 10/6/09
 //        print "\n<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>\n";
         print "<FORM NAME='fin_form' METHOD='get' ACTION='" . basename(__FILE__) . "'>";
         print "<INPUT TYPE='hidden' NAME='caption' VALUE='" . $caption . "'>";
@@ -880,7 +880,7 @@ var buttons_html = "";
         <A NAME='top'>        <!-- 11/11/09 -->
         <DIV ID='to_bottom' style="position:fixed; top:2px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png"  BORDER=0></div>
 <?php
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
 ?>
         <TABLE BORDER=0 ID='outer' BORDER=><TR><TD>
         <TABLE BORDER="0" ID='addform'>
@@ -1107,7 +1107,7 @@ var buttons_html = "";
         <A NAME='top'>        <!-- 11/11/09 -->
         <DIV ID='to_bottom' style="position:fixed; top: 2px; left: 50px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0></div>
         <?php
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         ?>
         <TABLE BORDER=0 ID='outer'><TR><TD>
         <TABLE BORDER=0 ID='editform'>
@@ -1331,7 +1331,7 @@ var buttons_html = "";
 <?php
         print "\t<BODY onLoad = 'ck_frames()'>\n";
         print "<A NAME='top'>\n";            // 11/11/09
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
 
         $temp = $u_types[$row['type']];
         $the_type = $temp[0];            // name of type
@@ -1435,7 +1435,7 @@ var buttons_html = "";
         <A NAME='top'>        <!-- 11/11/09 -->
         <DIV ID='to_bottom' style="position:fixed; top:2px; left:50px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png"  BORDER=0></div>
         <?php
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         $required = 250 + (db()->affected_rows*40);;
         $the_height = (integer)  min (round($facs_side_bar_height * $_SESSION['scr_height']), $required );        // set the max
         $user_level = is_super() ? 9999 : $_SESSION['user_id'];

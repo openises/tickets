@@ -1505,7 +1505,7 @@ function pause_messages() {    //    10/29/13
             <DIV id="chat" class='lists'>
 <?php
                 if($logged_in == 1) {
-                    include('chat.php');
+                    include 'chat.php';
                     }
 ?>
             </DIV>
@@ -1648,7 +1648,7 @@ function do_geolocate(latLng, the_lat, the_lng) {
 </DIV>
 <?php
 if ((intval(get_variable ('broadcast')==1)) && (intval(get_variable ('internet')==1))) {
-    require_once('./incs/mob_sockets.inc.php');
+    require_once './incs/mob_sockets.inc.php';
     }
 ?>
 </body>

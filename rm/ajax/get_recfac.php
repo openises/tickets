@@ -2,7 +2,7 @@
 /*
 */
 error_reporting(E_ALL);
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 $tick_id = sanitize_int($_GET['ticket_id']);
 $ret_arr = array();
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ?";

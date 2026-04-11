@@ -4,9 +4,9 @@ error_reporting(E_ALL);                // 9/13/08
 
 $not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : null;
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 <?php
@@ -195,7 +195,7 @@ function do_tab(tabid, suffix, lat, lng) {
 ?>
 <BODY style="overflow-y: scroll;" onLoad = "loadData(); ck_frames(); parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top';" onUnload = "<?php print $gunload;?>";>
 <?php
-    include("./incs/links.inc.php");        // 8/13/10
+    include "./incs/links.inc.php";        // 8/13/10
 ?>
 <DIV id='screenname' style='display: none;'>responders</DIV>
 <DIV ID='to_bottom' style="position: fixed; top: 20px; left: 20px; height: 12px; width: 10px;" onclick = "location.href = '#bottom';"><IMG SRC="markers/down.png" BORDER=0 ID = "down"/></div>

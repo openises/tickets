@@ -10,7 +10,7 @@
 */
 error_reporting(E_ALL);
 
-require_once('../../incs/functions.inc.php');        //7/28/10
+require_once '../../incs/functions.inc.php';        //7/28/10
 
 $vals_ary = explode("%", sanitize_string($_POST['frm_vals']));        // example: "frm_id=17&frm_vals=frm_dispatched%frm_responding%frm_clear"
 $ret_arr = array();

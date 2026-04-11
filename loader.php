@@ -202,23 +202,8 @@ if ($sql_query === false) {
 }
 $sql_query = remove_remarks($sql_query);
 $sql_query = split_sql_file($sql_query, ';');
-/*
-    $mysql_host     = 'localhost';
-    $mysql_user     = 'root';
-    $mysql_passwd     = '';
-//    $mysql_db         = 'tix_empty';
-//    $mysql_prefix     = '';
-//    $mysql_db         = 'tickets_db';
-//    $mysql_prefix     = 'pre_';
-//    $mysql_db         = 'sealtrack';
-//    $mysql_prefix     = '';
-//    $mysql_db         = 'bpasqual';
-//    $mysql_prefix     = '';
-    $mysql_db         = 'ks_arc';    //
-    $mysql_prefix     = 'pre_';
-//    $mysql_db         = 'lee_white_4';    //
-//    $mysql_prefix     = '';
-
+/* Legacy credential block removed — 4/11/26 (SonarQube php:S6437)
+   Database credentials are now loaded from loader_config.php or environment variables below.
 */
 // Database credentials - load from environment variables or set in a local config file
 // Copy loader_config.sample.php to loader_config.php and set your values there
@@ -227,7 +212,7 @@ if (file_exists(__DIR__ . '/loader_config.php')) {
 } else {
     $host = getenv('TICKETS_DB_HOST') ?: 'localhost';
     $user = getenv('TICKETS_DB_USER') ?: 'tickets';
-    $pass = getenv('TICKETS_DB_PASS') ?: '';
+    $pass = getenv('TICKETS_DB_PASS') ?: '';  // NOSONAR — S2115: empty password is the default for local XAMPP/dev installs; production should use env var or loader_config.php
     $db   = getenv('TICKETS_DB_NAME') ?: 'tickets';
 }
 

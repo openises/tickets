@@ -20,7 +20,7 @@ if (empty($_SESSION)) {
     header("Location: index.php");
     }
 
-require_once('incs/functions.inc.php');        //7/28/10
+require_once 'incs/functions.inc.php';        //7/28/10
 do_login(basename(__FILE__));
 
 $in_win = (array_key_exists("mode", $_GET)) ? 1 : 0;
@@ -621,7 +621,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
 
         if (((intval(get_variable('broadcast')) == 1)) &&  ($_SESSION['good_internet'])) {
-            require_once('./incs/socket2me.inc.php');        // 5/22/2013
+            require_once './incs/socket2me.inc.php';        // 5/22/2013
             }
 ?>
         </HEAD>
@@ -751,7 +751,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
     window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
     var protocols = <?php echo json_encode($protocols); ?>;
@@ -1599,7 +1599,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 <SCRIPT SRC="./js/misc_function.js" type="application/x-javascript"></SCRIPT>
 <?php
     if (((intval(get_variable('broadcast')) == 1)) &&  ($_SESSION['good_internet'])) {
-        require_once('./incs/socket2me.inc.php');        // 5/22/2013
+        require_once './incs/socket2me.inc.php';        // 5/22/2013
         }
 ?>
 </HEAD>
@@ -1790,7 +1790,7 @@ $do_wizard = ($useWizard == 1) ? "modalStart();" : "";
 if($in_win) {
     $leftcol = "<DIV id = 'leftcol_inwin' style='position: relative; left: 10px; top: 60px; float: left;'>";
     } else {
-    require_once('./incs/links.inc.php');
+    require_once './incs/links.inc.php';
     $leftcol = "<DIV id = 'leftcol' style='position: relative; left: 30px; float: left;'>";
     }
 ?>
@@ -2373,7 +2373,7 @@ if ($gmaps || $good_internet) {
 <?php
     }
 if($useWizard) {
-    include("./forms/inc_wizard.php");
+    include "./forms/inc_wizard.php";
     }
 ?>
 </BODY>

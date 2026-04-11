@@ -1,5 +1,5 @@
 <?php
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 // dump ($_SESSION);
 
 $nature = get_text("Nature");
@@ -171,7 +171,7 @@ input:hover {background-color: white; border-width: 4px; border-STYLE: outset;}
 window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;

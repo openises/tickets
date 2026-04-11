@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-require_once('incs/functions.inc.php');
+require_once 'incs/functions.inc.php';
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 do_login(basename(__FILE__));    // session_start()
 @session_start();

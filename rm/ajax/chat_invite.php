@@ -4,7 +4,7 @@ error_reporting(E_ALL);
 9/10/13 New file, supports mobile chat
 */
 @session_start();
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 
 // housekeep old invites
 

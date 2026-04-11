@@ -3,7 +3,7 @@
 del_messages.php - puts all current messages into the wastebasket - the del_all function.
 10/23/12 - new file
 */
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 
 $query = "SELECT * FROM `$GLOBALS[mysql_prefix]messages`";
 $result = db_query($query) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);

@@ -5,7 +5,7 @@
 error_reporting(E_ALL);
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 if((empty($_REQUEST)) || ((!empty($_GET)) && (!isset($_GET['func'])))) {
     exit();
     }

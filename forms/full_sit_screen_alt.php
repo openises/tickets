@@ -25,13 +25,13 @@ function hexToRgb($hex, $alpha = false) {
     return implode(array_keys($rgb)) . '(' . implode(', ', $rgb) . ')';
     }
 
-require_once('./incs/functions.inc.php');
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/functions.inc.php';
+require_once './incs/all_forms_js_variables.inc.php';
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 $not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : null;
 if ($broadcast == 1) {
-    require_once('./incs/full_sit_comms.inc.php');
+    require_once './incs/full_sit_comms.inc.php';
     }
 $sess_id = $_SESSION['id'];
 $curr_cats = get_category_butts();    //    get current categories.
@@ -133,7 +133,7 @@ $routesUnits = (($locale == 0) || ($locale == 1)) ? 'imperial' : 'metric';
 window.onresize=function(){set_size();}
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 <?php
@@ -1419,7 +1419,7 @@ function show_closed() {
 $gunload = "backtoSituation(); clearInterval(i_interval); clearInterval(s_interval);";
 ?>
 <BODY onLoad = "loadData(); location.href = '#top';" onUnload = "<?php print $gunload;?>";>
-<?php include("./incs/links.inc.php"); ?>
+<?php include "./incs/links.inc.php"; ?>
 <DIV id='screenname' style='display: none;'>Incidents Screen</DIV>
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <DIV ID = "div_ticket_id" STYLE="display:none;"></DIV>

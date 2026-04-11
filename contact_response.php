@@ -6,7 +6,7 @@ error_reporting(E_ALL);        // 10/1/08
 */
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');        //7/28/10
+require_once './incs/functions.inc.php';        //7/28/10
 $theName = isset($_GET['nx']) ? base64_decode($_GET['nx']) : '';
 $theEmail = isset($_GET['ex']) ? base64_decode($_GET['ex']) : '';
 $theSec = isset($_GET['sx']) ? base64_decode($_GET['sx']) : '';

@@ -1,7 +1,7 @@
 <?php
 
 error_reporting(0);
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 // 3/14/26 - XSS fix: escape server variables in HTML output
 echo "<PRE>" . e(print_r($_SERVER, true)) . "</PRE>";
 echo e($_SERVER['HTTP_HOST']) . "<BR />";

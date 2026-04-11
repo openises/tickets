@@ -308,7 +308,7 @@ $key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : "";
     <SCRIPT TYPE="application/x-javascript" SRC="./js/messaging.js"></SCRIPT>
 <?php
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 ?>
     <script type="application/x-javascript" src="./js/proj4js.js"></script>
@@ -352,7 +352,7 @@ if(file_exists("./incs/modules.inc.php")) {
     window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-    require_once('./incs/all_forms_js_variables.inc.php');
+    require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
     function set_size() {

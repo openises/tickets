@@ -19,7 +19,7 @@ session_write_close();
 if (empty($_SESSION)) {
     header("Location: index.php");
     }
-require_once('incs/functions.inc.php');        //7/28/10
+require_once 'incs/functions.inc.php';        //7/28/10
 do_login(basename(__FILE__));
 $in_win = (array_key_exists("mode", $_GET)) ? 1 : 0;
 $from_mi = (array_key_exists("mi", $_GET)) ? 1 : 0;
@@ -133,7 +133,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
             print "</DIV";
             print "<BR />";
             print '<FONT CLASS="header">Ticket <I>' . $theScope . '</I> has not changed</FONT><BR /><BR />';
-            require_once('./forms/ticket_view_screen.php');
+            require_once './forms/ticket_view_screen.php';
             exit();
             } else {
             $_POST['frm_description']     = strip_html($_POST['frm_description']);        //clean up HTML tags
@@ -576,7 +576,7 @@ $dis =  ($disallow)? "DISABLED ": "";                // 4/1/11 -
 window.onresize=function(){set_size();}
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
@@ -963,7 +963,7 @@ function set_size() {
 </SCRIPT>
 <?php                // 7/3/2013
     if (((intval(get_variable('broadcast')) == 1)) &&  ($_SESSION['good_internet'])) {
-        require_once('./incs/socket2me.inc.php');        // 5/22/2013
+        require_once './incs/socket2me.inc.php';        // 5/22/2013
         }
 ?>
 </HEAD>
@@ -981,7 +981,7 @@ function set_size() {
         }
     if($in_win == 0) {
         $mode = 0;
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         } else {
         $mode = 1;
         }
@@ -1009,9 +1009,9 @@ function set_size() {
                 mail_it($theTo, "", $theText, $id, $theStatus);
                 }                // end if ($addrs)
             if($_SESSION['internet']) {
-                require_once('./forms/ticket_view_screen.php');
+                require_once './forms/ticket_view_screen.php';
                 } else {
-                require_once('./forms/ticket_view_screen_NM.php');
+                require_once './forms/ticket_view_screen_NM.php';
                 }
             }
         exit();

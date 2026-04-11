@@ -1,5 +1,5 @@
 <?php
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $string = sanitize_string($_GET['string']);
 
 function isFreetype() {

@@ -4,7 +4,7 @@
 */
 error_reporting(E_ALL);
 
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 set_sess_exp();
 print "";
 ?>

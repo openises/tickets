@@ -4,7 +4,7 @@
 */
 error_reporting(E_ALL);
 
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 do_login(basename(__FILE__));
 $ret_arr = array();
 

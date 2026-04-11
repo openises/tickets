@@ -1,5 +1,5 @@
 <?php
-require_once('./users.php');
+require_once './users.php';
 
 abstract class WebSocketServer {
 
@@ -441,6 +441,7 @@ abstract class WebSocketServer {
         return "";
       case 9:
         $pongReply = true;
+        break;    // 4/11/26 - Added missing break (SonarQube php:S128 — was falling through to case 10)
       case 10:
         break;
       default:

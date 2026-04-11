@@ -3,7 +3,7 @@
 9/10/13 - New file, retrieves road conditions for mobile page (markers)
 */
 error_reporting(E_ALL);
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 @session_start();
 $ret_arr = array();
 $query = "SELECT *,

@@ -1,6 +1,6 @@
 <?php
 /*
-5/21/2013 initial release - useage: inside the page <head> "require_once('./incs/socket2me.inc.php');"
+5/21/2013 initial release - useage: inside the page <head> "require_once './incs/socket2me.inc.php';"
 5/27/2013 removed user_id prepend
 6/3/2013 revised js source per AH email
 */
@@ -8,7 +8,7 @@
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}        // 11/8/09
 error_reporting (E_ALL  ^ E_DEPRECATED);
 
-require_once('functions.inc.php');
+require_once 'functions.inc.php';
 $temp1  = get_variable('socketserver_url');
 $temp2 = get_variable('socketserver_port');
 $host = (array_key_exists("SERVER_NAME", $_SERVER)) ? "{$_SERVER['SERVER_NAME']}" : $temp1;

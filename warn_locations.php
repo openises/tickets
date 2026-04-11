@@ -110,7 +110,7 @@ function get_icon_legend (){            // returns legend string
     <script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
     <script type="application/x-javascript" src="./js/geotools2.js"></script>
 <?php
-    require_once('./incs/all_forms_js_variables.inc.php');
+    require_once './incs/all_forms_js_variables.inc.php';
 ?>
     <SCRIPT>
     var map;        // note global
@@ -247,11 +247,11 @@ function get_icon_legend (){            // returns legend string
 // add ===========================================================================================================================
     if ($_getadd == 'true') {
         if (!($_SESSION['internet'])) {
-            require_once('./incs/links.inc.php');
-            require_once('./forms/wl_add_screen_NM.php');
+            require_once './incs/links.inc.php';
+            require_once './forms/wl_add_screen_NM.php';
             } else {
-            require_once('./incs/links.inc.php');
-            require_once('./forms/wl_add_screen.php');
+            require_once './incs/links.inc.php';
+            require_once './forms/wl_add_screen.php';
             }
         exit();
         }        // end if ($_GET['add'])
@@ -259,11 +259,11 @@ function get_icon_legend (){            // returns legend string
 // edit =================================================================================================================
     if ($_getedit == 'true') {
         if (!($_SESSION['internet'])) {
-            require_once('./incs/links.inc.php');
-            require_once('./forms/wl_edit_screen_NM.php');
+            require_once './incs/links.inc.php';
+            require_once './forms/wl_edit_screen_NM.php';
             } else {
-            require_once('./incs/links.inc.php');
-            require_once('./forms/wl_edit_screen.php');
+            require_once './incs/links.inc.php';
+            require_once './forms/wl_edit_screen.php';
             }
         exit();
         }        // end if ($_GET['edit'])
@@ -271,22 +271,22 @@ function get_icon_legend (){            // returns legend string
 
     if ($_getview == 'true') {
         if (!($_SESSION['internet'])) {
-            require_once('./incs/links.inc.php');
-            require_once('./forms/wl_view_screen_NM.php');
+            require_once './incs/links.inc.php';
+            require_once './forms/wl_view_screen_NM.php';
             } else {
-            require_once('./incs/links.inc.php');
-            require_once('./forms/wl_view_screen.php');
+            require_once './incs/links.inc.php';
+            require_once './forms/wl_view_screen.php';
             }
         exit();
         }        // end if ($_GET['view'])
 // ============================================= initial display =======================
     if (!isset($mapmode)) {$mapmode="a";}
     if (!($_SESSION['internet'])) {
-        require_once('./incs/links.inc.php');
-        require_once('./forms/wl_screen_NM.php');
+        require_once './incs/links.inc.php';
+        require_once './forms/wl_screen_NM.php';
         } else {
-        require_once('./incs/links.inc.php');
-        require_once('./forms/wl_screen.php');
+        require_once './incs/links.inc.php';
+        require_once './forms/wl_screen.php';
         }
     exit();
 ?>

@@ -6,8 +6,8 @@
 /*
 This is the main modules include file. It includes the helper file of all modules that are installed and enabled.
 */
-//require_once('functions.inc.php');
-require_once('mysql.inc.php');
+//require_once 'functions.inc.php';
+require_once 'mysql.inc.php';
 
 
 function get_modules($calling_file) {

@@ -3,7 +3,7 @@
 11/21/2012 initial release
 */
 error_reporting(E_ALL);
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 if (trim(get_variable("locale"))==0)    {$radius = 3959; $caption = "Mi."; }
 else                                     {$radius = 6371; $caption = "Km"; }

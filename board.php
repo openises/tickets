@@ -139,7 +139,7 @@ Sequence numbering: SELECT a.id, @num := @num + 1 seqno from ticket a, (SELECT @
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');        //7/28/10
+require_once './incs/functions.inc.php';        //7/28/10
 
 /* Auth gate: require logged-in user */
 if (empty($_SESSION['user_id'])) {
@@ -358,7 +358,7 @@ if(empty($_SESSION)) {        // expired?
     </HEAD>
     <BODY> <!-- <?php print __LINE__; ?> -->
 <?php
-    require_once('./incs/links.inc.php');
+    require_once './incs/links.inc.php';
     $evenodd = array ("even", "odd");    // CLASS names for alternating table row colors
 
 ?>

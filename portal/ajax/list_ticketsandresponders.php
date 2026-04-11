@@ -4,7 +4,7 @@
 */
 
 @session_start();
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 
 $ticket_ids = array();
 $request_ids = array();

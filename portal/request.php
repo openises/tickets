@@ -31,7 +31,7 @@ $gmaps_ok = ($key_str) ? 1 : 0;
     <META HTTP-EQUIV="Content-Script-Type"    CONTENT="application/x-javascript" />
     <LINK REL=StyleSheet HREF="../stylesheet.php?version=<?php print time();?>" TYPE="text/css">
 <?php
-    require_once('../incs/all_forms_js_variables.inc.php');
+    require_once '../incs/all_forms_js_variables.inc.php';
     if($key_str) {
         if($https) {
 ?>

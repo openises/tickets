@@ -111,7 +111,7 @@ function get_user_name($the_id) {
 <script type="application/x-javascript" src="./js/osgb.js"></script>
 <script type="application/x-javascript" src="./js/geotools2.js"></script>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var doDebug = true;

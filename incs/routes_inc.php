@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-require_once('functions.inc.php');
+require_once 'functions.inc.php';
 /*
 7/8/10 extracted from routes.php
 8/4/10 Add check for tickets/ units / facilities entered in no maps mode and added default question mark icon for those items.

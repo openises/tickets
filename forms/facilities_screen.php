@@ -11,7 +11,7 @@ $cat_sess_stat = get_session_status($curr_cats);    //    get session current st
 $hidden = find_hidden($curr_cats);
 $shown = find_showing($curr_cats);
 $un_stat_cats = get_all_categories();
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
@@ -55,7 +55,7 @@ $setZoom = (get_variable('local_maps') == "1") ? $localZoomMin : get_variable('d
 window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 <?php
@@ -247,7 +247,7 @@ function do_tab(tabid, suffix, lat, lng) {
 ?>
 <BODY style="overflow-y: scroll;" onLoad = "ck_frames(); <?php print $ld_ticker;?> parent.frames['upper'].document.getElementById('gout').style.display  = 'inline'; location.href = '#top';" onUnload = "<?php print $gunload;?>";>
 <?php
-    include("./incs/links.inc.php");        // 8/13/10
+    include "./incs/links.inc.php";        // 8/13/10
 ?>
 <DIV id='screenname' style='display: none;'>facilities</DIV>
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT><!-- 1/3/10 -->

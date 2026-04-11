@@ -3,7 +3,7 @@
 restore_message.php - restores message from wastebasket to inbox.
 10/23/12 - new file
 */
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $messages = array_key_exists('messages', $_GET) ? sanitize_string($_GET['messages']) : "";
 if($messages == "") {
     exit();

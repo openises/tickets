@@ -92,7 +92,7 @@ unset($result_as);
 <?php
 
 if(file_exists("./incs/modules.inc.php")) {    //    10/28/10
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 ?>
     <script src="./js/proj4js.js"></script>
@@ -113,7 +113,7 @@ window.onresize=function(){set_size()};
 window.onload = function(){set_size();};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var tmarkers = [];    //    Incident markers array
@@ -161,7 +161,7 @@ function set_size() {
 </SCRIPT>
 </HEAD>
 <BODY onLoad = "set_size(); ck_frames(); location.href = '#top';">
-<?php include("./incs/links.inc.php"); ?>
+<?php include "./incs/links.inc.php"; ?>
 <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <DIV id='outer' style='position: absolute; left: 0px; z-index: 1;'>
     <DIV id='leftcol' style='position: absolute; left: 10px; top: 10px; z-index: 3;'>

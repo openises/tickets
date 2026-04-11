@@ -280,7 +280,7 @@ function do_blink() {
 		sho="hidden";
 		swi=1;
 		}
-	for(i=0;i<na.length;i++) {
+	for (var i =0;i<na.length;i++) {
 		na[i].style.visibility=sho;
 		}
 	blink_continue();
@@ -1378,14 +1378,14 @@ function do_tracks() {
 
 function checkAll() {	//	9/10/13
 	var theField = document.res_add_Form.elements["frm_group[]"];
-	for (i = 0; i < theField.length; i++) {
+	for (var i = 0; i < theField.length; i++) {
 		theField[i].checked = true ;
 		}
 	}
 
 function uncheckAll() {	//	9/10/13
 	var theField = document.res_add_Form.elements["frm_group[]"];
-	for (i = 0; i < theField.length; i++) {
+	for (var i = 0; i < theField.length; i++) {
 		theField[i].checked = false ;
 		}
 	}
@@ -3842,7 +3842,7 @@ function incidentlist_setwidths() {
 	var inctbl = document.getElementById('respondertable');
 	if(!inctbl) {return;}
 	var headerRow = inctbl.rows[0];
-	for (i = 1; i < inctbl.rows.length; i++) {
+	for (var i = 1; i < inctbl.rows.length; i++) {
 		if(!isViewable(inctbl.rows[i])) {
 			} else {
 			viewableRow = i;
@@ -4100,7 +4100,7 @@ function full_incidentlist_setwidths() {
 	var viewableRow = 1;
 	var inctbl = document.getElementById('respondertable');
 	var headerRow = inctbl.rows[0];
-	for (i = 1; i < inctbl.rows.length; i++) {
+	for (var i = 1; i < inctbl.rows.length; i++) {
 		if(!isViewable(inctbl.rows[i])) {
 			} else {
 			viewableRow = i;
@@ -4599,7 +4599,7 @@ function load_responderlist(sort, dir) {
 					var headerRow = resptbl.rows[0];
 					var viewableRow = 1;
 					var headerRow = resptbl.rows[0];
-					for (i = 1; i < resptbl.rows.length; i++) {
+					for (var i = 1; i < resptbl.rows.length; i++) {
 						if(!isViewable(resptbl.rows[i])) {
 							} else {
 							viewableRow = i;
@@ -4651,7 +4651,7 @@ function responderlist_setwidths() {
 	var resptbl = document.getElementById('respondertable');
 	if(!resptbl) {return;}
 	var headerRow = resptbl.rows[0];
-	for (i = 1; i < resptbl.rows.length; i++) {
+	for (var i = 1; i < resptbl.rows.length; i++) {
 		if(!isViewable(resptbl.rows[i])) {
 			} else {
 			viewableRow = i;
@@ -5019,7 +5019,7 @@ function load_responderlist2(sort, dir) {
 				var viewableRow = 1;
 				if(resptbl) {
 					var headerRow = resptbl.rows[0];
-					for (i = 1; i < resptbl.rows.length; i++) {
+					for (var i = 1; i < resptbl.rows.length; i++) {
 						if(!isViewable(resptbl.rows[i])) {
 							} else {
 							viewableRow = i;
@@ -5066,7 +5066,7 @@ function responderlist2_setwidths() {
 	var resptbl = document.getElementById('respondertable');
 	if(!resptbl) {return;}
 	var headerRow = resptbl.rows[0];
-	for (i = 1; i < resptbl.rows.length; i++) {
+	for (var i = 1; i < resptbl.rows.length; i++) {
 		if(!isViewable(resptbl.rows[i])) {
 			} else {
 			viewableRow = i;
@@ -5328,7 +5328,7 @@ function load_facilitylist(sort, dir) {
 				var viewableRow = 1;
 				if(factbl) {
 					var headerRow = factbl.rows[0];
-					for (i = 1; i < factbl.rows.length; i++) {
+					for (var i = 1; i < factbl.rows.length; i++) {
 						if(!isViewable(factbl.rows[i])) {
 							} else {
 							viewableRow = i;
@@ -5373,7 +5373,7 @@ function facilitylist_setwidths() {
 	var factbl = document.getElementById('facilitiestable');
 	if(!factbl) {return;}
 	var headerRow = factbl.rows[0];
-	for (i = 1; i < factbl.rows.length; i++) {
+	for (var i = 1; i < factbl.rows.length; i++) {
 		if(!isViewable(factbl.rows[i])) {
 			} else {
 			viewableRow = i;
@@ -5609,7 +5609,7 @@ function warnloclist_setwidths() {
 	var viewableRow = 1;
 	var loctbl = document.getElementById('locationstable');
 	var headerRow = loctbl.rows[0];
-	for (i = 1; i < loctbl.rows.length; i++) {
+	for (var i = 1; i < loctbl.rows.length; i++) {
 		if(!isViewable(loctbl.rows[i])) {
 			} else {
 			viewableRow = i;
@@ -6048,7 +6048,7 @@ function draw_polyline(linename, color, opacity, width, linedata, theID) {
 	if(!linedata) {return;}
 	var path = new Array();
 	var thelineData = linedata.split(';');
-	for (i = 0; i < thelineData.length; i++) {
+	for (var i = 0; i < thelineData.length; i++) {
 		var theCoords = thelineData[i].split(',');
 		var theLatLng = new L.LatLng(theCoords[0], theCoords[1]);
 		path[i] = theLatLng;
@@ -7098,7 +7098,7 @@ function messagelist_setwidths() {
 	var viewableRow = 1;
 	var msgtbl = document.getElementById('messagestable');
 	var headerRow = msgtbl.rows[0];
-	for (i = 1; i < msgtbl.rows.length; i++) {
+	for (var i = 1; i < msgtbl.rows.length; i++) {
 		if(!isViewable(msgtbl.rows[i])) {
 			} else {
 			viewableRow = i;
@@ -7414,7 +7414,7 @@ function do_conditions_loop() {
 	}			// end function do_conditions_loop()
 
 function delfiles(myForm){
-	for (i=0;i<myForm.elements.length; i++) {
+	for (var i =0;i<myForm.elements.length; i++) {
 		if(myForm.elements[i].type == 'checkbox'){
 			if(myForm.elements[i].checked == true) {;
 				theID = myForm.elements[i].value;
@@ -7432,7 +7432,7 @@ function del_handleResult(req) {
 
 function check_checkboxes(myForm, checkControl, uncheckControl) {
 	var boxesChecked = 0;
-	for (i=0;i<myForm.elements.length; i++) {
+	for (var i =0;i<myForm.elements.length; i++) {
 		if(myForm.elements[i].type =='checkbox'){
 			if(myForm.elements[i].checked == true) {
 				boxesChecked++;
@@ -7452,7 +7452,7 @@ function check_checkboxes(myForm, checkControl, uncheckControl) {
 	}
 
 function do_check(myForm, checkControl, uncheckControl){
-	for (i=0;i<myForm.elements.length; i++) {
+	for (var i =0;i<myForm.elements.length; i++) {
 		if(myForm.elements[i].type =='checkbox'){
 			myForm.elements[i].checked = true;
 			}
@@ -7461,7 +7461,7 @@ function do_check(myForm, checkControl, uncheckControl){
 	}		// end function do_clear
 
 function do_clear(myForm, checkControl, uncheckControl){
-	for (i=0;i<myForm.elements.length; i++) {
+	for (var i =0;i<myForm.elements.length; i++) {
 		if(myForm.elements[i].type =='checkbox'){
 			myForm.elements[i].checked = false;
 			}
@@ -7493,7 +7493,7 @@ function htmlspecialchars_decode(string, quote_style) {
   if (typeof quote_style !== 'number') {
     // Allow for a single string or an array of string flags
     quote_style = [].concat(quote_style);
-    for (i = 0; i < quote_style.length; i++) {
+    for (var i = 0; i < quote_style.length; i++) {
       // Resolve string input to bitwise e.g. 'PATHINFO_EXTENSION' becomes 4
       if (OPTS[quote_style[i]] === 0) {
         noquotes = true;

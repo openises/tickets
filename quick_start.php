@@ -2,7 +2,7 @@
 /*
 5/11/12 Initial release - Basic setup script to build a default set of values and responders into Tickets
 */
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 if((empty($_POST)) && (empty($_GET))) {    //    checks to make sure script is not run directly.
     $host  = $_SERVER['HTTP_HOST'];

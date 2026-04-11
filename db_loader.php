@@ -2,8 +2,8 @@
 ini_set('memory_limit', '5120M');
 set_time_limit ( 0 );
 error_reporting(E_ALL);
-require_once('./incs/mysql.inc.php');
-require_once('./incs/db.inc.php');        // 3/14/26 - Use db_query() for local DB operations
+require_once './incs/mysql.inc.php';
+require_once './incs/db.inc.php';        // 3/14/26 - Use db_query() for local DB operations
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 $dir = getcwd() . "/backups";
 // mysql2i shim removed — all code migrated to db_query() and mysqli
@@ -197,7 +197,7 @@ function split_sql_file($sql, $delimiter) {
     }
 
 function dump_db($host,$user,$passwd,$db,$prefix) {
-    require_once('./incs/MySQLDump.class.php');
+    require_once './incs/MySQLDump.class.php';
     $delta = (get_variable('delta_mins')) ? get_variable('delta_mins') : 0;
     $the_now = time() - ($delta * 60);
     $locale = (get_variable('locale')) ? get_variable('locale') : 0;

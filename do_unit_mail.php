@@ -21,8 +21,8 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 set_time_limit(0);
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
-require_once('./incs/messaging.inc.php');
+require_once './incs/functions.inc.php';
+require_once './incs/messaging.inc.php';
 //dump($_REQUEST);
 function distance($lat1, $lon1, $lat2, $lon2, $unit) {
     if(my_is_float($lat1) && my_is_float($lon1) && my_is_float($lat2) && my_is_float($lon2)) {

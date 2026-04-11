@@ -3,8 +3,8 @@
 9/10/13 - New file, updates read status for message from mobile screen
 */
 
-require_once('../../incs/functions.inc.php');
-require_once('../../incs/messaging.inc.php');
+require_once '../../incs/functions.inc.php';
+require_once '../../incs/messaging.inc.php';
 set_time_limit(90);
 if(empty($_GET)) {
 	exit();

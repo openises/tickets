@@ -41,7 +41,7 @@ function get_category_butts() {
 function get_category($unit) {
     global $hide_status_groups, $hide_dispatched;
     $status_category="";
-    require_once('mysql.inc.php');
+    require_once 'mysql.inc.php';
     if($hide_status_groups == 0) {
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `{$GLOBALS['mysql_prefix']}assigns`.`responder_id` = $unit AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";    //2/12/11
         $result = db_query($query);
@@ -103,7 +103,7 @@ function get_category($unit) {
 function get_all_categories() {
     global $hide_status_groups, $hide_dispatched;
     $status_category=array();
-    require_once('mysql.inc.php');
+    require_once 'mysql.inc.php';
     if($hide_status_groups == 0) {
         $query = "SELECT `{$GLOBALS['mysql_prefix']}responder`.`un_status_id`,
             `{$GLOBALS['mysql_prefix']}responder`.`id`,
@@ -441,7 +441,7 @@ function find_bnd_showing() {
 
 function get_fac_category($facility) {
     $fac_category="";
-    require_once('mysql.inc.php');
+    require_once 'mysql.inc.php';
     $query = "SELECT `{$GLOBALS['mysql_prefix']}facilities`.`type`, `{$GLOBALS['mysql_prefix']}fac_types`.`name`
             FROM `{$GLOBALS['mysql_prefix']}facilities`
             LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_types` ON `{$GLOBALS['mysql_prefix']}facilities`.`type`=`{$GLOBALS['mysql_prefix']}fac_types`.`id`

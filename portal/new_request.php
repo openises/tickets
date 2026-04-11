@@ -128,7 +128,7 @@ $key_str = (safe_strlen($api_key) == 39)?  "key={$api_key}&" : false;
 body {overflow:hidden}
 </style>
 <?php
-require_once('../incs/all_forms_js_variables.inc.php');
+require_once '../incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT TYPE="application/x-javascript" SRC="../js/jss.js"></SCRIPT>
 <SCRIPT TYPE="application/x-javascript" SRC="../js/misc_function.js"></SCRIPT>

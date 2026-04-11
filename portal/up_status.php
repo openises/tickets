@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 //    file as_up_un_status.php
 
 @session_start();
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 
 $status = sanitize_string($_GET['status']);
 $the_id = sanitize_int($_GET['the_id']);

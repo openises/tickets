@@ -5,8 +5,8 @@ if(empty($_GET)) {
     print $failed;
     exit();
     }
-require_once('../incs/functions.inc.php');
-require_once('../incs/versions.inc.php');
+require_once '../incs/functions.inc.php';
+require_once '../incs/versions.inc.php';
 $completed = array();
 $dir = $_GET['dir'];
 $subdir = $_GET['subdir'];

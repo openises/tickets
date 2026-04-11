@@ -2,7 +2,7 @@
 /*
 9/10/13 - New file - gets local copies of map tiles from OSM
 */
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 @session_start();
 session_write_close();
 do_login(basename(__FILE__));

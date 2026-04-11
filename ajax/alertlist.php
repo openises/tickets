@@ -4,7 +4,7 @@
 3/31/2015 - corrected field-name in initial sql 'on' clause
 */
 @session_start();
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 session_write_close();
 $iw_width= "270px";                    // map infowindow with
 $use_twitter = (get_variable('twitter_consumerkey') != "" && get_variable('twitter_consumersecret') != "" && get_variable('twitter_accesstoken') != "" && get_variable('twitter_accesstokensecret') != "") ? true : false;

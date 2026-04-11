@@ -2,8 +2,8 @@
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');
-require_once('./incs/messaging.inc.php');
+require_once './incs/functions.inc.php';
+require_once './incs/messaging.inc.php';
 $nature = get_text("Nature");
 $disposition = get_text("Disposition");
 $patient = get_text("Patient");

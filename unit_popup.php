@@ -1,5 +1,5 @@
 <?php
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 @session_start();
 session_write_close();
 function get_day() {
@@ -170,7 +170,7 @@ $lng = $row['lng'];
 <script type="application/x-javascript" src="./js/L.Graticule.js"></script>
 <script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 </HEAD>
 <?php

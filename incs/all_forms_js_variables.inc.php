@@ -1,7 +1,7 @@
 <?php
 $not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : null;
 if(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 $do_blink = true;
 $ld_ticker = "";
@@ -18,10 +18,10 @@ $use_ticker = 0;
 $def_lat = get_variable('def_lat');
 $def_lng = get_variable('def_lng');
 if(file_exists("modules.inc.php")) {
-    require_once('modules.inc.php');
+    require_once 'modules.inc.php';
     $use_ticker = (($_SESSION['good_internet'] == 1) && (module_active("Ticker") == 1) && (!$not_sit)) ? 1 : 0;
     } elseif(file_exists("./incs/modules.inc.php")) {
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     $use_ticker = (($_SESSION['good_internet'] == 1) && (module_active("Ticker") == 1) && (!$not_sit)) ? 1 : 0;
     }
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';

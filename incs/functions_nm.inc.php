@@ -138,19 +138,19 @@
 7/10/13 Revisions to function show_actions( to correct failure to show patients if no actions.
 9/10/13 Added function show_unit_log()
 */
-require_once(__DIR__ . '/compat.inc.php');
+require_once __DIR__ . '/compat.inc.php';
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 //    {                        -- dummy
 //
-require_once('istest.inc.php');
-require_once('mysql.inc.php');
-require_once('db.inc.php');
-require_once('security.inc.php');
-require_once("phpcoord.php");                // UTM converter
-require_once("usng.inc.php");                // USNG converter 9/12/08
+require_once 'istest.inc.php';
+require_once 'mysql.inc.php';
+require_once 'db.inc.php';
+require_once 'security.inc.php';
+require_once "phpcoord.php";                // UTM converter
+require_once "usng.inc.php";                // USNG converter 9/12/08
 //require_once($fmp);    // 7/28/10
-require_once("browser.inc.php");            // added 1/23/10
+require_once "browser.inc.php";            // added 1/23/10
 
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}        // 11/7/09
 error_reporting (E_ALL  ^ E_DEPRECATED);
@@ -282,7 +282,7 @@ if ($failed) {
 
 $expiry = expires();        // note global
 
-require_once ('login.inc.php');                // 8/21/10
+require_once 'login.inc.php';                // 8/21/10
 
 function remove_nls($instr) {                // 10/20/09
     $nls = array("\r\n", "\n", "\r");        // note order
@@ -1051,7 +1051,7 @@ function mysql2timestamp($m) {                // 9/29/10
                     );
     }
 
-require_once('remotes.inc.php');    // 8/21/10
+require_once 'remotes.inc.php';    // 8/21/10
 
 function do_log($code, $ticket_id=0, $responder_id=0, $info="", $facility_id=0, $rec_facility_id=0, $mileage=0) {        // generic log table writer - 5/31/08, 10/6/09
     @session_start();                            // 4/4/10
@@ -1491,7 +1491,7 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 // ________________________________________________________
 
 function smtp ($my_to, $my_subject, $my_message, $my_params, $my_from) {
-    require_once('smtp.inc.php');                                        // defer load until required - 8/2/10
+    require_once 'smtp.inc.php';                                        // defer load until required - 8/2/10
     real_smtp ($my_to, $my_subject, $my_message, $my_params, $my_from);
     }                         // end function smtp
 
@@ -1508,7 +1508,7 @@ function do_send ($to_str, $subject_str, $text_str ) {                        //
         }
 
     $to_array = explode ("|",$to_str );                                        // pipe-delimited string  - 10/17/08
-    require_once("cell_addrs.inc.php");                                        // 10/22/08
+    require_once "cell_addrs.inc.php";                                        // 10/22/08
     $cell_addrs = array("vtext.com", "messaging.sprintpcs.com", "txt.att.net", "vmobl.com", "myboostmobile.com");        // 10/5/08
     if ($istest) {array_push($cell_addrs, "gmail.com");};
 

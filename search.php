@@ -20,7 +20,7 @@ error_reporting(E_ALL);
 
 session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');        // 9/29/10
+require_once './incs/functions.inc.php';        // 9/29/10
 do_login(basename(__FILE__));
 require_once($_SESSION['fmp']);                    // 9/29/10
 //if ($istest) {
@@ -149,7 +149,7 @@ $do_str = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type
 ?>
 <BODY onLoad = "ck_frames(); <?php echo $do_str; ?>">
 <?php
-    include("./incs/links.inc.php");
+    include "./incs/links.inc.php";
     $post_frm_query = ( ( array_key_exists('search_type', $_POST) ) && ( $_POST['search_type'] == 'db') ) ? strip_tags($_POST['frm_query']) : false ;        // 1/6/2013
     if($post_frm_query) {
         $year_text = ($_POST['frm_year'] == 0) ? " for all years" : " in year " . $_POST['frm_year'];

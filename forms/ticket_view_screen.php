@@ -98,7 +98,7 @@ unset($result_as);
 <?php
 
 if(file_exists("./incs/modules.inc.php")) {    //    10/28/10
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 ?>
     <script src="./js/leaflet/leaflet.js"></script>
@@ -140,7 +140,7 @@ if(file_exists("./incs/modules.inc.php")) {    //    10/28/10
 window.onresize=function(){set_size()};
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;
@@ -259,7 +259,7 @@ function find_warnings(tick_lat, tick_lng) {    //    9/10/13
 if($mode == 0) {
 ?>
     <BODY onLoad = "set_size(); ck_frames(); location.href = '#top';">
-<?php include("./incs/links.inc.php"); ?>
+<?php include "./incs/links.inc.php"; ?>
     <SCRIPT TYPE="application/x-javascript" src="./js/wz_tooltip.js"></SCRIPT>
 <?php
     } else {

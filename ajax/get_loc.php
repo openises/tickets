@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 $resp = sanitize_string($_REQUEST['id']);
 $coords = array();
 $points = "";

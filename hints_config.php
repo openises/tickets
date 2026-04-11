@@ -6,7 +6,7 @@
     error_reporting (E_ALL  ^ E_DEPRECATED);
     session_start();
     session_write_close();
-    require_once('./incs/functions.inc.php');
+    require_once './incs/functions.inc.php';
     do_login(basename(__FILE__));    // session_start()
 
     if(isset($_GET['func'])) {
@@ -15,8 +15,8 @@
         $func = "group";
     }
 
-    require_once('./incs/config.inc.php');
-    require_once('./incs/usng.inc.php');                // 9/16/08
+    require_once './incs/config.inc.php';
+    require_once './incs/usng.inc.php';                // 9/16/08
 
      $query    = "SELECT `user` FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` <> '{$_SESSION['user_id']}'";        // 12/2/08
      $result    = db_query($query);

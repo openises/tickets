@@ -2,8 +2,8 @@
 /*
 9/10/13 - New file, checks for new unread messages to light messages button on mobile page
 */
-require_once('../../incs/functions.inc.php');
-require_once('../../incs/messaging.inc.php');
+require_once '../../incs/functions.inc.php';
+require_once '../../incs/messaging.inc.php';
 set_time_limit(90);
 if(empty($_GET)) {
 	exit();

@@ -2,7 +2,7 @@
 /*
 */
 error_reporting(E_ALL);
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 
 $ret_arr = array();
 $addr = urlencode(sanitize_string($_GET['addr']));

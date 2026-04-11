@@ -3,7 +3,7 @@ header('Content-type: text/css');
 /* 
 9/10/13 - new file, the stylesheet for the mobile page
 */
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 session_start();
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';
 $alt_day_night = ($day_night=="Day") ? "Night" : "Day"; 

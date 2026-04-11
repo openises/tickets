@@ -1,6 +1,6 @@
 <?php
-require_once('../../incs/functions.inc.php');
-include('../../incs/html2text.php');
+require_once '../../incs/functions.inc.php';
+include '../../incs/html2text.php';
 if(!isset($_GET['id'])) {
     exit();
     }

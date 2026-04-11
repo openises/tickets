@@ -4,7 +4,7 @@ $units_side_bar_height = .6;        // max height of units sidebar as decimal fr
 $temp = get_variable('auto_poll');                // 1/28/09
 $poll_val = ($temp==0)? "none" : $temp ;
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';    //    3/15/11
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;

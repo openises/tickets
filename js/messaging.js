@@ -261,7 +261,7 @@ Encoder = {
 
 Array.prototype.inArray = function (value) {
 	var i;
-	for (i=0; i < this.length; i++) {
+	for (var i =0; i < this.length; i++) {
 		if (this[i] == value) {
 			return true;
 			}
@@ -1170,7 +1170,7 @@ function read_status_selected(thestatus, id, thescreen) {
 	if((!folder) || (folder == "")) {
 		return false;
 		}
-	for (i=0;i<document.messages_form.elements.length; i++) {
+	for (var i =0;i<document.messages_form.elements.length; i++) {
 		if((document.messages_form.elements[i].type =='checkbox') && (document.messages_form.elements[i].checked)){
 			var the_val = document.messages_form.elements[i].value;
 			message_status_string += the_val + sep;
@@ -1275,7 +1275,7 @@ function del_all_messages() {
 function del_selected_messages() {
 	var message_del_string = "";
 	var sep = "|";
-	for (i=0;i<document.messages_form.elements.length; i++) {
+	for (var i =0;i<document.messages_form.elements.length; i++) {
 		if((document.messages_form.elements[i].type =='checkbox') && (document.messages_form.elements[i].checked)){
 			var the_val = document.messages_form.elements[i].value;
 			message_del_string += the_val + sep;
@@ -1291,7 +1291,7 @@ function del_selected_messages() {
 	function msgsdel_cb(req) {
 		var resp=JSON.decode(req.responseText);
 		var output = "";
-		for (i = 0; i < resp.length; i++) {
+		for (var i = 0; i < resp.length; i++) {
 			if(resp[i][0] == 100) {output += "Message " + resp[i][1] + " Deleted -- ";} else {output += "Message " + resp[i][1] + " Not deleted -- ";}
 			}
 		get_main_messagelist(ticket_id, responder_id, sortby, sort, filter, thescreen);	
@@ -1307,7 +1307,7 @@ function del_selected_messages() {
 function rest_selected_messages() {
 	var message_rest_string = "";
 	var sep = "|";
-	for (i=0;i<document.messages_form.elements.length; i++) {
+	for (var i =0;i<document.messages_form.elements.length; i++) {
 		if((document.messages_form.elements[i].type =='checkbox') && (document.messages_form.elements[i].checked)){
 			var the_val = document.messages_form.elements[i].value;
 			message_rest_string += the_val + sep;
@@ -1323,7 +1323,7 @@ function rest_selected_messages() {
 	function msgsrest_cb(req) {
 		var resp=JSON.decode(req.responseText);
 		var output = "";
-		for (i = 0; i < resp.length; i++) {
+		for (var i = 0; i < resp.length; i++) {
 			if(resp[i][0] == 100) {output += "Message " + resp[i][1] + " Restore -- ";} else {output += "Message " + resp[i][1] + " Not restored -- ";}
 			}
 		get_wastelist(ticket_id, responder_id, sortby, sort, filter, thescreen);
@@ -1337,7 +1337,7 @@ function rest_selected_messages() {
 	}
 	
 function toggle_select_all() {
-	for (i=0;i<document.messages_form.elements.length; i++) {
+	for (var i =0;i<document.messages_form.elements.length; i++) {
 		if((document.messages_form.elements[i].type =='checkbox')){
 			if(document.messages_form.elements[i].checked == true) {document.messages_form.elements[i].checked = false;} else {document.messages_form.elements[i].checked = true;}
 			}
@@ -1373,7 +1373,7 @@ function aliveButton(id) {
 	
 function checkIfChecked() {
 	var counter = 0;
-	for (i=0;i<document.messages_form.elements.length; i++) {
+	for (var i =0;i<document.messages_form.elements.length; i++) {
 		if((document.messages_form.elements[i].type =='checkbox')){
 			if(document.messages_form.elements[i].checked == true) {
 				counter++;

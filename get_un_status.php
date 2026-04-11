@@ -1,5 +1,5 @@
 <?php
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 $id = sanitize_int($_GET['id']);
 $ret_arr = array();

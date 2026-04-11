@@ -1,5 +1,5 @@
 <?php
-require_once('../incs/functions.inc.php');
+require_once '../incs/functions.inc.php';
 
 function write_shutdown() {
     if(is_dir('_ws_server')) {

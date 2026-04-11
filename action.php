@@ -28,7 +28,7 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 
 @session_start();
 session_write_close();
-require_once('./incs/functions.inc.php');        //7/28/10
+require_once './incs/functions.inc.php';        //7/28/10
 do_login(basename(__FILE__));
 require_once($_SESSION['fmp']);        // 8/27/10
 
@@ -333,7 +333,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? sanitize_int($_REQUEST['ticket_id']
     </SCRIPT>
 <?php                // 7/3/2013
     if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) {
-        require_once('./incs/socket2me.inc.php');        // 5/22/2013
+        require_once './incs/socket2me.inc.php';        // 5/22/2013
         }
 ?>
     </HEAD>

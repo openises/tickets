@@ -9,7 +9,7 @@ define ( "TITLE", "Incident Objectives" ) ;
 if ( !defined ( 'E_DEPRECATED' ) ) { define ( 'E_DEPRECATED',8192 ) ;}        // 11/8/09
 error_reporting ( E_ALL ^ E_DEPRECATED ) ;
 @session_start () ;
-require_once ( '../incs/functions.inc.php' ) ;        //7/28/10
+require_once '../incs/functions.inc.php';        //7/28/10
 
 if ( empty ($_SESSION) ) {
 ?>
@@ -21,7 +21,7 @@ if ( empty ($_SESSION) ) {
 else {            // NOTE!
 
 session_write_close () ;
-include ( './ics.css.php' ) ;
+include './ics.css.php';
 
 // Phase 2 security cleanup: removed extract — $func set explicitly below
 
@@ -129,7 +129,7 @@ function set_input_strings () {
     }        // end function set input strings ()
 
 function merge_template () {        // merge argument array with template -- E.G., <td> $my_inputs_arr['fn'] </td>
-    include ( './ics.css.php' ) ;
+    include './ics.css.php';
 
     $my_inputs_arr = set_input_strings () ;
 

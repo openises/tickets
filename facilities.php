@@ -118,7 +118,7 @@ function get_mailgroup_name($id) {    //    8/28/13
     }
 
 if(file_exists("./incs/modules.inc.php")) {    //    10/28/10
-    require_once('./incs/modules.inc.php');
+    require_once './incs/modules.inc.php';
     }
 ?>
 
@@ -178,7 +178,7 @@ if(file_exists("./incs/modules.inc.php")) {    //    10/28/10
     <script type="application/x-javascript" src="./js/leaflet-providers.js"></script>
     <script type="application/x-javascript" src="./js/geotools2.js"></script>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
     var map;        // note global
@@ -234,7 +234,7 @@ require_once('./incs/all_forms_js_variables.inc.php');
 <?php
     function finished ($caption) {
         print "</HEAD><BODY><!--" . __LINE__ . " -->";
-        require_once('./incs/links.inc.php');    // 10/6/09
+        require_once './incs/links.inc.php';    // 10/6/09
         print "\n<DIV ID='to_bottom' style='position:fixed; top:2px; left:50px; height: 12px; width: 10px;' onclick = 'to_bottom()'><IMG SRC='markers/down.png'  BORDER=0 /></DIV>\n";
         print "<FORM NAME='fin_form' METHOD='get' ACTION='" . basename(__FILE__) . "'>";
         print "<INPUT TYPE='hidden' NAME='caption' VALUE='" . $caption . "'>";
@@ -446,11 +446,11 @@ require_once('./incs/all_forms_js_variables.inc.php');
 // add ===========================================================================================================================
 
     if ($_getadd == 'true') {
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         if (!($_SESSION['internet'])) {
-            require_once('./forms/facilities_add_screen_NM.php');
+            require_once './forms/facilities_add_screen_NM.php';
             } else {
-            require_once('./forms/facilities_add_screen.php');
+            require_once './forms/facilities_add_screen.php';
             }
         exit();
         }        // end if ($_GET['add'])
@@ -460,11 +460,11 @@ require_once('./incs/all_forms_js_variables.inc.php');
 // edit =================================================================================================================
 
     if ($_getedit == 'true') {
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         if (!($_SESSION['internet'])) {
-            require_once('./forms/facilities_edit_screen_NM.php');
+            require_once './forms/facilities_edit_screen_NM.php';
             } else {
-            require_once('./forms/facilities_edit_screen.php');
+            require_once './forms/facilities_edit_screen.php';
             }
         }        // end if ($_GET['edit'])
 
@@ -473,21 +473,21 @@ require_once('./incs/all_forms_js_variables.inc.php');
 // view =================================================================================================================
 
     if ($_getview == 'true') {
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         if (!($_SESSION['internet'])) {
-            require_once('./forms/facilities_view_screen_NM.php');
+            require_once './forms/facilities_view_screen_NM.php';
             } else {
-            require_once('./forms/facilities_view_screen.php');
+            require_once './forms/facilities_view_screen.php';
             }
         }
 
 // ============================================= initial display =======================
         if (!isset($mapmode)) {$mapmode="a";}
-        require_once('./incs/links.inc.php');
+        require_once './incs/links.inc.php';
         if (!($_SESSION['internet'])) {
-            require_once('./forms/facilities_screen_NM.php');
+            require_once './forms/facilities_screen_NM.php';
             } else {
-            require_once('./forms/facilities_screen.php');
+            require_once './forms/facilities_screen.php';
             }
         exit();
 ?>

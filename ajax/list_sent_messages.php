@@ -5,8 +5,8 @@ list_sent_messages.php - gets sent messages from messages table for display in m
 */
 @session_start();
 session_write_close();
-require_once('../incs/functions.inc.php');
-include('../incs/html2text.php');
+require_once '../incs/functions.inc.php';
+include '../incs/html2text.php';
 $filter = "";
 
 $cols_width = array(30,30,120,120,150,250,90,90);

@@ -1,7 +1,7 @@
 <?php
 error_reporting(E_ALL);                // 9/13/08
 $units_side_bar_height = .6;        // max height of units sidebar as decimal fraction of screen height - default is 0.6 (60%)
-require_once('./incs/functions.inc.php');
+require_once './incs/functions.inc.php';
 
 $the_inc = ((array_key_exists('internet', ($_SESSION))) && ($_SESSION['internet']))? './incs/functions_major.inc.php' : './incs/functions_major_nm.inc.php';
 $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
@@ -44,7 +44,7 @@ function get_categoryName($id) {
 window.onresize=function(){set_size();}
 </SCRIPT>
 <?php
-require_once('./incs/all_forms_js_variables.inc.php');
+require_once './incs/all_forms_js_variables.inc.php';
 ?>
 <SCRIPT>
 var theBounds = <?php echo json_encode(get_tile_bounds("./_osm/tiles")); ?>;

@@ -3,7 +3,7 @@
 9/10/13 New file - shows who is logged in and availbale to chat - for mobile page.
 */
 @session_start();
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 
 $ret_arr = array();
 $the_users = "";

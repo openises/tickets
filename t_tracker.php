@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 
 @session_start();
 session_write_close();
-require_once('incs/functions.inc.php');        //7/28/10
+require_once 'incs/functions.inc.php';        //7/28/10
 $api_key = get_variable('gmaps_api_key');
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">

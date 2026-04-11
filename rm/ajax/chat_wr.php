@@ -3,7 +3,7 @@
 9/10/13 New file - writes ne chat message - for mobile page
 */
 @session_start();
-require_once('../../incs/functions.inc.php');
+require_once '../../incs/functions.inc.php';
 $frm_message = sanitize_string($_GET['frm_message']);
 $frm_room = sanitize_int($_GET['frm_room']);
 $frm_user = sanitize_int($_GET['frm_user']);
