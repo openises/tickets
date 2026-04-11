@@ -1571,15 +1571,15 @@ function get_severity_field($severity){            /* return severity string fro
 function get_responder($id){            /* return responder-type string from value */
     $query = "SELECT `name` FROM `{$GLOBALS['mysql_prefix']}responder` WHERE id= ? LIMIT 1";
     $result    = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
-    return $row['name'];
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
+    return $row ? $row['name'] : '?';
     }
 
 function get_member($id){            /* return responder-type string from value */
     $query = "SELECT `field1`, `field2`, `field4` FROM `{$GLOBALS['mysql_prefix']}member` WHERE `id` = ? LIMIT 1";
     $result    = db_query($query, [$id]);
-    $row = stripslashes_deep($result->fetch_assoc());
-    return $row['field2'] . " " . $row['field1'] . " " . $row['field4'];
+    $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
+    return $row ? ($row['field2'] . " " . $row['field1'] . " " . $row['field4']) : '?';
     }
 
 function strip_html($html_string) {                        /* strip HTML tags/special characters and fix custom ones to prevent bad HTML, CrossSiteScripting etc */

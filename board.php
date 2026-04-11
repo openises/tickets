@@ -818,7 +818,8 @@ if(empty($_SESSION)) {        // expired?
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id` = ?
                     LIMIT 1";         // see case $func = 'add_b'
             $result = db_query($query, [$frm_ticket_id]);
-            $row = $result->fetch_array();
+            $row = $result ? $result->fetch_array() : null;
+            if (!$row) { $row = ['lat' => 0, 'lng' => 0]; }
             $latitude = $row['lat'];
             $longitude = $row['lng'];
 ?>
@@ -1886,7 +1887,8 @@ if(empty($_SESSION)) {        // expired?
             WHERE `{$GLOBALS['mysql_prefix']}assigns`.`id` = ? LIMIT 1";
 
             $asgn_result = db_query($query, [$frm_id]);
-            $asgn_row = stripslashes_deep($asgn_result->fetch_assoc());
+            $asgn_row = $asgn_result ? stripslashes_deep($asgn_result->fetch_assoc()) : null;
+            if (!$asgn_row) { $asgn_row = []; }
 
 ?>
                 <FORM NAME="edit_Form" onSubmit="return validate_ed(document.edit_Form);" action = "<?php print basename(__FILE__); ?>" method = "post">

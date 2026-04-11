@@ -51,7 +51,8 @@ if (empty($_POST)) {         // pass # 1
 <?php
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [$ticket_id]);
-        $row = $result->fetch_assoc();
+        $row = $result ? $result->fetch_assoc() : null;
+        if (!$row) { echo "<H3>Incident not found</H3>"; return; }
         if ($row['status']== $GLOBALS['STATUS_CLOSED']) {
             do_is_closed();
             } else {
@@ -357,7 +358,8 @@ function do_is_start($in_row) {                // 3/22/10
                 //    Get Responder ID for auto dispatch status
                 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `id` = ? LIMIT 1";    //    10/24/13
                 $result = db_query($query, [sanitize_int($VarValue)]);    //    10/24/13
-                $row = $result->fetch_assoc();    //    10/24/13
+                $row = $result ? $result->fetch_assoc() : null;    //    10/24/13
+                if (!$row) { continue; }    // skip if assign record not found
                 $un_id = $row['responder_id'];    //    10/24/13
                 //    Clear assigns entry
                 $query = "UPDATE `{$GLOBALS['mysql_prefix']}assigns` SET
@@ -377,7 +379,8 @@ function do_is_start($in_row) {                // 3/22/10
 
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ? LIMIT 1";
         $result = db_query($query, [sanitize_int($_POST['frm_ticket_id'])]);
-        $row = $result->fetch_assoc();
+        $row = $result ? $result->fetch_assoc() : null;
+        if (!$row) { $row = []; }
 
         if($counter > 1) {
             do_log($GLOBALS['LOG_INCIDENT_CLOSE'], $_POST['frm_ticket_id'])    ;

@@ -440,13 +440,16 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? sanitize_int($_REQUEST['ticket_id']
                 } else {
                 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1";
                 $result = db_query($query, [$safe_action_id]);
-                $row = stripslashes_deep($result->fetch_assoc());
+                $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
+                if (!$row) { print "<FONT CLASS='header'>Action record not found.</FONT><BR /><BR />"; }
+                else {
                 print "<FONT CLASS='header'>Really delete action record '" . e(shorten($row['description'], 24)) . "' ? </FONT><BR /><BR />";
                 print "<FORM NAME='delfrm' METHOD='post' ACTION='action.php?action=delete&id=" . e($safe_action_id) . "&ticket_id=" . e($safe_ticket_id_del) . "&confirm=1'>";
 
                 print "<SPAN id='sub_but' CLASS='plain text' style='width: 100px; display: inline-block; float: none;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='do_step_2();'><SPAN STYLE='float: left;'>" . get_text('Yes') . "</SPAN><IMG STYLE='float: right;' SRC='./images/submit_small.png' BORDER=0></SPAN>";
                 print "<SPAN id='cancel_but' CLASS='plain text' style='float: none; width: 100px; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='history.back();'><SPAN STYLE='float: left;'>" . get_text('Cancel') . "</SPAN><IMG STYLE='float: right;' SRC='./images/cancel_small.png' BORDER=0></SPAN>";
                 print "</FORM>";
+                } // end else (row found)
                 }
             } else if ($get_action == 'update') {    // end if ($get_action == 'delete') update action and show ticket
             $safe_upd_id = sanitize_int($_GET['id']);
@@ -470,7 +473,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? sanitize_int($_REQUEST['ticket_id']
             $result = db_query("UPDATE `{$GLOBALS['mysql_prefix']}action` SET `description`=?, `responder` = ?, `updated` = ? WHERE `id`=? LIMIT 1", [$frm_description, $responder, $frm_asof, $safe_upd_id]);
             $result = db_query("UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE id=? LIMIT 1", [$frm_asof, $safe_upd_ticket_id]);
             $result = db_query("SELECT ticket_id FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1", [$safe_upd_id]);
-            $row = stripslashes_deep($result->fetch_array());
+            $row = $result ? stripslashes_deep($result->fetch_array()) : null;
             $id = $safe_upd_ticket_id;
             print '<SPAN CLASS="header text" style="width: 100%; display: block; text-align: center;">Action record has been updated.</SPAN><BR /><BR /><BR />';
             print "<DIV STYLE='width: 100%; display: block; text-align: center;'>";
@@ -488,7 +491,8 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? sanitize_int($_REQUEST['ticket_id']
             $safe_edit_id = sanitize_int($_GET['id']);
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1";
             $result = db_query($query, [$safe_edit_id]);
-            $row = stripslashes_deep($result->fetch_array());
+            $row = $result ? stripslashes_deep($result->fetch_array()) : null;
+            if (!$row) { print "<FONT CLASS='header'>Action record not found.</FONT>"; return; }
             $responders = explode(" ", $row['responder']);                // to array
             $do_yr_asof = true;
             $heading = "Edit Action";

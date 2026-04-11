@@ -289,7 +289,9 @@ if ($get_action == 'add') {
             } else {
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1";
             $result = db_query($query, [$safe_del_id]);
-            $row = stripslashes_deep($result->fetch_assoc());
+            $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
+            if (!$row) { print "<CENTER><FONT CLASS='header text_large'>Action record not found.</FONT></CENTER>"; }
+            else {
             print "<CENTER>";
             print "<FONT CLASS='header text_large'>Really delete action record '" . e(shorten($row['description'], 24)) . "' ? </FONT><BR /><BR />";
             print "<FORM NAME='delfrm' METHOD='post' ACTION='action_w.php?action=delete&id=" . e($safe_del_id) . "&ticket_id=" . e($safe_del_ticket_id) . "&confirm=1'>";
@@ -307,6 +309,7 @@ if ($get_action == 'add') {
                 }
             print "<INPUT type='hidden' NAME='mode' VALUE=" . $mode . "/>";
             print "</CENTER></FORM>";
+            } // end else (row found)
             }
         } else if ($get_action == 'update') {        //update action and show ticket
         $safe_upd_id = sanitize_int($_GET['id']);
@@ -330,7 +333,7 @@ if ($get_action == 'add') {
         $result = db_query("UPDATE `{$GLOBALS['mysql_prefix']}action` SET `description`=?, `responder` = ?, `updated` = ? WHERE `id`=? LIMIT 1", [$frm_description, $responder, $frm_asof, $safe_upd_id]);
         $result = db_query("UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET `updated` = ? WHERE id=? LIMIT 1", [$frm_asof, $safe_upd_ticket_id]);
         $result = db_query("SELECT ticket_id FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1", [$safe_upd_id]);
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
         print "<br /><CENTER><FONT CLASS='header text_large'>Action record has been updated</FONT><BR /><BR />";
         print "<BR /><BR /><SPAN ID='fin_but' CLASS='plain text' STYLE='width: 100px; float: none; display: inline-block;' onMouseover='do_hover(this.id);' onMouseout='do_plain(this.id);' onClick='opener.location.reload(true); opener.parent.frames[\"upper\"].show_msg(\"Action added!\"); window.close();'><SPAN STYLE='float: left;'>" . get_text('Finished') . "</SPAN><IMG STYLE='float: right;' SRC='./images/finished_small.png' BORDER=0></SPAN><BR /><BR /><BR /></CENTER>";
 //        print "</BODY>";                // 10/19/08
@@ -349,7 +352,8 @@ if ($get_action == 'add') {
         $safe_edit_id = sanitize_int($_GET['id']);
         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `id`=? LIMIT 1";
         $result = db_query($query, [$safe_edit_id]);
-        $row = stripslashes_deep($result->fetch_array());
+        $row = $result ? stripslashes_deep($result->fetch_array()) : null;
+        if (!$row) { print "<FONT CLASS='header text_large'>Action record not found.</FONT>"; return; }
         $responders = explode(" ", $row['responder']);                // to array
         $do_yr_asof = true;
         $ticket_id = $row['ticket_id'];
