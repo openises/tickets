@@ -523,7 +523,7 @@ var track_captions = ["", "Callsign&nbsp;&raquo;", "Device key&nbsp;&raquo;", "U
                         unset($result_st);
                         $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id`=? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') ";
                         $result_as = db_query($query, [$id]);
-                        $cbcount = db()->affected_rows;                // count of incomplete assigns
+                        $cbcount = $result_as->num_rows;                // count of incomplete assigns
                         $dis_rmv = ($cbcount==0)? "": " DISABLED";        // allow/disallow removal
                         $cbtext = ($cbcount==0)? "": "&nbsp;&nbsp;<FONT size=-2>(NA - calls in progress: " .$cbcount . " )</FONT>";
 ?>

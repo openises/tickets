@@ -133,7 +133,7 @@ $coords =  $row['lat'] . "," . $row['lng'];        // for UTM
 
 $query = "SELECT *,UNIX_TIMESTAMP(packet_date) AS `packet_date`, UNIX_TIMESTAMP(updated) AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks`
     WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";        // newest
-$result_tr = db_query($query, [$row['callsign']]);if (db()->affected_rows>0) {                        // got track stuff?
+$result_tr = db_query($query, [$row['callsign']]);if ($result_st->num_rows>0) {                        // got track stuff?
     $rowtr = $result_tr ? stripslashes_deep($result_tr->fetch_array()) : null;
     $lat = $rowtr['latitude'];
     $lng = $rowtr['longitude'];
@@ -408,7 +408,7 @@ $the_type = $temp[0];            // name of type
                                         // 11/15/09 - identify candidate incidents - i. e., open and not already assigned to this unit
             $query_t = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = ?";
             $result_temp = db_query($query_t, [$id]);            $ctr = 0;        // count hits
-            if (db()->affected_rows>0) {
+            if ($result_temp->num_rows>0) {
             $work = $sep = "";
             $ctr = 0;        // count hits
             while ($row_temp = stripslashes_deep($result_temp->fetch_array())) {
@@ -418,7 +418,7 @@ $the_type = $temp[0];            // name of type
                     $sep = ", ";                                // set comma separator for next
                     }                    // end if (is_date())
                 }                    // end while ($row_temp)
-            }                    // end if (db()->affected_rows>0)
+            }                    // end if ($result_temp->num_rows>0)
 
             $instr = ($ctr == 0)? "" : " AND `{$GLOBALS['mysql_prefix']}ticket`.`id` NOT IN ({$work})";
 

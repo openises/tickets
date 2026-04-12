@@ -106,13 +106,13 @@ if (empty($_POST)) {
     }
 //    dump($query);
 ?>
-    <BODY onLoad = "reSizeScr(<?php print db()->affected_rows;?>)"><CENTER>        <!-- 1/12/09 -->
+    <BODY onLoad = "reSizeScr(<?php print $result->num_rows;?>)"><CENTER>        <!-- 1/12/09 -->
 
     <CENTER>        <!-- 1/12/09 -->
     <CENTER><H3>Mail Facilities </H3>
 <?php
     $i = 0;
-    if (db()->affected_rows>0) {
+    if ($result->num_rows>0) {
         print "<FORM NAME='mail_form' METHOD='post' ACTION='" . basename(__FILE__) . "'>\n";
         print "<TABLE BORDER = 0 ALIGN='center'>\n";
         while($row = stripslashes_deep($result->fetch_assoc())) {

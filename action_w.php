@@ -410,7 +410,7 @@ if ($get_action == 'add') {
                     ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC";
                 $result = db_query($query);
                 $max = 24;
-                $height =  (db()->affected_rows>$max) ? ($max * 30 ) : (db()->affected_rows + 1) * 30;
+                $height =  ($result->num_rows>$max) ? ($max * 30 ) : ($result->num_rows + 1) * 30;
                 print "<TR><TD COLSPAN=2>&nbsp;</TD></TR>";
                 print "<TR><TD COLSPAN=2 style='text-align: center;'>" . get_units_legend(). "</TD></TR>";
                 print "<TR><TD COLSPAN=2>&nbsp;</TD></TR>";
@@ -549,7 +549,7 @@ if ($get_action == 'add') {
             $result = db_query($query);
             $max = 24;
 
-            $height =  (db()->affected_rows>$max) ? ($max * 22 ) : (db()->affected_rows + 1) * 22;
+            $height =  ($result->num_rows>$max) ? ($max * 22 ) : ($result->num_rows + 1) * 22;
             print "<TR><TD COLSPAN=2>&nbsp;</TD></TR>";
             print "<TR><TD COLSPAN=2 style='text-align: center;'>" . get_units_legend(). "</TD></TR>";
             print "<TR><TD COLSPAN=2>&nbsp;</TD></TR>";

@@ -547,7 +547,7 @@ switch ( $func ) {
         ORDER BY `organization` ASC,`name` ASC" ;
     $result = db_query ( $query ) or do_error ( $query, 'mysql query failed', db()->error , basename ( __FILE__ ) , __LINE__ ) ;
 
-    if ( db()->affected_rows >0 ) {
+    if ( $result->num_rows >0 ) {
 
     function do_row ( $i, $addr, $name, $org ) {
         global $evenodd;

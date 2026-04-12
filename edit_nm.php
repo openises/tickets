@@ -696,7 +696,7 @@ require_once './incs/links.inc.php';
                                 if (!(empty($row['phone']))) {                    // 3/13/10
                                     $query  = "SELECT `miscellaneous` FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE `phone`= '{$row['phone']}' LIMIT 1";
                                     $result_cons = db_query($query);
-                                    if (db()->affected_rows > 0) {
+                                    if ($result_cons->num_rows > 0) {
                                         $row_cons = $result_cons ? stripslashes_deep($result_cons->fetch_array()) : null;
 ?>
                                         <TR CLASS='even'>

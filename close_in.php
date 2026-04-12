@@ -267,7 +267,7 @@ function do_is_start($in_row) {                // 3/22/10
                 WHERE `{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = ? GROUP BY `r`.`id`";
 
                 $asgn_result = db_query($query, [$ticket_id]);
-                if (db()->affected_rows>0) {
+                if ($asgn_result && $asgn_result->num_rows > 0) {
                     $evenodd = array ("even", "odd");    // CLASS names for alternating table row colors
                     $i=1;
                     $clear_capt = "Clear: ";

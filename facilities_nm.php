@@ -593,7 +593,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
         {$where2}  GROUP BY `f`.id ORDER BY `f`.type ASC";
 
     $result = db_query($query);
-    $num_facilities = db()->affected_rows;
+    $num_facilities = $result->num_rows;
     $i=0;                // counter
 // =============================================================================
     while ($row = stripslashes_deep($result->fetch_assoc())) {        // ==========  major while() for Facility ==========
@@ -817,7 +817,7 @@ var buttons_html = "";
 
                 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = ?";
                 $result = db_query($query, [$realfilename]);
-                if(db()->affected_rows == 0) {    //    file doesn't exist already
+                if($result->num_rows == 0) {    //    file doesn't exist already
                     if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {    // If file uploaded OK
                         if (safe_strlen(filesize($file)) < 20000000) {
                             $print .= "";

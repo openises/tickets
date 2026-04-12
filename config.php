@@ -2793,13 +2793,13 @@ case 'user' :
             $frm_id = sanitize_int($_POST['frm_id']);
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE owner=? LIMIT 1";
             $result = db_query($query, [$frm_id]);
-            $ctr += db()->affected_rows;
+            $ctr += $result->num_rows;
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE user=? LIMIT 1";
             $result = db_query($query, [$frm_id]);
-            $ctr += db()->affected_rows;
+            $ctr += $result->num_rows;
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE user=? LIMIT 1";
             $result = db_query($query, [$frm_id]);
-            $ctr += db()->affected_rows;
+            $ctr += $result->num_rows;
             if ($ctr > 0) {
                 print '<B>DENIED! - User has active database records.</B><BR /><BR />';
             } else {        // OK - delete user
@@ -3428,7 +3428,7 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
         $query = "SELECT *,UNIX_TIMESTAMP(problemend) AS problemend FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `status` = " . $GLOBALS['STATUS_CLOSED'] . " ORDER BY `scope`";
 
         $result = db_query($query);
-        if (db()->affected_rows > 0) {                    // inventory affected rows
+        if ($result->num_rows > 0) {                    // inventory affected rows
             ?>
             <SPAN CLASS='heading text'
                   style=' position: relative; left: 200px; top: 50px; width: 700px; display: block;'>Select Closed Tickets for Permanent Deletion</SPAN>
@@ -3448,13 +3448,13 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                     while ($row = stripslashes_deep($result->fetch_array())) {
                         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}action` WHERE `ticket_id` = ?";
                         $res_temp = db_query($query, [$row['id']]);
-                        $no_acts = db()->affected_rows;
+                        $no_acts = $res_temp->num_rows;
                         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}patient` WHERE `ticket_id` = ?";
                         $res_temp = db_query($query, [$row['id']]);
-                        $no_pers = db()->affected_rows;
+                        $no_pers = $res_temp->num_rows;
                         $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `ticket_id` = ?";
                         $res_temp = db_query($query, [$row['id']]);
-                        $no_assns = db()->affected_rows;
+                        $no_assns = $res_temp->num_rows;
                         ?>
                         <TR CLASS='<?php print $evenodd[$i % 2]; ?>'>
                             <TD CLASS='td_label'><?php print shorten($row['scope'], 50); ?></TD>

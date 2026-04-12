@@ -103,7 +103,7 @@ $result_f = db_query($query_f);
 while ($row_f = stripslashes_deep($result_f->fetch_assoc())) {
     $current_facilities [$row_f['id']] = array ($row_f['name'], $row_f['lat'], $row_f['lng']);
     }
-$facilities = db()->affected_rows;        // 3/24/10
+$facilities = $result_f->num_rows;        // 3/24/10
 
 function get_res_row() {                // writes empty ticket if none exists - returns a row - 11/5/10
     $by = $_SESSION['user_id'];            // 5/27/10

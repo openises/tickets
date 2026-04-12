@@ -105,7 +105,7 @@ $query = "SELECT *, r.updated AS `r_updated`,
     WHERE `r`.`id` = ?";
 
 $result = db_query($query, [$id]);
-$units_ct = db()->affected_rows;            // 1/4/10
+$units_ct = $result->num_rows;            // 1/4/10
 
 $aprs = $instam = $locatea = $gtrack = $glat = $t_tracker = $ogts = $mob_tracker = false;        //7/23/09
 
@@ -132,7 +132,7 @@ if ($track_type > 0 ) {                // get most recent mobile track data
     $query = "SELECT *,packet_date AS `packet_date`, updated AS `updated` FROM `{$GLOBALS['mysql_prefix']}tracks`
         WHERE `source`= ? ORDER BY `packet_date` DESC LIMIT 1";        // newest
     $result_tr = db_query($query, [$row['callsign']]);
-    $row_track = (db()->affected_rows>0)? stripslashes_deep($result_tr->fetch_assoc()) : false;
+    $row_track = ($result_tr->num_rows>0)? stripslashes_deep($result_tr->fetch_assoc()) : false;
     $aprs_updated = $row_track['updated'];
     $aprs_speed = $row_track['speed'];
     if (($row_track) && (my_is_float($row_track['latitude']))) {

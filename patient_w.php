@@ -257,7 +257,7 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
                  `updated` =        ? LIMIT 1";
 
             $result    = db_query($query, [$_POST['frm_description'], $_GET['ticket_id'], $_SESSION['user_id'], $GLOBALS['ACTION_COMMENT'], $_POST['frm_name'], $frm_asof]);
-            if (db()->affected_rows==0) {        // not a duplicate - 8/15/10
+            if ($result->num_rows==0) {        // not a duplicate - 8/15/10
 
                 if ((array_key_exists ('frm_fullname', $_POST))) {        // 6/22/11
                     $ins_data = "`fullname` = ?, `dob` = ?, `gender` = ?, `insurance_id` = ?,";

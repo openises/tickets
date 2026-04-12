@@ -75,7 +75,7 @@ function get_roster($current=null) {    //    9/6/13
 function get_user_details($rosterID) {    //    9/6/13
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}personnel` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$rosterID]) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    if(db()->affected_rows != 0) {
+    if($result->num_rows != 0) {
         $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
         $the_ret =  "Name: " . $row['forenames'] . " " . $row['surname'] . "<BR />";
         $the_ret .= "Street: " . $row['address'] . "<BR />";
@@ -740,7 +740,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
         LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON ( `r`.`un_status_id` = s.id )
         {$where2}  GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC ";                                            // 2/1/10, 3/15/10, 6/10/11
     $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    $num_units = db()->affected_rows;
+    $num_units = $result->num_rows;
     $aprs = false;
     $instam = false;
     $locatea = false;                // 7/23/09
@@ -802,7 +802,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
             LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON (`{$GLOBALS['mysql_prefix']}assigns`.`ticket_id` = `t`.`id`)
             WHERE `responder_id` = ? AND (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00' )";
         $result_as = db_query($query, [$row['unit_id']]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-        $row_assign = (db()->affected_rows==0)?  false : stripslashes_deep($result_as->fetch_assoc()) ;
+        $row_assign = ($result_as->num_rows==0)?  false : stripslashes_deep($result_as->fetch_assoc()) ;
         switch($row_assign['severity'])        {        //color tickets by severity
              case $GLOBALS['SEVERITY_MEDIUM']:     $severityclass='severity_medium'; break;
             case $GLOBALS['SEVERITY_HIGH']:     $severityclass='severity_high'; break;
@@ -1101,7 +1101,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
 
                 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = ?";
                 $result = db_query($query, [$realfilename]) or do_error($query, $query, db()->error, basename( __FILE__), __LINE__);
-                if(db()->affected_rows == 0) {    //    file doesn't exist already
+                if($result->num_rows == 0) {    //    file doesn't exist already
                     if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {    // If file uploaded OK
                         if (safe_strlen(filesize($file)) < 20000000) {
                             $print .= "";
@@ -1622,7 +1622,7 @@ if(get_num_groups()) {
         $query    = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id`= ? AND ( `clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') ";        // 6/27/08
         $result_as = db_query($query, [$id]) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
-        $cbcount = db()->affected_rows;                // count of incomplete assigns
+        $cbcount = $result_as->num_rows;                // count of incomplete assigns
         $dis_rmv = ($cbcount==0)? "": " DISABLED";        // allow/disallow removal
         $cbtext = ($cbcount==0)? "": "&nbsp;&nbsp;<FONT size=-2>(NA - calls in progress: " .$cbcount . " )</FONT>";
 ?>
@@ -1849,7 +1849,7 @@ if(get_num_groups()) {
         $query_t = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `responder_id` = ?";
         $result_temp = db_query($query_t, [$row['id']]) or do_error($query_t, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
         $ctr = 0;        // count hits
-        if (db()->affected_rows>0) {
+        if ($result_temp->num_rows>0) {
             $work = $sep = "";
             $ctr = 0;        // count hits
             while ($row_temp = stripslashes_deep($result_temp->fetch_array())) {
@@ -1859,7 +1859,7 @@ if(get_num_groups()) {
                     $sep = ", ";                                // set comma separator for next
                     }                    // end if (is_date())
                 }                    // end while ($row_temp)
-            }                    // end if (db()->affected_rows>0)
+            }                    // end if ($result_temp->num_rows>0)
 
         $instr = ($ctr == 0)? "" : " AND `id` NOT IN ({$work})";
         $al_groups = $_SESSION['user_groups'];
@@ -2004,7 +2004,7 @@ if(get_num_groups()) {
         $query = "SELECT `id` FROM `{$GLOBALS['mysql_prefix']}responder`";        // 12/17/08
         $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
         unset($result);
-        $required = 40 + (db()->affected_rows*22);
+        $required = 40 + ($result->num_rows*22);
         $the_height = (integer)  min (round($units_side_bar_height * $_SESSION['scr_height']), $required );        // set the max
         $user_level = is_super() ? 9999 : $_SESSION['user_id'];
         $regions_inuse = get_regions_inuse($user_level);    //    6/10/11

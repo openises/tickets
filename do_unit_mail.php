@@ -76,7 +76,7 @@ if ((!(empty($_GET))) && (array_key_exists('name', $_GET))) {    //    10/23/12
             WHERE `status` = {$GLOBALS['STATUS_OPEN']} OR  `status` = {$GLOBALS['STATUS_OPEN']}
             ORDER BY `t`.`severity` DESC, `t`.`scope` ASC" ;                // 4/28/10
         $result = db_query($query);
-        $no_open_tickets = db()->affected_rows;
+        $no_open_tickets = $result->num_rows;
         if($no_open_tickets==0) {            // 6/28/09
             $step = 2;
             } else {
@@ -407,7 +407,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
                 ORDER BY `t`.`severity` DESC, `t`.`scope` ASC" ;                // 4/28/10
 
             $result = db_query($query);
-            $no_tickets = db()->affected_rows;
+            $no_tickets = $result->num_rows;
             if($no_tickets==1) {
                 $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 //                dump($row);

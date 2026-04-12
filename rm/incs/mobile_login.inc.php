@@ -116,7 +116,7 @@ function mobile_is_expired($id) {        // returns boolean
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$id]);
     $row = @stripslashes_deep($result->fetch_assoc());
-    return (($result) && (db()->affected_rows==1) && ($row['expires'] > $now));
+    return (($result) && ($result->num_rows==1) && ($row['expires'] > $now));
     }
 
 function do_mobile_login($requested_page, $outinfo = false, $hh = false) {            // do login/ses sion code - returns array - 2/12/09, 3/8/09

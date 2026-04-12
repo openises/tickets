@@ -418,7 +418,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
         $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
         $i = 0;
 
-        if (db()->affected_rows>0) {                // main loop - top
+        if ($result->num_rows>0) {                // main loop - top
             while($row = stripslashes_deep($result->fetch_assoc())) {
                 $do_date=$row['when'];
                 $table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
@@ -571,7 +571,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
             $where . $which_unit. " AND ((`code` = " . $GLOBALS['LOG_UNIT_STATUS'] . ") OR (`code` = " . $GLOBALS['LOG_UNIT_COMMENT'] . ") OR (`code` = " . $GLOBALS['LOG_COMMENT'] . ")) ORDER BY `name` ASC, `incident` ASC, `status` ASC, `when` ASC" ;    //    9/10/13
         $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
         $i = 0;
-        if (db()->affected_rows>0) {                // main loop - top
+        if ($result->num_rows>0) {                // main loop - top
             while($row = stripslashes_deep($result->fetch_assoc())) {
                 if (empty($curr_unit)) {
                     $curr_unit = $row['unit'];

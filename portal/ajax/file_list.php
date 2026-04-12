@@ -24,7 +24,7 @@ $query = "SELECT *,
         WHERE (`user_id` = ? OR `user_id` = 0) AND `type` = 2 ORDER BY `f`.`id` ASC";
 $bgcolor = '#EEEEEE';
 $result = db_query($query, [$user_id]);
-if (db()->affected_rows == 0) {
+if ($result->num_rows == 0) {
     $return .= "<TABLE style='width: 100%;'><TR style='width: 100%; font-size: 1em; cursor: default;'><TD style='width: 100%; font-size: 1em; text-align: center; cursor: default;'>No Files</TD></TR></TABLE>";
     } else {
     $return .= "<TABLE style='width: 100%;'>";

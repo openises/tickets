@@ -261,7 +261,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
             if(($portal_user != null) && ($portal_user != 0)) {        //    9/10/13
                 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `ticket_id` = ?";        //    9/10/13
                 $result = db_query($query, [$id]);            //    9/10/13
-                if(db()->affected_rows == 0) {        //    9/10/13
+                if($result->num_rows == 0) {        //    9/10/13
                     $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}requests` (
                     `org`,
                     `contact`,
@@ -346,7 +346,7 @@ $the_level = (isset($_SESSION['level'])) ? $_SESSION['level'] : 0 ;
 
                     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = ?";
                     $result = db_query($query, [sanitize_string($realfilename)]);
-                    if(db()->affected_rows == 0) {    //    file doesn't exist already
+                    if($result->num_rows == 0) {    //    file doesn't exist already
                         if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {    // If file uploaded OK
                             if (safe_strlen(filesize($file)) < 20000000) {
                                 $print .= "";
@@ -1514,7 +1514,7 @@ function set_size() {
                         if (!(empty($row['phone']))) {                    // 3/13/10
                             $query  = "SELECT `miscellaneous` FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE `phone`= '{$row['phone']}' LIMIT 1";
                             $result_cons = db_query($query);
-                            if (db()->affected_rows > 0) {
+                            if ($result_cons->num_rows > 0) {
                                 $row_cons = $result_cons ? stripslashes_deep($result_cons->fetch_array()) : null;
 ?>
                                 <DIV>Add'l:</DIV><DIV><?php print $row_cons['miscellaneous'];?></DIV><BR />
@@ -1529,7 +1529,7 @@ function set_size() {
                         $portal_user_control = "<SELECT id='portal_user' NAME='frm_portal_user'>";
                         $query_pu = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `level` = " . $GLOBALS['LEVEL_SERVICE_USER'] . " ORDER BY `name_l` ASC";
                         $result_pu = db_query($query_pu);
-                        if(db()->affected_rows > 0) {
+                        if($result_pu->num_rows > 0) {
                             $has_portal = 1;
                             $portal_user_control .= "<OPTION VALUE = 0 SELECTED>Select User</OPTION>\n";
                                 while ($row_pu = $result_pu->fetch_assoc()) {

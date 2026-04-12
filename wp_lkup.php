@@ -38,14 +38,14 @@ $query  = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE
     LIMIT 1";
 
 $result = db_query($query, [$phone, $phone, $phone, $phone]) or do_error("", 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-$cons_row = (db()->affected_rows==1) ? stripslashes_deep($result->fetch_array()): null;
+$cons_row = ($result->num_rows==1) ? stripslashes_deep($result->fetch_array()): null;
 
 $query  = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `phone` = ? ORDER BY `updated` DESC";            // 9/29/09
 $result = db_query($query, [$phone]) or do_error("", 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
 
-//dump(db()->affected_rows);
-if (db()->affected_rows> 0) {                            // build return string from newest incident data
-    $vals[0] = db()->affected_rows;
+//dump($result->num_rows);
+if ($result->num_rows> 0) {                            // build return string from newest incident data
+    $vals[0] = $result->num_rows;
     $vals[10] = 1;                                        // identify data source as ticket
     $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     do_the_row($row);

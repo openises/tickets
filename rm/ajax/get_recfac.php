@@ -7,7 +7,7 @@ $tick_id = sanitize_int($_GET['ticket_id']);
 $ret_arr = array();
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `id` = ?";
 $result = db_query($query, [$tick_id]);
-if (db()->affected_rows!=0) {
+if ($result->num_rows!=0) {
 	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$the_fac = $row['rec_facility'];
 		}
@@ -17,7 +17,7 @@ if (db()->affected_rows!=0) {
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}facilities`";
 $result = db_query($query);
-if (db()->affected_rows!=0) {
+if ($result->num_rows!=0) {
 	$outstr = "<SELECT name='frm_recfac' ONCHANGE = 'update_recfac(tick_id, this.value);'>";
 	while ($row = stripslashes_deep($result->fetch_assoc())) {
 		$sel = ($row['id']==$the_fac)? " SELECTED": "";

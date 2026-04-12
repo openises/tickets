@@ -50,9 +50,9 @@ if ($result->num_rows==1) {
 
 $query  = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `phone`= ? ORDER BY `updated` DESC";            // 9/29/09
 $result = db_query($query, [$phone]) or do_error("", 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-$ret = db()->affected_rows . ";";                        // common to each  return
-//dump(db()->affected_rows);
-if (db()->affected_rows> 0) {                            // build return string from newest incident data
+$ret = $result->num_rows . ";";                        // common to each  return
+//dump($result->num_rows);
+if ($result->num_rows> 0) {                            // build return string from newest incident data
     $row = $result ? stripslashes_deep($result->fetch_array()) : null;
     $ret .= do_the_row($row);
     }

@@ -388,7 +388,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? sanitize_int($_REQUEST['ticket_id']
                     `responder` = ? ";
 
                 $result    = db_query($query, [$_POST['frm_description'], $safe_ticket_id, $_SESSION['user_id'], $GLOBALS['ACTION_COMMENT'], $frm_asof, $responder]);
-                if (db()->affected_rows==0) {        // not a duplicate - 8/15/10
+                if ($result->num_rows==0) {        // not a duplicate - 8/15/10
 
                     $query     = "INSERT INTO `{$GLOBALS['mysql_prefix']}action`
                         (`description`,`ticket_id`,`date`,`user`,`action_type`, `updated`, `responder`) VALUES
@@ -531,7 +531,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? sanitize_int($_REQUEST['ticket_id']
 //                        dump($query);    //
                 $result = db_query($query);
                 $max = 24;
-                $height =  (db()->affected_rows>$max) ? ($max * 30 ) : (db()->affected_rows + 1) * 30;
+                $height =  ($result->num_rows>$max) ? ($max * 30 ) : ($result->num_rows + 1) * 30;
                 print "<TR VALIGN='top'><TD COLSPAN=3 CLASS='td_label' style='text-align: center;'>" . get_units_legend(). "</TD></TR>";
                 $checked = (in_array("0", $responders))? "CHECKED" : "";    // NA is special case - 8/8/10
 ?>
@@ -697,7 +697,7 @@ $tick_id = (isset($_REQUEST['ticket_id'])) ? sanitize_int($_REQUEST['ticket_id']
                     $result = db_query($query);
                     $max = 24;
 
-                    $height =  (db()->affected_rows>$max) ? ($max * 22 ) : (db()->affected_rows + 1) * 22;
+                    $height =  ($result->num_rows>$max) ? ($max * 22 ) : ($result->num_rows + 1) * 22;
                     print "<TR><TD></TD><TD COLSPAN=2>" . get_units_legend(). "</TD></TR>";
                     print "<TR CLASS='odd'><TD CLASS='td_label text'></TD>";        // 8/8/10
                     print "<TD CLASS='td_data text'><DIV  style='width:auto;height:{$height}PX; overflow-y: auto; overflow-x: auto;' >

@@ -531,7 +531,7 @@ switch($popup_type) {
                                                 AND ticket_id=? ";
 
                                         $result_cleared  = db_query($query, [$id]);
-                                        $num_rows_cleared = db()->affected_rows;
+                                        $num_rows_cleared = $result_cleared->num_rows;
                                         $ticket_end = ($ticket_end > 1)? $ticket_end:  (time() - (get_variable('delta_mins')*60));
                                         $tick_end_str = format_date_2($ticket_end);
                                         $elapsed = my_date_diff(mysql_format_date($ticket_start), mysql_format_date($ticket_end));        // 5/13/10

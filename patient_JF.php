@@ -183,7 +183,7 @@ function ck_frames() {        //  onLoad = "ck_frames()"
                  `updated` =        ?";
 
             $result    = db_query($query, [$_POST['frm_description'], $_GET['ticket_id'], $_SESSION['user_id'], $GLOBALS['ACTION_COMMENT'], $_POST['frm_name'], $frm_asof]);
-            if (db()->affected_rows==0) {        // not a duplicate - 8/15/10
+            if ($result->num_rows==0) {        // not a duplicate - 8/15/10
 
                  $query     = "INSERT INTO `{$GLOBALS['mysql_prefix']}patient`
                      (`description`,`ticket_id`,`date`,`user`,`action_type`, `name`, `updated`) VALUES

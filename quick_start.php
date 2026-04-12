@@ -312,7 +312,7 @@ function count_responders() {
 function do_setting ($which, $what) {                // 7/7/09
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}settings` WHERE `name`= ? LIMIT 1";        // 5/25/09
     $result = db_query($query, [$which]);
-    if (db()->affected_rows!=0) {
+    if ($result->num_rows!=0) {
         $query = "UPDATE `{$GLOBALS['mysql_prefix']}settings` SET `value`= ? WHERE `name`= ?";
         $result = db_query($query, [$what, $which]);
         }

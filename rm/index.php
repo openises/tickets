@@ -85,7 +85,7 @@ function get_status_selector($unit_in, $status_val_in, $tbl_in) {
         AND `{$GLOBALS['mysql_prefix']}{$status_table}`.`id` = `{$GLOBALS['mysql_prefix']}{$tablename}`.`{$link_field}` LIMIT 1" ;
 
     $result = db_query($query);
-    if (db()->affected_rows==0) {                // 2/7/10
+    if ($result->num_rows==0) {                // 2/7/10
         $init_bg_color = "transparent";
         $init_txt_color = "black";
         }

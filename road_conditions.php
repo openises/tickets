@@ -854,7 +854,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
             LEFT JOIN `{$GLOBALS['mysql_prefix']}conditions` `c` ON `r`.`conditions`=`c`.`id`
             ORDER BY `cond_id` ASC";
     $result = db_query($query);
-    $num_locations = db()->affected_rows;
+    $num_locations = $result->num_rows;
     $i=1;                // counter
 // =============================================================================
     $utc = gmdate ("U");

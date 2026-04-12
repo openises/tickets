@@ -171,7 +171,7 @@ $result_f = db_query($query_f);
 while ($row_f = stripslashes_deep($result_f->fetch_assoc())) {
     $current_facilities [$row_f['id']] = array ($row_f['name'], $row_f['lat'], $row_f['lng']);
     }
-$facilities = db()->affected_rows;        // 3/24/10
+$facilities = $result_f->num_rows;        // 3/24/10
 
 $protocols = array();
 $query_in = "SELECT * FROM `{$GLOBALS['mysql_prefix']}in_types` ORDER BY `group` ASC, `sort` ASC, `type` ASC";
@@ -428,7 +428,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
             if(($portal_user != null) && ($portal_user != 0)) {        //    9/10/13
                 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}requests` WHERE `ticket_id` = ?";        //    9/10/13
                 $result = db_query($query, [$id]);            //    9/10/13
-                if(db()->affected_rows == 0) {        //    9/10/13
+                if($result->num_rows == 0) {        //    9/10/13
                     $query = "INSERT INTO `{$GLOBALS['mysql_prefix']}requests` (
                     `org`,
                     `contact`,
@@ -513,7 +513,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
                     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}files` WHERE `orig_filename` = ?";
                     $result = db_query($query, [$realfilename]);
-                    if(db()->affected_rows == 0) {    //    file doesn't exist already
+                    if($result->num_rows == 0) {    //    file doesn't exist already
                         if (move_uploaded_file($_FILES['frm_file']['tmp_name'], $file)) {    // If file uploaded OK
                             if (safe_strlen(filesize($file)) < 20000000) {
                                 $print .= "";
@@ -1517,7 +1517,7 @@ require_once './incs/all_forms_js_variables.inc.php';
         // Pulldown menu for portal user association 9/10/13
     $query_pu = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` WHERE `level` = " . $GLOBALS['LEVEL_SERVICE_USER'] . " ORDER BY `name_l` ASC";
     $result_pu = db_query($query_pu);
-    if(db()->affected_rows > 0) {
+    if($result_pu->num_rows > 0) {
         $has_portal = 1;
         $portal_user_control = "<SELECT ID='portal_user' NAME='frm_portal_user'>\n";
         $portal_user_control .= "<OPTION VALUE = 0 SELECTED>Select User</OPTION>\n";

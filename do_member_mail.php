@@ -23,7 +23,7 @@ else {
             ORDER BY `m`.`id` ASC" ;
 
         $result = db_query($query);
-        $no_members = db()->affected_rows;
+        $no_members = $result->num_rows;
         $step = 1;
         } else {
         $step = $_POST['frm_step'];
@@ -182,7 +182,7 @@ TEXTAREA {FONT-SIZE: 1vw;}
                 ORDER BY `t`.`severity` DESC, `t`.`scope` ASC" ;
 
             $result = db_query($query);
-            $no_tickets = db()->affected_rows;
+            $no_tickets = $result->num_rows;
             if($no_tickets==1) {
                 $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
 //                dump($row);
@@ -220,8 +220,8 @@ TEXTAREA {FONT-SIZE: 1vw;}
                     ORDER BY  `field1` ASC ";
                 }
             $result = db_query($query);
-            $lines = db()->affected_rows +8;
-            $no_rows = db()->affected_rows;
+            $lines = $result->num_rows +8;
+            $no_rows = $result->num_rows;
 ?>
             <SCRIPT>
 
