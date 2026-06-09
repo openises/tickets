@@ -4,8 +4,12 @@
  * Keep $tickets_current_version updated for new releases.
  * 3/1/2026: Consolidated version source and added legacy detection
  *           for installs where the settings table exists but _version is absent.
+ * 6/8/2026: v3.44.3 — fix docker-autoinstall to read from this constant
+ *           instead of hardcoding the version string in its own SQL.
+ *           This file is now the SINGLE source of truth; bumping it
+ *           propagates to the auto-installer automatically.
  */
-define('TICKETS_CURRENT_VERSION', 'v3.44.1');
+define('TICKETS_CURRENT_VERSION', 'v3.44.3');
 $tickets_current_version = TICKETS_CURRENT_VERSION;
 
 if (!function_exists('tickets_get_versions')) {

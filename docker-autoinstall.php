@@ -82,11 +82,29 @@ $guestPass = md5('guest');
 $mysqli->query("INSERT IGNORE INTO user (id, user, passwd, info, level, status, open_at, sort_desc, reporting) VALUES (2, 'guest', '" . $mysqli->real_escape_string($guestPass) . "', 'Guest', 3, 'approved', 'd', 1, 0)");
 echo "Guest user created.\n";
 
-// Set version
-$mysqli->query("UPDATE settings SET value = '3.44.1' WHERE name = '_version'");
+// Set version. Read from incs/versions.inc.php (the single source of truth)
+// rather than hardcoding here — this prevents the v3.44.1 / v3.44.2 drift
+// that bit us between 3.44.1 ship and 3.44.3 fix (reported by Benjamin H.
+// 2026-06-08: container code was 3.44.2 but settings._version still said
+// 3.44.1 because this file was never bumped when 3.44.2 was tagged).
+//
+// TICKETS_CURRENT_VERSION uses the 'v3.44.3' format; strip the leading 'v'
+// so the settings table stores the bare semver, matching legacy convention.
+require_once __DIR__ . '/incs/versions.inc.php';
+$installerVersion = defined('TICKETS_CURRENT_VERSION') ? TICKETS_CURRENT_VERSION : 'unknown';
+$bareVersion = ltrim($installerVersion, 'vV');
+
+$stmt = $mysqli->prepare("UPDATE settings SET value = ? WHERE name = '_version'");
+$stmt->bind_param('s', $bareVersion);
+$stmt->execute();
 if ($mysqli->affected_rows === 0) {
-    $mysqli->query("INSERT INTO settings (name, value) VALUES ('_version', '3.44.1')");
+    $insertStmt = $mysqli->prepare("INSERT INTO settings (name, value) VALUES ('_version', ?)");
+    $insertStmt->bind_param('s', $bareVersion);
+    $insertStmt->execute();
+    $insertStmt->close();
 }
+$stmt->close();
+echo "Version set to {$bareVersion}.\n";
 
 // Set tile mode to proxy for Docker
 $mysqli->query("UPDATE settings SET value = 'proxy' WHERE name = 'tile_mode'");
