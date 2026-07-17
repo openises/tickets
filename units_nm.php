@@ -59,36 +59,12 @@ while ($row = stripslashes_deep($result->fetch_assoc())) {
 
 unset($result);
 
-function get_roster($current=null) {    //    9/6/13
-    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}personnel` ORDER BY `person_identifier`";
-    $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    $the_ret = "<SELECT NAME='frm_roster_id' onChange = 'get_roster_details(this.form, this.options[this.selectedIndex].value);' >";
-    $the_ret .= "<OPTION VALUE='0' SELECTED>Select a Person</OPTION>";
-    while ($row = stripslashes_deep($result->fetch_assoc())) {
-        $sel = (($current) && ($current == $row['id'])) ? "SELECTED " : "";
-        $the_ret .= "<OPTION VALUE=" .  $row['id'] . " " . $sel . ">" . $row['person_identifier'] . "</OPTION>";
-        }
-    $the_ret .= "</SELECT>";
-    return $the_ret;
-    }
-
-function get_user_details($rosterID) {    //    9/6/13
-    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}personnel` WHERE `id` = ? LIMIT 1";
-    $result = db_query($query, [$rosterID]) or do_error('', 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
-    if($result->num_rows != 0) {
-        $row = $result ? stripslashes_deep($result->fetch_assoc()) : null;
-        $the_ret =  "Name: " . $row['forenames'] . " " . $row['surname'] . "<BR />";
-        $the_ret .= "Street: " . $row['address'] . "<BR />";
-        $the_ret .= "State: " . $row['state'] . "<BR />";
-        $the_ret .= "Email: " . $row['email'] . "<BR />";
-        $the_ret .= "Home phone: " . $row['homephone'] . "<BR />";
-        $the_ret .= "Work Phone: " . $row['workphone'] . "<BR />";
-        $the_ret .= "Cellphone: " . $row['cellphone'] . "<BR />";
-        } else {
-        $the_ret = "";
-        }
-    return $the_ret;
-    }
+// get_roster() and get_user_details() are defined in incs/functions.inc.php
+// (required above at line 32) and are also used by units.php and the four
+// units_*_screen*.php forms. Local copies here were byte-near duplicates and
+// caused a fatal "Cannot redeclare get_roster()" (units_nm.php vs
+// functions.inc.php) on the add-unit path in no-internet (NM) mode. Removed so
+// the single shared definitions are used. (v3.44.4 bug fix — Gerald Hurt report)
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

@@ -8,8 +8,13 @@
  *           instead of hardcoding the version string in its own SQL.
  *           This file is now the SINGLE source of truth; bumping it
  *           propagates to the auto-installer automatically.
+ * 7/16/2026: v3.44.4 — fix fatal "Cannot redeclare get_roster()" on the
+ *           add-unit path in no-internet (NM) mode; units_nm.php carried
+ *           duplicate copies of get_roster()/get_user_details() that also
+ *           live in functions.inc.php. Code-only fix, no schema change; the
+ *           bump alerts existing installs that an update is available.
  */
-define('TICKETS_CURRENT_VERSION', 'v3.44.3');
+define('TICKETS_CURRENT_VERSION', 'v3.44.4');
 $tickets_current_version = TICKETS_CURRENT_VERSION;
 
 if (!function_exists('tickets_get_versions')) {
