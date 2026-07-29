@@ -1,3 +1,27 @@
+=========================================================================
+ NOTICE - THIS IS THE LEGACY VERSION (Tickets CAD 3.44)
+=========================================================================
+
+ TicketsCAD 4 is the current version.  This repository is version 3.44.
+
+ Version 3.44 is still maintained for security and bug fixes, and the rest
+ of this file still applies if you are running it.  New development happens
+ in TicketsCAD 4, which keeps the same database schema, so an existing 3.44
+ install can be upgraded in place.
+
+   TicketsCAD 4 ......... https://github.com/openises/TicketsCAD
+   Latest 4.x release ... https://github.com/openises/TicketsCAD/releases/latest
+   Upgrading from 3.44 .. https://github.com/openises/TicketsCAD/blob/main/docs/UPGRADING-FROM-V3.md
+
+ Getting help (either version):
+   Discussion ........... https://groups.google.com/g/open-source-cad
+   Bugs in 3.44 ......... https://github.com/openises/tickets/issues
+   Bugs in 4 ............ https://github.com/openises/TicketsCAD/issues
+
+ See README.md for this same information with clickable links.
+
+=========================================================================
+
 Tickets README
 
 -- Short Intro
@@ -48,8 +72,7 @@ application, PHP-Ticket.  The original author, having frequented the OpenTicket 
 at KTHNOC (Network Operations Center at Royal Institute of Technology in Stockholm, Sweden) 
 which is the node at which SUNET, NORDUNET and national ISPs connect (PoP),  felt a need to
 list  tasks and troubles at work (being a sysadmin) to keep track of what needs to be done 
-and to give other people a chance to read and post tickets. KTHNOC OpenTicket available at 
-http://www.noc.kth.se/opentickets/index.html
+and to give other people a chance to read and post tickets. The KTHNOC OpenTicket site is no longer online.
 
 
 -- Features
@@ -69,8 +92,11 @@ http://www.noc.kth.se/opentickets/index.html
 -- Requirements
 + A PHP capable webserver (Apache, Microsoft IIS, Nginx)
 + PHP 7.4 - PHP 8.5
-+ MySQL, 3.x probably works, but 3.23.*/4 is preferred
-+ You will need a GMaps API key. Obtain at http://www.google.com/apis/maps/signup.html
++ MySQL 5.7+ or MariaDB 10.3+ (MySQL 8.0+ or MariaDB 10.11 recommended)
++ Maps use OpenStreetMap tiles via Leaflet; no map API key is needed for normal
+  use.  A Google Maps API key is only needed for the optional Google address
+  lookup; set it from Configuration/Edit Settings/gmaps_api_key.  See
+  docs/TILE_SETTINGS.md.
 + Clients must accept cookies for login info and handle CSS
 + Users are running phpticket on a 486 66mhz/64mb on linux 2.2.x and it's fast
 

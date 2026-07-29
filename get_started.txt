@@ -128,12 +128,12 @@ Additional initial setup:
     * For security, delete the latter as soon as you have a set up a new 
         account - WITH SUPER PRIVILEGES! - that works.
 
-25.	On SourceForge - Tickets is at 
-	  https://sourceforge.net/projects/openises/
+25.	Releases are published on GitHub at 
+	  https://github.com/openises/tickets/releases
 	  
 26.	Noteworthy URL's.
 	* WAMP - http://www.wampserver.com/en/
-	* XAMPP - http://www.apachefriends.org/en/xampp.html
+	* XAMPP - https://www.apachefriends.org/
 	* LAMP - http://en.wikipedia.org/wiki/LAMP_(software_bundle)
 	* MAMP - http://www.mamp.info/en/mamp.html
 	
@@ -141,9 +141,9 @@ Additional initial setup:
 A User's guide will be available at a later date
        +++++++++++++++++++++++++++++++++++++++++++++++++++++
 If you need help in setting up a web server on a local machine, be sure to
-view the tutorials at the OpenISES Wiki. Adobe Acrobat (pdf) versions of the 
-tutorials can be downloaded from there as well.
-http://openises.wiki.sourceforge.net/Web+Servers+on+the+Desktop
+view the tutorials on the project wiki. The wiki has setup guides for
+Windows with XAMPP, Windows with WSL, and CentOS.
+https://github.com/openises/tickets/wiki
        +++++++++++++++++++++++++++++++++++++++++++++++++++++
 Comments/questions are most welcome!
 
