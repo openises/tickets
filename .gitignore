@@ -9,3 +9,10 @@ composer.lock
 .phpunit.result.cache
 mdb_pictures/.phpunit.result.cache
 .github/
+
+# Static-analysis scanner artifacts (leak the internal analysis server URL)
+.scannerwork/
+.sonar/
+.sonar_lock
+sonar-scanner-*/
+sonar-project.properties
