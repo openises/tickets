@@ -1753,7 +1753,13 @@ function newGetAddress(latlng, currform) {
 
 function getTheAddress(latlng) {
 	control.options.geocoder.reverse(latlng, 67108864 /* zoom 18 */, function(results) {
-		var r = results[0];
+		if(!results || !results.length) {return;}
+		//	Nominatim results carry the parsed address at .properties.address;
+		//	the other providers hand back a flat object. newGetAddress already
+		//	resolves this per provider -- this handler read results[0] directly,
+		//	so every r.city / r.state / r.road below was undefined on Nominatim.
+		var r0 = results[0];
+		var r = (window.geo_provider == 2) ? r0 : ((r0 && r0.properties && r0.properties.address) ? r0.properties.address : r0);
 		var lat = parseFloat(latlng.lat.toFixed(6));
 		var lng = parseFloat(latlng.lng.toFixed(6));
 		var theCity = "";
