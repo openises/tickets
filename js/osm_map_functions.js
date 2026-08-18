@@ -2832,7 +2832,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 		// Use server-configured tile URL if available, fallback to legacy my_Local check
 		var osmUrl = (typeof tileUrl !== 'undefined') ? tileUrl : ((my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
 		var	cmAttr = '';
-		var cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+		var cmAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
 		var tileOpts = {attribution: cmAttr};
 		var effectiveMode = (typeof tileMode !== 'undefined') ? tileMode : ((my_Local=="1") ? "offline" : "online");
 		if (effectiveMode == "offline") {
@@ -3378,7 +3378,7 @@ function init_minimap(theType, lat, lng, icon, theZoom, locale, useOSMAP) {
 	var my_Path = "http://127.0.0.1/_osm/tiles/";
 	// Use server-configured tile URL if available, fallback to legacy my_Local check
 	var osmUrl = (typeof tileUrl !== 'undefined') ? tileUrl : ((my_Local=="1")? "../_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
-	var	cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+	var	cmAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
 	var miniTileOpts = {attribution: cmAttr};
 	var effectiveMode = (typeof tileMode !== 'undefined') ? tileMode : ((my_Local=="1") ? "offline" : "online");
 	if (effectiveMode == "offline") {
