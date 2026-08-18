@@ -1752,7 +1752,7 @@ function newGetAddress(latlng, currform) {
 	}
 
 function getTheAddress(latlng) {
-	control.options.geocoder.reverse(latlng, 20, function(results) {
+	control.options.geocoder.reverse(latlng, 67108864 /* zoom 18 */, function(results) {
 		var r = results[0];
 		var lat = parseFloat(latlng.lat.toFixed(6));
 		var lng = parseFloat(latlng.lng.toFixed(6));

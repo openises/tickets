@@ -1100,7 +1100,7 @@ function load_member_filelist(id) {
 	}				// end function load_filelist()
 	
 function newGetAddress(latlng, currform) {
-	control.options.geocoder.reverse(latlng, 20, function(results) {
+	control.options.geocoder.reverse(latlng, 67108864 /* zoom 18 */, function(results) {
 		if(window.geo_provider == 0){
 			if(results) {var r1 = results[0]; var r = r1['properties']['address'];} else {var r = {city: '', suburb: '', locality: '', house_number: '', road: '', state: '', properState: '', country: ''} }
 			} else if(window.geo_provider == 1) {

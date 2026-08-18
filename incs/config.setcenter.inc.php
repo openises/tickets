@@ -202,7 +202,7 @@ if(count($mapzooms) > 0) {$localZoomMin = min($mapzooms); $localZoomMax = max($m
     function GetAddress(latlng) {
         var popup = L.popup();
         var loc = <?php print get_variable('locale');?>;
-        control.options.geocoder.reverse(latlng, 20, function(results) {
+        control.options.geocoder.reverse(latlng, 67108864 /* zoom 18 */, function(results) {
         if(window.geo_provider == 0){
             var r1 = results[0];
             var r = r1['properties']['address'];

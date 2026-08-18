@@ -1571,7 +1571,7 @@ function initialise() {
 function do_geolocate(latLng, the_lat, the_lng) {
     var control = new L.Control.Geocoder();
     var theCity = "";
-    control.options.geocoder.reverse(latLng, 20, function(results) {
+    control.options.geocoder.reverse(latLng, 67108864 /* zoom 18 */, function(results) {
         if(!results) {alert("Try again"); return;}
         if(window.geo_provider == 0){
             var r1 = results[0];
