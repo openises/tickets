@@ -1500,18 +1500,25 @@ function dummy_pt_to_map(my_form) {
 
 function newGetAddress(latlng, currform) {
 	var popup = L.popup();
-	control.options.geocoder.reverse(latlng, 20, function(results) {
+	control.options.geocoder.reverse(latlng, 67108864 /* zoom 18 */, function(results) {
 		if(!results) {alert("Try again"); return;}
+		var theAbout = [];
 		if(window.geo_provider == 0){
 			var r1 = results[0];
 			var r = r1['properties']['address'];
-			if(r.neighbourhood && r.neighbourhood != "") {
-				r.city = r.neighbourhood;
-				} else if(r.suburb && r.suburb != "") {
-				r.city = r.suburb;
-				} else if(r.town && r.town != "") {
-				r.city = r.town;
+			//	City is the municipality: city/town/village. Nominatim also returns
+			//	neighbourhood and suburb for the same point, and those are NOT the
+			//	city -- they belong in Address About, the way v4 fills its cross
+			//	street. Previously neighbourhood overwrote a good city outright.
+			if(!r.city) {
+				if(r.town && r.town != "") {
+					r.city = r.town;
+				} else if(r.village && r.village != "") {
+					r.city = r.village;
 				}
+			}
+			if(r.neighbourhood && r.neighbourhood != "") {theAbout.push(r.neighbourhood);}
+			if(r.suburb && r.suburb != "" && r.suburb != r.city) {theAbout.push(r.suburb);}
 			} else if(window.geo_provider == 1) {
 			var r = results[0].properties.address;
 			if(!r.city) {
@@ -1684,13 +1691,18 @@ function newGetAddress(latlng, currform) {
 					var address1 = (number != "") ? number + " " : "";
 					var address2 = (street != "") ? street : "";
 					document.add.frm_street.value = address1 + address2;
-					document.add.frm_city.value = theCity;
+					//	Only write a field we actually resolved -- a miss used to blank
+					//	whatever the dispatcher had already typed.
+					if(theCity) {document.add.frm_city.value = theCity;}
+					if(theAbout.length && document.add.frm_address_about && document.add.frm_address_about.value.replace(/^\s+|\s+$/g, "") == "") {
+						document.add.frm_address_about.value = theAbout.join(" / ");
+						}
 					if(locale == 0) {
-						state = (state != "" && state.length > 2) ? states_arr[state] : state;
+						state = (state != "" && state.length > 2 && states_arr[state]) ? states_arr[state] : state;
 						}
 					if(locale == 1) {state = "UK";}
 					if(r.properState) { state = r.properState;}
-					document.add.frm_state.value = state;
+					if(state) {document.add.frm_state.value = state;}
 					document.add.frm_lat.value = lat;
 					document.add.frm_lng.value = lng;
 					document.add.show_lat.value = lat;
