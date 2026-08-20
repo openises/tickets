@@ -21,8 +21,15 @@
  *           fixed getTheAddress() reading the wrong result shape for
  *           Nominatim, and corrected stale map attribution. Code-only, no
  *           schema change. Contributed by Ron Jones (PR #12).
+ * 8/20/2026: v3.44.6 — fix a hard fatal dispatching from the Call Board
+ *           ("Column 'user_id' cannot be null" — board.php's `add_db` case
+ *           lost its $frm_* assignments in an earlier extract() cleanup and
+ *           has been failing since), a scheduled incident silently losing
+ *           its booked date (add_nm.php read $frm_do_scheduled from nowhere),
+ *           and malformed/broken notification links ("HTTP//:8081?id=10").
+ *           Code-only, no schema change. Contributed by Ron Jones (PR #15).
  */
-define('TICKETS_CURRENT_VERSION', 'v3.44.5');
+define('TICKETS_CURRENT_VERSION', 'v3.44.6');
 $tickets_current_version = TICKETS_CURRENT_VERSION;
 
 if (!function_exists('tickets_get_versions')) {
