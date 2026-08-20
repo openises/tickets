@@ -1082,6 +1082,26 @@ if(empty($_SESSION)) {        // expired?
             for ($i=0; $i< count($unit_ids)-1; $i++) {
                 $delta = (get_variable('delta_mins') != "") ? intval(get_variable('delta_mins')) : 0;
                 $now = mysql_format_date(time() - ($delta*60));
+                //	Regression from the extract() cleanup, not a pre-existing gap.
+                //
+                //	fc0af6c removed the file-scope `extract($_POST)` at line 380 on the
+                //	basis that "only $func needed" -- but every case in this switch was
+                //	fed by it. 9064ea5 then restored explicit assignments for `add_b`
+                //	and `edit_db` and stopped there, so `add_db` was left reading seven
+                //	$frm_* names that no longer exist.
+                //
+                //	`assigns`.`user_id` is NOT NULL with no default, so binding null threw
+                //	1048 "Column 'user_id' cannot be null" -- this INSERT could not have
+                //	succeeded at all. The form does post all seven fields.
+                $frm_ticket_id  = sanitize_int($_POST['frm_ticket_id'] ?? 0);
+                $frm_by_id      = sanitize_int($_POST['frm_by_id'] ?? 0);
+                if ($frm_by_id <= 0) {$frm_by_id = sanitize_int($_SESSION['user_id'] ?? 0);}
+                $frm_comments   = sanitize_string($_POST['frm_comments'] ?? '');
+                $frm_miles_strt = (string) ($_POST['frm_miles_strt'] ?? '');
+                $frm_miles_onsc = (string) ($_POST['frm_miles_onsc'] ?? '');
+                $frm_miles_end  = (string) ($_POST['frm_miles_end']  ?? '');
+                $frm_miles_tot  = (string) ($_POST['frm_miles_tot']  ?? '');
+
 
                 $temp = trim($frm_miles_strt);                // 11/4/09
                 $start_mi = (empty($temp))? 0: $temp ;

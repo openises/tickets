@@ -237,6 +237,12 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
             @session_start();
             $by = $_SESSION['user_id'];
 //            $booked_date = empty($frm_booked_date)? "NULL" : quote_smart(trim($frm_booked_date)) ;    // 6/20/10
+            //	$frm_do_scheduled was read as a bare variable and is assigned nowhere in
+            //	this file -- and this is function scope, so nothing at file scope could
+            //	reach it anyway. intval(null) is 0, so the ternary below always took the
+            //	null branch and a scheduled incident silently lost its booked date.
+            //	add.php:362 already reads it from $_POST; this is the twin diverging.
+            $frm_do_scheduled = sanitize_int($_POST['frm_do_scheduled'] ?? 0);
             $booked_date = (intval($frm_do_scheduled)==1)?  trim($frm_booked_date) : null ;    // 1/1/11
                                                                                                     // 6/26/10
             $query = "UPDATE `{$GLOBALS['mysql_prefix']}ticket` SET
