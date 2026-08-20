@@ -1419,12 +1419,34 @@ function mail_it ($to_str, $smsg_to_str, $text, $ticket_id, $text_sel=1, $txt_on
 
                 case "S":        // 6/20/12 - 12/14/2012
                     $gt = get_text("Links");
-                    $protocol = explode("/", $_SERVER["SERVER_PROTOCOL"]);
-                    $uri = explode("/", $_SERVER["REQUEST_URI"]);
+                    //	This emitted "HTTP//:8081?id=10". SERVER_PROTOCOL is "HTTP/1.1",
+                    //	so $protocol[0] was the bare word HTTP with no colon after it,
+                    //	and it cannot indicate TLS either (it reads HTTP/1.1 over https
+                    //	too, so the HTTPS key is what has to be checked). SERVER_ADDR is
+                    //	not populated on every SAPI -- it is absent on IIS here, which
+                    //	raised the warning and left the host empty -- and where it is set
+                    //	it holds the server's own IP, which the recipient may not be able
+                    //	to reach. Prefer the host the user actually browsed to.
+                    $scheme = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')? "https" : "http";
+                    $host = trim((string) ($_SERVER['HTTP_HOST'] ?? ''));
+                    if ($host === '') {
+                        //	No request context (CLI/cron), or a server that omits it.
+                        $host = trim((string) ($_SERVER['SERVER_ADDR'] ?? ''));
+                        if ($host === '') {$host = trim((string) get_variable('host'));}
+                        $port = (string) ($_SERVER['SERVER_PORT'] ?? '');
+                        if ($port !== '' && $port !== '80' && $port !== '443') {$host .= ":{$port}";}
+                        }
+                    //	HTTP_HOST already carries a non-default port, so the port is
+                    //	deliberately only appended on the fallback path above.
+                    //
+                    //	REQUEST_URI is used only to recover the directory the install sits
+                    //	in. The page has to be named explicitly: main.php is the only one
+                    //	that reads ?id=, so the bare-directory form resolved to index.php,
+                    //	which ignores the id and renders a login.
+                    $uri = explode("/", (string) ($_SERVER['REQUEST_URI'] ?? '/main.php'));
                     unset ($uri[count($uri)-1]);
                     $uri = join("/", $uri);
-                    //$message .= "{$gt}: {$temp_arr[0]}://{$_SERVER['HTTP_HOST']}:{$_SERVER['SERVER_PORT']}/main.php?id={$ticket_id}";
-                    $message .= "{$gt}: {$protocol[0]}//{$_SERVER["SERVER_ADDR"]}:{$_SERVER["SERVER_PORT"]}{$uri}?id={$ticket_id}";
+                    $message .= "{$gt}: {$scheme}://{$host}{$uri}/main.php?id={$ticket_id}";
                     break;
                 case "T":                            // 6/20/12
                     $gt = get_text("Facility");
