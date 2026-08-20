@@ -1500,18 +1500,25 @@ function dummy_pt_to_map(my_form) {
 
 function newGetAddress(latlng, currform) {
 	var popup = L.popup();
-	control.options.geocoder.reverse(latlng, 20, function(results) {
+	control.options.geocoder.reverse(latlng, 67108864 /* zoom 18 */, function(results) {
 		if(!results) {alert("Try again"); return;}
+		var theAbout = [];
 		if(window.geo_provider == 0){
 			var r1 = results[0];
 			var r = r1['properties']['address'];
-			if(r.neighbourhood && r.neighbourhood != "") {
-				r.city = r.neighbourhood;
-				} else if(r.suburb && r.suburb != "") {
-				r.city = r.suburb;
-				} else if(r.town && r.town != "") {
-				r.city = r.town;
+			//	City is the municipality: city/town/village. Nominatim also returns
+			//	neighbourhood and suburb for the same point, and those are NOT the
+			//	city -- they belong in Address About, the way v4 fills its cross
+			//	street. Previously neighbourhood overwrote a good city outright.
+			if(!r.city) {
+				if(r.town && r.town != "") {
+					r.city = r.town;
+				} else if(r.village && r.village != "") {
+					r.city = r.village;
 				}
+			}
+			if(r.neighbourhood && r.neighbourhood != "") {theAbout.push(r.neighbourhood);}
+			if(r.suburb && r.suburb != "" && r.suburb != r.city) {theAbout.push(r.suburb);}
 			} else if(window.geo_provider == 1) {
 			var r = results[0].properties.address;
 			if(!r.city) {
@@ -1684,13 +1691,18 @@ function newGetAddress(latlng, currform) {
 					var address1 = (number != "") ? number + " " : "";
 					var address2 = (street != "") ? street : "";
 					document.add.frm_street.value = address1 + address2;
-					document.add.frm_city.value = theCity;
+					//	Only write a field we actually resolved -- a miss used to blank
+					//	whatever the dispatcher had already typed.
+					if(theCity) {document.add.frm_city.value = theCity;}
+					if(theAbout.length && document.add.frm_address_about && document.add.frm_address_about.value.replace(/^\s+|\s+$/g, "") == "") {
+						document.add.frm_address_about.value = theAbout.join(" / ");
+						}
 					if(locale == 0) {
-						state = (state != "" && state.length > 2) ? states_arr[state] : state;
+						state = (state != "" && state.length > 2 && states_arr[state]) ? states_arr[state] : state;
 						}
 					if(locale == 1) {state = "UK";}
 					if(r.properState) { state = r.properState;}
-					document.add.frm_state.value = state;
+					if(state) {document.add.frm_state.value = state;}
 					document.add.frm_lat.value = lat;
 					document.add.frm_lng.value = lng;
 					document.add.show_lat.value = lat;
@@ -1740,8 +1752,14 @@ function newGetAddress(latlng, currform) {
 	}
 
 function getTheAddress(latlng) {
-	control.options.geocoder.reverse(latlng, 20, function(results) {
-		var r = results[0];
+	control.options.geocoder.reverse(latlng, 67108864 /* zoom 18 */, function(results) {
+		if(!results || !results.length) {return;}
+		//	Nominatim results carry the parsed address at .properties.address;
+		//	the other providers hand back a flat object. newGetAddress already
+		//	resolves this per provider -- this handler read results[0] directly,
+		//	so every r.city / r.state / r.road below was undefined on Nominatim.
+		var r0 = results[0];
+		var r = (window.geo_provider == 2) ? r0 : ((r0 && r0.properties && r0.properties.address) ? r0.properties.address : r0);
 		var lat = parseFloat(latlng.lat.toFixed(6));
 		var lng = parseFloat(latlng.lng.toFixed(6));
 		var theCity = "";
@@ -2814,7 +2832,7 @@ function init_map(theType, lat, lng, icon, initzoom, locale, useOSMAP, control_p
 		// Use server-configured tile URL if available, fallback to legacy my_Local check
 		var osmUrl = (typeof tileUrl !== 'undefined') ? tileUrl : ((my_Local=="1")? "./_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
 		var	cmAttr = '';
-		var cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+		var cmAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
 		var tileOpts = {attribution: cmAttr};
 		var effectiveMode = (typeof tileMode !== 'undefined') ? tileMode : ((my_Local=="1") ? "offline" : "online");
 		if (effectiveMode == "offline") {
@@ -3360,7 +3378,7 @@ function init_minimap(theType, lat, lng, icon, theZoom, locale, useOSMAP) {
 	var my_Path = "http://127.0.0.1/_osm/tiles/";
 	// Use server-configured tile URL if available, fallback to legacy my_Local check
 	var osmUrl = (typeof tileUrl !== 'undefined') ? tileUrl : ((my_Local=="1")? "../_osm/tiles/{z}/{x}/{y}.png": protocol + "{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
-	var	cmAttr = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade';
+	var	cmAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
 	var miniTileOpts = {attribution: cmAttr};
 	var effectiveMode = (typeof tileMode !== 'undefined') ? tileMode : ((my_Local=="1") ? "offline" : "online");
 	if (effectiveMode == "offline") {
