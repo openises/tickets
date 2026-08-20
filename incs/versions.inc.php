@@ -13,8 +13,16 @@
  *           duplicate copies of get_roster()/get_user_details() that also
  *           live in functions.inc.php. Code-only fix, no schema change; the
  *           bump alerts existing installs that an update is available.
+ * 8/19/2026: v3.44.5 — fix reverse geocoding on map click: five call sites
+ *           passed a map ZOOM where Control.Geocoder.reverse() expects a
+ *           SCALE, which silently asked Nominatim for zoom -4 and got back
+ *           only "United States" — clearing City/State on every click.
+ *           Also stopped neighbourhood/suburb overwriting a correct city,
+ *           fixed getTheAddress() reading the wrong result shape for
+ *           Nominatim, and corrected stale map attribution. Code-only, no
+ *           schema change. Contributed by Ron Jones (PR #12).
  */
-define('TICKETS_CURRENT_VERSION', 'v3.44.4');
+define('TICKETS_CURRENT_VERSION', 'v3.44.5');
 $tickets_current_version = TICKETS_CURRENT_VERSION;
 
 if (!function_exists('tickets_get_versions')) {
