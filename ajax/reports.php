@@ -903,7 +903,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
                 $table .= "</TR></thead><tbody>\n";
 
             $of_interest = array($GLOBALS['LOG_ERROR'], $GLOBALS['LOG_INTRUSION'], $GLOBALS['LOG_ICS_MESSAGE_SEND'], $GLOBALS['LOG_BROADCAST_MESSAGE'], $GLOBALS['LOG_BROADCAST_ALERT'], $GLOBALS['LOG_BROADCAST_ERROR']);
-            while($row = stripslashes_deep($result->fetch_assoc(), MYSQL_ASSOC)){            // main loop - top
+            while($row = stripslashes_deep($result->fetch_assoc())){            // main loop - top
                 if (($row['code']<20) || in_array( $row['code'], $of_interest) ) {        // 4/7/2014
                     $table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
 
@@ -955,6 +955,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
         }
 
     function parsedate($diff){
+        $diff = (int) $diff;        // whole seconds - % on a float is deprecated in PHP 8.1+
         $seconds = 0;
         $hours   = 0;
         $minutes = 0;
@@ -993,7 +994,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
         global $evenodd, $img_width, $types, $doDownload ;
         global $nature, $disposition, $patient, $incident, $incidents;
         global $theWidth, $doprint;
-        global $startdate, $enddate;
+        global $startdate, $enddate, $tick_sel;
 
         $ret_arr = array();
 
@@ -1006,7 +1007,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
         $types[$GLOBALS['LOG_INCIDENT_CHANGE']]        ="{$incident} change";
 
         $where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
-        $which_inc = ($_GET['tick_sel'] ==0)? "" : " AND `ticket_id` = " . $_Get['tick_sel'];                // 2/7/09
+        $which_inc = ($tick_sel == 0)? "" : " AND `ticket_id` = " . intval($tick_sel);                // 2/7/09
 
         $query = "
             SELECT *,
@@ -1054,7 +1055,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
             $table .= "</TR></thead><tbody>\n";
             $inc_types = array();
 
-            while($row = stripslashes_deep($result->fetch_assoc(), MYSQL_ASSOC)){            // 8/15/08 main loop - top
+            while($row = stripslashes_deep($result->fetch_assoc())){            // 8/15/08 main loop - top
                 if ($row['code']<20) {
                     if (array_key_exists($row['in_types_id'], $inc_types)) {
                         $inc_types[$row['in_types_id']]++;
@@ -1084,7 +1085,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
 
             $query2 = "SELECT * FROM `$GLOBALS[mysql_prefix]ticket` WHERE id IN (" . $query . ")";
             $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
-            while($row = stripslashes_deep($result->fetch_assoc(), MYSQL_ASSOC)){            //
+            while($row = stripslashes_deep($result->fetch_assoc())){            //
 //                dump ($row['id']);
                 }                                                                // end while($row ...
 //            graphics date range in db format and calculated img width - when` < '2013-06-01 23:59:59&p3=391'  AND `code` = '10'
@@ -1314,7 +1315,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
         global $evenodd, $img_width, $types, $doDownload ;
         global $nature, $disposition, $patient, $incident, $incidents;
         global $theWidth, $doprint;
-        global $startdate, $enddate;
+        global $startdate, $enddate, $tick_sel;
 
         $ret_arr = array();
 
@@ -1327,7 +1328,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
         $types[$GLOBALS['LOG_INCIDENT_CHANGE']]        ="{$incident} change";
 
         $where = " WHERE `problemstart` >= '" . $from_to[0] . "' AND `problemstart` < '" . $from_to[1] . "'";
-        $which_inc = ($_GET['tick_sel'] ==0)? "" : " AND `ticket_id` = " . $_Get['tick_sel'];                // 2/7/09
+        $which_inc = ($tick_sel == 0)? "" : " AND `ticket_id` = " . intval($tick_sel);                // 2/7/09
 
         $query = "
             SELECT *,
@@ -1388,7 +1389,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
             $table .= "<TH CLASS='plain_listheader text text_left'>Miles</TH>";
             $table .= "</TR></thead><tbody>\n";
             $inc_types = array();
-            while($row = stripslashes_deep($result->fetch_assoc(), MYSQL_ASSOC)){
+            while($row = stripslashes_deep($result->fetch_assoc())){
                 $table .= "<TR CLASS='" . $evenodd[$i%2] . "' style='width: 100%;'>";
                 $temp = $row['user_firstname'] . " " . $row['user_surname'];
                 $controller = ($temp == " " || $temp == "") ? str_pad($row['user_name'], 20, " ", STR_PAD_RIGHT) : str_pad($temp, 20, " ", STR_PAD_RIGHT);

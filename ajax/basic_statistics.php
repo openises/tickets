@@ -39,6 +39,7 @@ function datediff($value1,$value2) {
     }
 
 function parsedate($diff){
+    $diff = (int) $diff;        // whole seconds - % on a float is deprecated in PHP 8.1+
     $seconds = 0;
     $hours   = 0;
     $minutes = 0;
