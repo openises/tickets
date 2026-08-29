@@ -272,8 +272,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
             if(empty($post_frm_owner)) {$post_frm_owner=0;}
 
             //$inc_num_ary = unserialize (get_variable('_inc_num'));                                            // 11/13/10
-            $temp = get_variable('_inc_num');                                        // 3/2/11
-            $inc_num_ary = (strpos($temp, "{")>0)?  unserialize ($temp) :  unserialize (base64_decode($temp));
+            $inc_num_ary = get_inc_num_ary();        // 3/2/11, hardened
 
             // Show serial and format
             switch ((int) $inc_num_ary[0]) {

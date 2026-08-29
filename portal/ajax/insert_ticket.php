@@ -118,8 +118,7 @@ if($result) {
     $query = "UPDATE `{$GLOBALS['mysql_prefix']}requests` SET `status` = 'Accepted', `accepted_date` = ?, `ticket_id` = ? WHERE `id` = ?";
     $result = db_query($query, [$now, $last_id, $id]);
 
-    $temp = get_variable('_inc_num');                                        // 3/2/11
-    $inc_num_ary = (strpos($temp, "{")>0)?  unserialize ($temp) :  unserialize (base64_decode($temp));
+    $inc_num_ary = get_inc_num_ary();        // 3/2/11, hardened
     $theScope = $row['scope'];
 
     if ($inc_num_ary[0] == 0 ) {

@@ -1629,6 +1629,32 @@ function get_variable($which){
     }
 
 /**
+ * Read the incident-numbering scheme from settings as a usable array.
+ *
+ * Stored base64-encoded since 3/2/11; pre-2011 installs hold the plain
+ * serialized array, which is what the brace test sniffs for. A value that is
+ * missing, empty or otherwise not a six-element array unserializes to false,
+ * and every caller writes its copy straight back after incrementing - so a
+ * single bad read replaces the scheme with serialize(false) permanently.
+ * Fall back to the shipped default, keeping whatever keys survived.
+ *
+ * @return array 0 style, 1 label, 2 separator, 3 number, 4 prepend nature, 5 year
+ */
+function get_inc_num_ary() {
+    $raw = (string) get_variable('_inc_num');
+    $ary = (strpos($raw, "{") > 0)? @unserialize($raw) : @unserialize(base64_decode($raw));
+    $default = array("0", "", "", "", "0", date("y"));        // no serial number, current year
+    if (!is_array($ary)) {
+        error_log("Tickets CAD: _inc_num is not a valid numbering array - falling back to default");
+        return $default;
+        }
+    foreach ($default as $k => $v) {                        // tolerate a short or sparse array
+        if (!array_key_exists($k, $ary)) {$ary[$k] = $v;}
+        }
+    return $ary;
+    }
+
+/**
  * Get the current tile mode: 'online', 'proxy', or 'offline'.
  * Falls back to reading legacy 'local_maps' setting for pre-upgrade installs.
  */
