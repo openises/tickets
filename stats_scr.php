@@ -57,6 +57,7 @@ function found_user() {
         }
 
     function parsedate($diff){
+        $diff = (int) $diff;        // whole seconds - % on a float is deprecated in PHP 8.1+
         $days = 0;
         $seconds = 0;
         $hours   = 0;

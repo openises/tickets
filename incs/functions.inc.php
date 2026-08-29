@@ -1066,7 +1066,7 @@ function get_fac_status_cols($id) {
     }
 
 function show_log($theid, $show_cfs=false) {                                // 11/20/09, 10/20/12, 5/8/14
-    global $evenodd ;    // class names for alternating table row colors
+    global $evenodd, $types ;    // class names for alternating table row colors; $types from log_codes.inc.php
     require_once 'log_codes.inc.php';                                      // 9/29/10
     $query = "
         SELECT `{$GLOBALS['mysql_prefix']}log`.`id` AS `log_id`,
