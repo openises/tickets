@@ -192,7 +192,7 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
             $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60)); // 6/20/10
             if(empty($post_frm_owner)) {$post_frm_owner=0;}
 
-            $inc_num_ary = unserialize (get_variable('_inc_num'));                    // 11/13/10
+            $inc_num_ary = get_inc_num_ary();        // 11/13/10, hardened
              $name_rev = $_POST['frm_scope'];
             if ($inc_num_ary[0] == 0 ) {                                            // no auto numbering scheme
                 switch (get_variable('serial_no_ap')) {                                // incident name revise -1/22/09
@@ -1467,7 +1467,7 @@ $city = (!(empty($res_row['city'])))?    $res_row['city']  : get_variable('def_c
 $st =   (!(empty($res_row['state'])))?    $res_row['state'] : get_variable('def_st') ;
 $st_size = (get_variable("locale") ==0)?  2: 4;                                                // 11/23/10
 
-$inc_num_ary = unserialize (get_variable('_inc_num'));                                            // 11/13/10
+$inc_num_ary = get_inc_num_ary();        // 11/13/10, hardened
 switch ((int) $inc_num_ary[0]) {
     case 0:            // none
            $inc_name="";                                                    // empty
