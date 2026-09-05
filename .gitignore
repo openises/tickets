@@ -16,3 +16,4 @@ mdb_pictures/.phpunit.result.cache
 .sonar_lock
 sonar-scanner-*/
 sonar-project.properties
+sonar_external_issues*.json

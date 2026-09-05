@@ -31,6 +31,13 @@ if ($semgrepReport === null) {
     exit(2);
 }
 
+// Current, non-deprecated generic issue import format: rule metadata is
+// declared once in a top-level "rules" array (keyed by a bare id, no
+// engineId prefix) and each issue references it by that same bare id --
+// the older format (each issue repeating engineId+ruleId inline with no
+// "rules" array) still works today but SonarQube warns it will be removed.
+$seenRuleIds = [];
+$rules = [];
 $issues = [];
 foreach ($semgrepReport['results'] ?? [] as $r) {
     $path = preg_replace('#^/src/#', '', $r['path']);
@@ -40,10 +47,27 @@ foreach ($semgrepReport['results'] ?? [] as $r) {
         'WARNING' => 'MAJOR',
         default => 'MINOR',
     };
+    $ruleId = $r['check_id'] ?? 'unknown';
+    // Semgrep's check_id is often config-path-qualified (e.g.
+    // "semgrep.ticketscad-tainted-sql-query-string") -- keep only the
+    // final segment as the bare rule id this format expects.
+    $bareRuleId = substr(strrchr('.' . $ruleId, '.'), 1);
+
+    if (!isset($seenRuleIds[$bareRuleId])) {
+        $seenRuleIds[$bareRuleId] = true;
+        $rules[] = [
+            'id' => $bareRuleId,
+            'name' => 'Tainted SQL query string (Semgrep taint analysis)',
+            'description' => $r['extra']['message'] ?? 'SQL injection risk (Semgrep taint analysis)',
+            'engineId' => 'semgrep-ticketscad',
+            'cleanCodeAttribute' => 'TRUSTWORTHY',
+            'impacts' => [['softwareQuality' => 'SECURITY', 'severity' => 'HIGH']],
+        ];
+    }
 
     $issues[] = [
+        'ruleId' => $bareRuleId,
         'engineId' => 'semgrep-ticketscad',
-        'ruleId' => $r['check_id'] ?? 'unknown',
         'severity' => $sonarSeverity,
         'type' => 'VULNERABILITY',
         'primaryLocation' => [
@@ -58,5 +82,5 @@ foreach ($semgrepReport['results'] ?? [] as $r) {
     ];
 }
 
-file_put_contents($argv[2], json_encode(['issues' => $issues], JSON_PRETTY_PRINT));
-echo "Wrote " . count($issues) . " issues to " . $argv[2] . "\n";
+file_put_contents($argv[2], json_encode(['rules' => $rules, 'issues' => $issues], JSON_PRETTY_PRINT));
+echo "Wrote " . count($issues) . " issues (" . count($rules) . " distinct rules) to " . $argv[2] . "\n";
