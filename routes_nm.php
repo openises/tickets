@@ -1240,6 +1240,13 @@ function do_list($unit_id ="", $capabilities ="", $searchtype ="") {
 //            dump ($query);
             }
 
+        // GHSA-class finding (2026-09-04 follow-up sweep): unit_id and
+        // capabilities were already parameter-bound here, but searchtype
+        // (used as a raw SQL keyword slot between two LIKE clauses, meant to
+        // hold only AND/OR -- see the radio buttons a few hundred lines up
+        // that are this parameter's only legitimate source) was left as a
+        // completely raw interpolation right next to the fixed placeholder.
+        $searchtype = (strtoupper((string) $searchtype) === 'AND') ? 'AND' : 'OR';
         $resp_params = [];
         $where = "";
         if (!empty($unit_id)) {

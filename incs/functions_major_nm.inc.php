@@ -822,7 +822,20 @@ if(empty($al_groups)) {    //    catch for errors - no entries in allocates for 
 
     $safe_my_offset = sanitize_int($my_offset, 0);
     if ($sort_by_field && $sort_value) {                    //sort by field?, updated 4/18/11 to support regional operation
-        $safe_sort_field = db_escape($sort_by_field);        // column name - use db_escape
+        // Same class as GHSA-ggw3-35vm-rq4r and siblings: db_escape() (a
+        // real_escape_string-style function) protects a QUOTED value, not
+        // an identifier position -- a backtick, not a quote, closes it.
+        // Not currently reachable (both callers pass no arguments, so this
+        // branch never runs today), but hardened so a future caller can't
+        // land here unprotected.
+        $ticketSortColumnsMajorNm = ['id', 'in_types_id', 'org', 'portal_user',
+            'contact', 'street', 'address_about', 'city', 'state', 'phone',
+            'to_address', 'facility', 'rec_facility', 'lat', 'lng', 'date',
+            'problemstart', 'problemend', 'scope', 'affected', 'description',
+            'comments', 'nine_one_one', 'status', 'owner', 'severity',
+            'updated', 'booked_date', '_by'];
+        $safe_sort_field = in_array($sort_by_field, $ticketSortColumnsMajorNm, true)
+            ? $sort_by_field : 'id';
         $query = "SELECT *,UNIX_TIMESTAMP(problemstart) AS problemstart,UNIX_TIMESTAMP(problemend) AS problemend,
             UNIX_TIMESTAMP(date) AS date,UNIX_TIMESTAMP(updated) AS updated,
             in_types.type AS `type`, in_types.id AS `t_id`

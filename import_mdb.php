@@ -1,10 +1,41 @@
 <?php
 ini_set('memory_limit', '5120M');
 set_time_limit ( 0 );
+@session_start();
 require_once './incs/functions.inc.php';
-$dbms_schema = (array_key_exists('backup', $_GET)) ? sanitize_string($_GET['backup']) : "";
-if($dbms_schema == "") {
-    print "Db Schema Backup not provided<BR />";
+
+// Found during a broader security sweep after GHSA-5v45-76v3-9gm5 and
+// siblings (commit f71a987): this endpoint had NO authentication at all,
+// and `backup` (sanitize_string() only strips null bytes -- no path
+// protection whatsoever) went straight into file_exists()/is_readable()/
+// file_get_contents() with no restriction on what path it could name.
+// That's not just SQL injection -- file_get_contents() honors PHP stream
+// wrappers (data://, php://input, ...), so this was unauthenticated
+// ARBITRARY SQL EXECUTION against the live database, no filesystem access
+// even required. Every "statement" split out of whatever content this
+// reached gets run raw via $conn->query() a few lines down with zero
+// parameterization -- correct for THIS feature's actual job (importing a
+// trusted .sql dump verbatim), so the fix here is access control and path
+// containment, not query escaping.
+if (!is_administrator()) {
+    print "-NOT AUTHORIZED";
+    exit;
+    }
+
+$importMdbDir = realpath(__DIR__ . '/mdb_imports');
+if ($importMdbDir === false) {
+    print "Import directory does not exist. Create " . __DIR__ . "/mdb_imports and place the .sql file there.<BR />";
+    exit();
+    }
+// basename() alone defeats directory traversal AND every dangerous stream
+// wrapper (data://, php://input, etc. don't survive being reduced to a
+// bare filename) -- the realpath+str_starts_with check below is the
+// belt-and-suspenders confirmation that the resolved file is genuinely
+// inside the intended directory and not, say, a symlink escape.
+$requested = (array_key_exists('backup', $_GET)) ? basename($_GET['backup']) : "";
+$dbms_schema = ($requested !== "") ? realpath($importMdbDir . '/' . $requested) : false;
+if ($dbms_schema === false || strpos($dbms_schema, $importMdbDir . DIRECTORY_SEPARATOR) !== 0) {
+    print "Db Schema Backup not provided, or not found in mdb_imports/<BR />";
     exit();
     }
 /***************************************************************************

@@ -2,6 +2,22 @@
 /*
 
 */
+
+// Same class as GHSA-5v45-76v3-9gm5 (areas_sc.php) and siblings:
+// db_escape() protects a QUOTED value, not a table-name identifier position
+// -- a backtick, not a quote, closes it. Every caller in this codebase
+// passes one of these hardcoded literals (verified by grepping every call
+// site of the functions below across the whole tree, 2026-09-04) -- none
+// currently pass request input, so this is hardening against a future
+// caller, not a fix for a live exploit. Centralized here rather than
+// duplicated per function so the allowlist has one place to grow.
+function safe_member_table_name($table) {
+    $allowed = ['team', 'member', 'defined_fields', 'fieldsets',
+        'training_packages', 'events', 'clothing_types', 'capability_types',
+        'equipment_types', 'vehicles', 'files'];
+    return in_array($table, $allowed, true) ? $table : 'member';
+    }
+
 function do_datestring($date) {
     $theRet = date("jS M Y", $date);
     return $theRet;
@@ -23,7 +39,7 @@ function get_control($table, $set_id, $fieldname, $label, $readonly) {
     $readonly_string = $readonly ? "DISABLED='disabled'" : "";
     $output = "                            <LABEL for=\"" . e($fieldname) . "\">" . get_text(get_field_label('defined_fields', 3)) . ":</LABEL>";
     $output .= "                                <SELECT NAME='" . e($fieldname) . "' " . $readonly_string . ">";
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $rows = db_fetch_all("SELECT * FROM `{$p}{$table_escaped}`");
     foreach ($rows as $row) {
         $sel = ($set_id == $row['id']) ? " SELECTED" : "";
@@ -38,7 +54,7 @@ function get_control_add($table, $fieldname, $label) {
     $output = "<LABEL for=\"" . e($fieldname) . "\">" . get_text(get_field_label('defined_fields', 3)) . ":</LABEL>";
     $output .= "<SELECT NAME='" . e($fieldname) . "'>";
     $output .= "<OPTION  VALUE=0 SELECTED>Select Team</OPTION>";
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $rows = db_fetch_all("SELECT * FROM `{$p}{$table_escaped}`");
     foreach ($rows as $row) {
         $output .= "                                    <OPTION 100%;' VALUE='" . e($row['id']) . "'>" . e($row['name']) . "</OPTION>";
@@ -49,7 +65,7 @@ function get_control_add($table, $fieldname, $label) {
 
 function get_field_numbers($table) {
     $p = $GLOBALS['mysql_prefix'];
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $result = db_query("SELECT * FROM `{$p}{$table_escaped}` LIMIT 1");
     $num_fields = $result->field_count;
     return $num_fields;
@@ -65,21 +81,21 @@ function get_status_name($id) {
 
 function get_field_label($table, $fieldid) {
     $p = $GLOBALS['mysql_prefix'];
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `field_id` = ? LIMIT 1", [$fieldid]);
     return $row ? $row['label'] : '';
     }
 
 function get_fieldset($table, $fieldid) {
     $p = $GLOBALS['mysql_prefix'];
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `field_id` = ? LIMIT 1", [$fieldid]);
     return $row ? $row['fieldset'] : '';
     }
 
 function get_fieldset_control($table, $fieldid) {
     $p = $GLOBALS['mysql_prefix'];
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `field_id` = ? LIMIT 1", [$fieldid]);
     if (!$row) { return ''; }
     $curr_fieldset = $row['fieldset'];
@@ -101,14 +117,14 @@ function get_fieldset_control($table, $fieldid) {
 
 function get_fieldset_label($table, $id) {
     $p = $GLOBALS['mysql_prefix'];
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `id` = ? LIMIT 1", [$id]);
     return $row ? $row['label'] : '';
     }
 
 function get_fieldset_name($table, $id) {
     $p = $GLOBALS['mysql_prefix'];
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `id` = ? LIMIT 1", [$id]);
     return $row ? $row['name'] : '';
     }
@@ -118,7 +134,7 @@ function get_field_inuse($table, $field, $fieldid) {
     $field_inuse = false;
     $field_type = get_field_type($table, $fieldid);
     $field_escaped = db_escape($field);
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     if ($field_type == "ENUM" || $field_type == "DATE" || $field_type == "DATETIME") {
         $where = " WHERE (`{$field_escaped}` != 0 AND `{$field_escaped}` != 2)";
     } else {
@@ -134,7 +150,7 @@ function get_field_inuse($table, $field, $fieldid) {
 
 function get_editable($table, $id) {
     $p = $GLOBALS['mysql_prefix'];
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `field_id` = ?", [$id], 'i');
     $editable = ($row && $row['_noedit'] == 0) ? true : false;
     return $editable;
@@ -774,7 +790,7 @@ function get_its_name($id, $namefield, $table){                                /
     $p = $GLOBALS['mysql_prefix'];
     $id = sanitize_int($id, 0);
     $namefield_escaped = db_escape($namefield);
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $row = db_fetch_one("SELECT `{$namefield_escaped}` AS `thename` FROM `{$p}{$table_escaped}` WHERE `id` = ? LIMIT 1", [$id], 'i');
     return (!$row) ? "Not Specified?" : $row['thename'];
     }
@@ -805,7 +821,7 @@ function return_bytes ($size_str) {
 function show_table($table, $id, $width) {
     $p = $GLOBALS['mysql_prefix'];
     $id = sanitize_int($id, 0);
-    $table_escaped = db_escape($table);
+    $table_escaped = safe_member_table_name($table);
     $row = db_fetch_one("SELECT * FROM `{$p}{$table_escaped}` WHERE `id` = ? LIMIT 1", [$id], 'i');
     $output = "<TABLE style='width: " . e($width) . "; border: 1px outset #707070;'>";
     foreach($row as $key => $val) {

@@ -17,19 +17,35 @@ $the_user = ($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
 $ticket_id = ((isset($_GET['ticket_id'])) && ($_GET['ticket_id'] != 0)) ? clean_string($_GET['ticket_id']) : NULL;
 $responder_id = (isset($_GET['responder_id'])) ? clean_string($_GET['responder_id']) : NULL;
 $filter = (isset($_GET['filter'])) ? clean_string($_GET['filter']) : "";
-$sort = (isset($_GET['sort'])) ? clean_string($_GET['sort']) : NULL;
-$way = (isset($_GET['way'])) ? clean_string($_GET['way']) : NULL;
+// Same class as GHSA-4pq7-gmrc-gvqq (rm/ajax/messagelist.php, already fixed)
+// -- this is a near-duplicate sibling file that had the identical bug and
+// was missed in that pass: ticket_id in an unquoted comparison, sort/way in
+// an unvalidated ORDER BY. Same fix, same real messages columns.
+$messagesSortColumns = ['id', 'msg_type', 'message_id', 'server_number',
+    'ticket_id', 'resp_id', 'recipients', 'from_address', 'fromname',
+    'subject', 'message', 'status', 'date', 'read_status', 'readby',
+    'delivered', 'delivery_status', '_by', '_from', '_on'];
+$sort = (isset($_GET['sort']) && in_array($_GET['sort'], $messagesSortColumns, true))
+    ? $_GET['sort'] : NULL;
+$way = (isset($_GET['way']) && strtoupper($_GET['way']) === 'ASC') ? 'ASC' : 'DESC';
 $where = "";
+$messagelist2Params = [];
 
 if($responder_id) {
 	$where .= "WHERE (`resp_id` = '" . $responder_id . "')";
-	$where .= ($ticket_id) ? " AND `ticket_id` = " . $ticket_id . " ":"";
+	if ($ticket_id) {
+		$where .= " AND `ticket_id` = ? ";
+		$messagelist2Params[] = (int) $ticket_id;
+		}
 	} else {
-	$where .= ($ticket_id) ? " WHERE `ticket_id` = " . $ticket_id : "";
+	if ($ticket_id) {
+		$where .= " WHERE `ticket_id` = ?";
+		$messagelist2Params[] = (int) $ticket_id;
+		}
 	}
-	
-$order = (isset($sort)) ? "ORDER BY `read_status`, " . $sort : "ORDER BY `date`" ;
-$order2 = (isset($way)) ? $way : "DESC";
+
+$order = (isset($sort)) ? "ORDER BY `read_status`, `" . $sort . "`" : "ORDER BY `date`" ;
+$order2 = $way;
 $actr=0;
 
 $query = "SELECT `id`, `name`, `handle` FROM `{$GLOBALS['mysql_prefix']}responder`";
@@ -54,7 +70,7 @@ $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		`m`.`subject` AS `subject`	
 		FROM `{$GLOBALS['mysql_prefix']}messages` `m`
 		{$where} {$order} {$order2}";
-$result = db_query($query);
+$result = db_query($query, $messagelist2Params);
 $bgcolor = "#EEEEEE";
 $num=$result->num_rows;
 if ($result->num_rows == 0) { 				// 8/6/08

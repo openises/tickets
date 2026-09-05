@@ -770,7 +770,12 @@ $htmlfooter = "</DIV></BODY></HTML>";
         $table .=  "<TH CLASS='plain_listheader text text_left'>" . get_text("Type") . "</TH>";
         $table .=  "<TH CLASS='plain_listheader text text_left'>" . get_text("Message") . "</TH></TR></thead><tbody>";
         $where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
-        $which_unit = ((!isset($_POST['frm_resp_sel']) || ($_POST['frm_resp_sel']==0)))? "" : " AND `responder_id` = " .$_POST['frm_resp_sel'];
+        // Second, separate instance of GHSA-pwrg-7c5c-pf7r in the same file
+        // (this report section builds its own copy of the same query shape)
+        // -- found in a follow-up sweep, missed in the original fix pass.
+        $frm_resp_sel_set2 = isset($_POST['frm_resp_sel']) && ($_POST['frm_resp_sel'] != 0);
+        $which_unit = $frm_resp_sel_set2 ? " AND `responder_id` = ?" : "";
+        $reportsQueryParams2 = $frm_resp_sel_set2 ? [(int) $_POST['frm_resp_sel']] : [];
                                                                                                                                             // 3/23/09
         $query = "SELECT *,
             `when` AS `when_num`,
@@ -779,7 +784,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
             FROM `$GLOBALS[mysql_prefix]log`
             LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`$GLOBALS[mysql_prefix]log`.responder_id = r.id) ".
             $where . $which_unit. " AND ((`code` = " . $GLOBALS['LOG_COMMENT'] . ") OR (`code` = " . $GLOBALS['LOG_UNIT_COMMENT'] . ") OR (`code` = " . $GLOBALS['LOG_BROADCAST_MESSAGE'] . ") OR (`code` = " . $GLOBALS['LOG_BROADCAST_ALERT'] . ")) ORDER BY `name` ASC, `when` ASC" ;    //    9/10/13
-        $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
+        $result = db_query($query, $reportsQueryParams2) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
         $i = 0;
         if ($result->num_rows>0) {                // main loop - top
             while($row = stripslashes_deep($result->fetch_assoc())) {

@@ -359,7 +359,18 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
     //            dump ($query);
                 }
 
-            $where = (empty($unit_id))? "" : " AND `r`.`id` = $unit_id ";        // revised 5/23/08 per AD7PE
+            // Same shape as routes_nm.php's sibling do_list() (already
+            // parameter-bound) -- this copy (routes.php's sink) was missed
+            // entirely: unit_id unquoted/numeric, capabilities raw in a
+            // quoted LIKE literal, searchtype a completely raw SQL-keyword
+            // slot (legitimate values are only AND/OR -- see the radio
+            // buttons in routes.php's own form).
+            $searchtype = (strtoupper((string) $searchtype) === 'AND') ? 'AND' : 'OR';
+            $routesIncParams = [];
+            $where = (empty($unit_id))? "" : " AND `r`.`id` = ? ";        // revised 5/23/08 per AD7PE
+            if (!empty($unit_id)) {
+                $routesIncParams[] = sanitize_int($unit_id);
+                }
             if(!empty($unit_id)) {
                 $where2="";
             } else {
@@ -368,10 +379,11 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
                 if($searchitems) {
                     for($j = 0; $j < count($searchitems); $j++){
                         if  ($j+1 != count($searchitems)) {
-                            $where2 .= "`r`.`capab` LIKE '%{$searchitems[$j]}%' $searchtype";
+                            $where2 .= "`r`.`capab` LIKE ? $searchtype";
                         } else {
-                            $where2 .= "`r`.`capab` LIKE '%{$searchitems[$j]}%')";
+                            $where2 .= "`r`.`capab` LIKE ?)";
                         }
+                        $routesIncParams[] = '%' . $searchitems[$j] . '%';
                     }
                 }
             }
@@ -453,7 +465,10 @@ function get_assigned_td($unit_id, $on_click = "") {        // returns td string
                  WHERE  `dispatch` > 0 $where $where2 $where3 GROUP BY unit_id )
                 {$order}";        //    6/17/13
 
-            $result = db_query($query);
+            // $where/$where2 (and therefore their ? placeholders) appear
+            // TWICE in the query above -- once per UNION branch -- so the
+            // bound values must be duplicated to match, in the same order.
+            $result = db_query($query, array_merge($routesIncParams, $routesIncParams));
 
             if($result->num_rows>0) {
             $end_date = (intval($problemend)> 1)? $problemend:  (time() - (get_variable('delta_mins')*60));
