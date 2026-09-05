@@ -17,19 +17,39 @@ $the_user = ($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
 $ticket_id = ((isset($_GET['ticket_id'])) && ($_GET['ticket_id'] != 0)) ? clean_string($_GET['ticket_id']) : NULL;
 $responder_id = (isset($_GET['responder_id'])) ? clean_string($_GET['responder_id']) : NULL;
 $filter = (isset($_GET['filter'])) ? clean_string($_GET['filter']) : "";
-$sort = (isset($_GET['sort'])) ? clean_string($_GET['sort']) : NULL;
-$way = (isset($_GET['way'])) ? clean_string($_GET['way']) : NULL;
+// GHSA-4pq7-gmrc-gvqq: unauthenticated SQL injection -- ticket_id reached an
+// UNQUOTED numeric comparison via raw concatenation (responder_id's quoted
+// slot right above it was already safe: clean_string() is
+// mysqli_real_escape_string(), which is real protection for a QUOTED
+// position, just not for this unquoted one or for the ORDER BY below).
+// Same-file, same-class issue found while fixing the reported one: `sort`
+// reached an identifier position and `way` a direction with no allowlist at
+// all -- neither can be secured by escaping the value.
+$messagesSortColumns = ['id', 'msg_type', 'message_id', 'server_number',
+    'ticket_id', 'resp_id', 'recipients', 'from_address', 'fromname',
+    'subject', 'message', 'status', 'date', 'read_status', 'readby',
+    'delivered', 'delivery_status', '_by', '_from', '_on'];
+$sort = (isset($_GET['sort']) && in_array($_GET['sort'], $messagesSortColumns, true))
+    ? $_GET['sort'] : NULL;
+$way = (isset($_GET['way']) && strtoupper($_GET['way']) === 'ASC') ? 'ASC' : 'DESC';
 $where = "";
+$messagelistParams = [];
 
 if($responder_id) {
 	$where .= "WHERE (`resp_id` = '" . $responder_id . "')";
-	$where .= ($ticket_id) ? " AND `ticket_id` = " . $ticket_id . " ":"";
+	if ($ticket_id) {
+		$where .= " AND `ticket_id` = ? ";
+		$messagelistParams[] = (int) $ticket_id;
+		}
 	} else {
-	$where .= ($ticket_id) ? " WHERE `ticket_id` = " . $ticket_id : "";
+	if ($ticket_id) {
+		$where .= " WHERE `ticket_id` = ?";
+		$messagelistParams[] = (int) $ticket_id;
+		}
 	}
-	
-$order = (isset($sort)) ? "ORDER BY `read_status`, " . $sort : "ORDER BY `date`" ;
-$order2 = (isset($way)) ? $way : "DESC";
+
+$order = (isset($sort)) ? "ORDER BY `read_status`, `" . $sort . "`" : "ORDER BY `date`" ;
+$order2 = $way;
 $actr=0;
 
 $query = "SELECT `id`, `name`, `handle` FROM `{$GLOBALS['mysql_prefix']}responder`";
@@ -54,7 +74,7 @@ $query = "SELECT *, `date` AS `date`, `_on` AS `_on`,
 		`m`.`subject` AS `subject`	
 		FROM `{$GLOBALS['mysql_prefix']}messages` `m`
 		{$where} {$order} {$order2}";
-$result = db_query($query);
+$result = db_query($query, $messagelistParams);
 $num=$result->num_rows;
 if ($result->num_rows == 0) { 				// 8/6/08
 	$print = "<TABLE style='width: 100%;'><TR style='width: 100%;'><TD style='width: 100%;'>No Messages</TD></TR></TABLE>";	

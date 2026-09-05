@@ -177,9 +177,16 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
             else {
                 print "</HEAD>\n<BODY onLoad = 'ck_frames();'>\n";        // 9/21/08
                 $evenodd = array ("even", "odd");
+                $hintsConfigParams = [];
                 if((isset($_POST['hints_group'])) && ($_POST['hints_group'] != "All")) {
+                    // GHSA-c94j-g2pj-wvv3: SQL injection -- sanitize_string()
+                    // only strips null bytes and trims whitespace; it does NOT
+                    // escape quote characters, so it gave no real protection
+                    // for this quoted position. Parameter-bind the value
+                    // instead of sanitising it.
                     $group = sanitize_string($_POST['hints_group']);
-                    $where = "WHERE `{$GLOBALS['mysql_prefix']}hints`.`group` = '{$group}' ORDER BY `tag` ASC";
+                    $where = "WHERE `{$GLOBALS['mysql_prefix']}hints`.`group` = ? ORDER BY `tag` ASC";
+                    $hintsConfigParams[] = $group;
 //                    dump($_POST);
                 } else {
                     $where = "ORDER BY `group` ASC";
@@ -193,7 +200,7 @@ print "//" . date("n/j/y", filemtime(basename(__FILE__))) . "\n";
             <?php
                 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}hints` {$where}";
 //                dump($query);
-                $result = db_query($query);
+                $result = db_query($query, $hintsConfigParams);
                 $i = 1;
                 print "\n<FORM NAME='hints_Form' METHOD = 'post' onSubmit='return validate_set(document.hints_Form);' ACTION='hints_config.php?func=hints&go=true'>
                     <table border=0 STYLE = 'MARGIN-LEFT:100PX'>\n";

@@ -559,7 +559,12 @@ $htmlfooter = "</DIV></BODY></HTML>";
         $table .=  "<TH CLASS='plain_listheader text text_left'>Comment</TH></TR></thead><tbody>\n";    //    9/10/13
         $blank = $statuses;
         $where = " WHERE `when` >= '" . $from_to[0] . "' AND `when` < '" . $from_to[1] . "'";
-        $which_unit = ((!isset($_POST['frm_resp_sel']) || ($_POST['frm_resp_sel']==0)))? "" : " AND `responder_id` = " .$_POST['frm_resp_sel'];
+        // GHSA-pwrg-7c5c-pf7r: unauthenticated SQL injection -- frm_resp_sel
+        // landed in an UNQUOTED numeric comparison via raw concatenation.
+        // Parameter-bind it instead.
+        $frm_resp_sel_set = isset($_POST['frm_resp_sel']) && ($_POST['frm_resp_sel'] != 0);
+        $which_unit = $frm_resp_sel_set ? " AND `responder_id` = ?" : "";
+        $reportsQueryParams = $frm_resp_sel_set ? [(int) $_POST['frm_resp_sel']] : [];
                                                                                                                                         // 3/23/09
         $query = "SELECT *,
             `when` AS `when_num`,
@@ -569,7 +574,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
             FROM `$GLOBALS[mysql_prefix]log`
             LEFT JOIN `$GLOBALS[mysql_prefix]responder` r ON (`$GLOBALS[mysql_prefix]log`.responder_id = r.id) ".
             $where . $which_unit. " AND ((`code` = " . $GLOBALS['LOG_UNIT_STATUS'] . ") OR (`code` = " . $GLOBALS['LOG_UNIT_COMMENT'] . ") OR (`code` = " . $GLOBALS['LOG_COMMENT'] . ")) ORDER BY `name` ASC, `incident` ASC, `status` ASC, `when` ASC" ;    //    9/10/13
-        $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
+        $result = db_query($query, $reportsQueryParams) or do_error($query, 'mysql query failed', db()->error, __FILE__, __LINE__);
         $i = 0;
         if ($result->num_rows>0) {                // main loop - top
             while($row = stripslashes_deep($result->fetch_assoc())) {

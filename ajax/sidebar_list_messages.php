@@ -31,8 +31,11 @@ if($inorout) {
     }
 
 if(isset($mi_id)) {
-    $query = "SELECT * FROM `$GLOBALS[mysql_prefix]mi_x` WHERE `mi_id` = " . $mi_id;
-    $result = db_query($query);
+    // GHSA-45xc-vp5c-mww4: unauthenticated SQL injection -- mi_id reached an
+    // UNQUOTED numeric comparison via raw concatenation. clean_string() only
+    // escapes quote characters, which is irrelevant to an unquoted slot.
+    $query = "SELECT * FROM `$GLOBALS[mysql_prefix]mi_x` WHERE `mi_id` = ?";
+    $result = db_query($query, [(int) $mi_id]);
     while($mi_row = stripslashes_deep($result->fetch_assoc())){
         $incs_arr[] = $mi_row['ticket_id'];
         }
@@ -69,8 +72,21 @@ if(isset($incs_arr)) {
 if(isset($responder_id)) { $where .= " AND (`resp_id` = '" . $responder_id . "')"; }
 if(isset($facility_id)) { $where .= " AND (`resp_id` = '" . $facility_id . "')"; }
 
-$order = (isset($sort)) ? "ORDER BY `read_status` ," . $sort : "ORDER BY `date`" ;
-$order2 = (isset($way)) ? $way : "";
+// Same class as GHSA-45xc-vp5c-mww4's mi_id finding, found while fixing it:
+// sort reaches an ORDER BY identifier position (not even backtick-wrapped)
+// and way a direction, both with zero validation. Mirrors the fix already
+// applied to the identical pattern in rm/ajax/messagelist.php (same table).
+$messagesSortColumns2 = ['id', 'msg_type', 'message_id', 'server_number',
+    'ticket_id', 'resp_id', 'recipients', 'from_address', 'fromname',
+    'subject', 'message', 'status', 'date', 'read_status', 'readby',
+    'delivered', 'delivery_status', '_by', '_from', '_on'];
+$sort = (isset($sort) && in_array($sort, $messagesSortColumns2, true)) ? $sort : null;
+// Preserve the original default (no explicit direction, i.e. MySQL's own
+// ASC default) rather than inventing a new default — only constrain the
+// value when the caller actually supplied one.
+$way = (isset($way) && $way !== null) ? (strtoupper($way) === 'ASC' ? 'ASC' : 'DESC') : "";
+$order = (isset($sort)) ? "ORDER BY `read_status`, `" . $sort . "`" : "ORDER BY `date`" ;
+$order2 = $way;
 $actr=0;
 
 $the_user = $_SESSION['user_id'];

@@ -159,13 +159,31 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
         default: print "error - error - error - error " . __LINE__;
         }                // end switch($func)
 
+    $sitIncidentsParams = [];
     if ($sort_by_field && $sort_value) {                    //sort by field?
+        // GHSA-ggw3-35vm-rq4r: SQL injection -- sort_by_field reached an
+        // identifier position (`ticket`.`{$sort_by_field}`, backtick-wrapped
+        // so escaping the value is irrelevant) and sort_value broke out of a
+        // LIKE literal, both with zero validation. An identifier position
+        // cannot be secured by escaping the value; sort_by_field needs an
+        // allowlist against the real `ticket` columns, sort_value needs
+        // parameter binding.
+        $ticketSortColumns = ['id', 'in_types_id', 'org', 'portal_user',
+            'contact', 'street', 'address_about', 'city', 'state', 'phone',
+            'to_address', 'facility', 'rec_facility', 'lat', 'lng', 'date',
+            'problemstart', 'problemend', 'scope', 'affected', 'description',
+            'comments', 'nine_one_one', 'status', 'owner', 'severity',
+            'updated', 'booked_date', '_by'];
+        if (!in_array($sort_by_field, $ticketSortColumns, true)) {
+            $sort_by_field = 'id';        // safe default rather than silently dropping the whole sort
+            }
         $query = "SELECT *,problemstart AS problemstart,problemend AS problemend,
             `date` AS `date`,updated AS updated, in_types.type AS `type`, in_types.id AS `t_id`
             FROM `$GLOBALS[mysql_prefix]allocates`
             LEFT JOIN `$GLOBALS[mysql_prefix]ticket` ON `$GLOBALS[mysql_prefix]allocates`.`resource_id`=`$GLOBALS[mysql_prefix]ticket`.`id`
             LEFT JOIN `$GLOBALS[mysql_prefix]in_types` ON `$GLOBALS[mysql_prefix]ticket`.`in_types_id`=`$GLOBALS[mysql_prefix]in_types`.`id`
-            WHERE `ticket`.`{$sort_by_field}` LIKE '%{$sort_value}%' $restrict_ticket AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 ORDER BY $order_by";
+            WHERE `ticket`.`{$sort_by_field}` LIKE ? $restrict_ticket AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1 ORDER BY $order_by";
+        $sitIncidentsParams[] = '%' . $sort_value . '%';
         }
     else {                    // 2/2/09, 8/12/09, updated 4/18/11 to support regional operation
         $query = "SELECT *,problemstart AS problemstart,
@@ -201,7 +219,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
             GROUP BY tick_id ORDER BY `status` DESC, {$sort_by_severity}
             LIMIT 1000 OFFSET {$my_offset}";        // 2/2/09, 10/28/09, 2/21/10
         }
-    $result = db_query($query);
+    $result = db_query($query, $sitIncidentsParams);
     $the_offset = (isset($_GET['frm_offset'])) ? (integer) $_GET['frm_offset'] : 0 ;
     $num_rows = $result->num_rows;
 //    Major While

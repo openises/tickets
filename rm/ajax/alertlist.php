@@ -56,11 +56,20 @@ function br2nl($input) {
 	return preg_replace('/<br(\s+)?\/?>/i', "\n", $input);
 	}
 
-$sort = (isset($_GET['sort'])) ? clean_string($_GET['sort']) : NULL;
-$way = (isset($_GET['way'])) ? clean_string($_GET['way']) : NULL;
+// GHSA-44vq-qjvr-96gj: unauthenticated SQL injection -- `sort` (backtick-
+// wrapped, so clean_string()'s quote-escaping is irrelevant) and `way`
+// (not validated at all) reached an ORDER BY with no allowlist. An
+// identifier/direction position cannot be secured by escaping the value;
+// both need an allowlist against the real `roadinfo` columns and the only
+// two legal sort directions.
+$roadinfoSortColumns = ['id', 'title', 'description', 'address', 'conditions',
+    'lat', 'lng', 'username', '_by', '_on', '_from'];
+$sort = (isset($_GET['sort']) && in_array($_GET['sort'], $roadinfoSortColumns, true))
+    ? $_GET['sort'] : NULL;
+$way = (isset($_GET['way']) && strtoupper($_GET['way']) === 'ASC') ? 'ASC' : 'DESC';
 
 $order = (isset($sort)) ? "ORDER BY `" . $sort . "`": "ORDER BY `_on`" ;
-$order2 = (isset($way)) ? $way : "DESC";
+$order2 = $way;
 $actr=0;
 
 $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}roadinfo` `r` WHERE `r`.`_on` >= (NOW() - INTERVAL 5 DAY) {$order} {$order2}";

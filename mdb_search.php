@@ -112,23 +112,36 @@ function validate(theForm) {
         $regex_query = preg_quote($_POST['frm_query'], '/');
         $regex_query = str_replace(array('\\*', '\\?'), array('.*', '.'), $regex_query);
         $safe_query = db()->real_escape_string($regex_query);
-        if(!empty($_POST['frm_search_in']))    {    //what field are we searching?
-            $safe_field = db()->real_escape_string($_POST['frm_search_in']);
+        // GHSA-ghqm-2wf7-8vww: SQL injection -- frm_search_in reached a
+        // backtick-wrapped column-identifier position and frm_ordertype an
+        // ORDER BY identifier, both "protected" only by real_escape_string(),
+        // which escapes quote characters and is therefore irrelevant to an
+        // identifier position (a backtick closes it, not a quote). An
+        // identifier cannot be secured by escaping the value; it needs an
+        // allowlist of real column names. Derive that allowlist live from the
+        // table's own real columns (same technique the "search all fields"
+        // branch below already used) so it can never drift from the schema.
+        $member_result_for_columns = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}member` LIMIT 0");
+        $memberColumns = [];
+        for ($mi = 0; $mi < $member_result_for_columns->field_count; $mi++) {
+            $memberColumns[] = $member_result_for_columns->fetch_field_direct($mi)->name;
+            }
+
+        if(!empty($_POST['frm_search_in']) && in_array($_POST['frm_search_in'], $memberColumns, true))    {    //what field are we searching?
+            $safe_field = $_POST['frm_search_in'];
             $search_fields = "`{$safe_field}` REGEXP '{$safe_query}'";
             } else {
             //list fields and form the query to search all of them
-            $result = db_query("SELECT * FROM `{$GLOBALS['mysql_prefix']}member`");
             $search_fields = "";
-            $field_count = $result->field_count;
-            for ($i = 0; $i < $field_count; $i++) {
-                $finfo = $result->fetch_field_direct($i);
-                $search_fields .= "`" . $finfo->name . "` REGEXP '{$safe_query}' OR ";
+            foreach ($memberColumns as $col_name) {
+                $search_fields .= "`" . $col_name . "` REGEXP '{$safe_query}' OR ";
                 }
             $search_fields = substr($search_fields,0,safe_strlen($search_fields) - 4);
             }
 
         $desc = isset($_POST['frm_order_desc'])? $_POST['frm_order_desc'] :  "";        // 9/19/08
-        $safe_ordertype = db()->real_escape_string($_POST['frm_ordertype']);
+        $safe_ordertype = in_array($_POST['frm_ordertype'] ?? '', $memberColumns, true)
+            ? $_POST['frm_ordertype'] : 'id';
         $safe_desc = ($desc === 'DESC') ? 'DESC' : '';
 
         $query = "SELECT *,`field16` AS `duedate`,

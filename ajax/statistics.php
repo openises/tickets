@@ -29,8 +29,12 @@ foreach($al_groups as $grp) {
 
 
 
-$query_cs = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = {$user_id}";
-$result_cs = db_query($query_cs);
+// GHSA-rhh3-5gwh-qjmp: unauthenticated SQL injection -- $user_id (from
+// $_GET['user']) landed in an UNQUOTED numeric comparison. clean_string()
+// escapes quote characters, which is irrelevant here since the slot never
+// needed a quote breakout. Parameter-bind it instead of interpolating.
+$query_cs = "SELECT * FROM `$GLOBALS[mysql_prefix]stats_settings` WHERE `user_id` = ?";
+$result_cs = db_query($query_cs, [(int) $user_id]);
 while ($row_cs = stripslashes_deep($result_cs->fetch_assoc())) {
     $refresh_rate = $row_cs['refresh_rate'];
     $f1 = $row_cs['f1'];
