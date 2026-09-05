@@ -36,7 +36,7 @@ incs/full_scr.inc.php:1975
 incs/functions_major_nm.inc.php:1158
 incs/functions_major_nm.inc.php:1246
 incs/functions_major_nm.inc.php:886
-install.php:806
+install.php:888
 mdb_search.php:154
 mdb_search.php:205
 mdb_search.php:253

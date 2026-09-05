@@ -82,6 +82,15 @@ function table_exists_mysqli($mysqli, $table) {
 // database is still correctly blocked. On any connection/query failure,
 // return false (never grants a bypass beyond "no admin found").
 function install_admin_exists($cfg) {
+    // $cfg['prefix'] (db_prefix from the request) reaches a backtick-quoted
+    // identifier below -- an IDENTIFIER position, so it needs an allowlist,
+    // not escaping. A crafted prefix that broke out of the identifier could
+    // make this function wrongly report "no admin exists" against an
+    // already-installed target, defeating the whole point of the check it
+    // backs. A real table prefix is only ever alphanumeric/underscore.
+    if (!preg_match('/^[a-zA-Z0-9_]*$/', (string) ($cfg['prefix'] ?? ''))) {
+        return true; // unrecognized prefix shape -- fail closed, never open
+    }
     $mysqli = @connect_db($cfg);
     if (!$mysqli) { return false; }
     $userTable = $cfg['prefix'] . 'user';
