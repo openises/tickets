@@ -123,4 +123,12 @@
         unset($query, $result);
         echo "\t}\t// end function do_landb()\n";
 
-?>
+<?php
+    }        // end function do_landb_server() -- closes the brace opened at
+             // line 2. This file is dead code (nothing require/includes
+             // incs/landb.inc.php -- the real, called do_landb() lives in
+             // incs/full_scr.inc.php); found only because today's new
+             // php -l CI gate is the first thing to ever syntax-check the
+             // whole tree. Fixed for a valid parse rather than deleted,
+             // since removing dead code is a separate decision from a
+             // security-sweep syntax fix.

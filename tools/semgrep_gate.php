@@ -27,7 +27,13 @@ $root = dirname(__DIR__);
 $baselinePath = $root . '/tools/semgrep_baseline.txt';
 $updateBaseline = in_array('--update-baseline', $argv ?? [], true);
 
-$cmd = 'docker run --rm -v ' . escapeshellarg($root) . ':/src semgrep/semgrep '
+// Pinned, not :latest -- an un-pinned tag makes the gate non-reproducible:
+// the same committed code can start failing or passing between runs as the
+// upstream image updates its taint engine, which is exactly what happened
+// during development here (a later "latest" pull found 5 more matches in
+// already-reviewed tables.php code that an earlier pull didn't). Bump this
+// deliberately, re-run the whole baseline-review process, never silently.
+$cmd = 'docker run --rm -v ' . escapeshellarg($root) . ':/src semgrep/semgrep:1.175.1 '
      . 'semgrep scan --config /src/.semgrep/ --json /src 2>/dev/null';
 $output = shell_exec($cmd);
 if ($output === null || trim($output) === '') {
