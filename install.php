@@ -68,6 +68,36 @@ function table_exists_mysqli($mysqli, $table) {
     return $ok;
 }
 
+// Whether a real super-admin account already exists in the target the
+// caller's own db_host/db_user/db_pass/db_name/db_prefix identify -- NOT
+// whether the `settings` table exists. detect_install()'s `exists` flag
+// flips true as soon as `settings` is created, which happens well before
+// (roughly table 77 of ~110, alphabetically) the `users` step actually
+// creates the admin account -- and a fresh install's execute_step flow is
+// one SEPARATE HTTP request per step, so gating on `settings` existing
+// blocks a real first-time install partway through its own single run.
+// Gating on "does an admin account exist yet" instead means every step of
+// a genuinely fresh install stays authorized for the run's entire
+// duration, while a second, later attempt against an already-claimed
+// database is still correctly blocked. On any connection/query failure,
+// return false (never grants a bypass beyond "no admin found").
+function install_admin_exists($cfg) {
+    $mysqli = @connect_db($cfg);
+    if (!$mysqli) { return false; }
+    $userTable = $cfg['prefix'] . 'user';
+    $exists = false;
+    if (table_exists_mysqli($mysqli, $userTable)) {
+        $res = $mysqli->query("SELECT COUNT(*) AS c FROM `{$userTable}` WHERE `level` IN (0,1)");
+        if ($res) {
+            $row = $res->fetch_assoc();
+            $exists = ((int)($row['c'] ?? 0)) > 0;
+            $res->free();
+        }
+    }
+    $mysqli->close();
+    return $exists;
+}
+
 function detect_install($cfg) {
     $out = array('exists' => false, 'installed_version' => null, 'db_version' => null, 'legacy' => false);
     $mysqli = connect_db($cfg);
@@ -635,25 +665,67 @@ $isInstallerApiCall = ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action
 // (execute_step/execute_stream/execute) from the admin-login check below,
 // on an ALREADY-INSTALLED system. The `!$isInstallerApiCall` exemption was
 // only ever meant to apply to a FRESH install (no admin account exists yet
-// to log in as) -- it must never apply once `$detection['exists']` is true.
-// As written, ANY unauthenticated POST with action=execute_stream (attacker
-// supplies db_host/db_user/db_pass/db_name/db_prefix/admin_user/admin_pass
-// directly in the request body) reached perform_install() in mode
-// install_clean on a live production instance -- full unauthenticated
-// database wipe-and-reinstall plus attacker-chosen super-admin creation,
-// against whatever DB the attacker's own POST body names.
-if ($detection['exists']) {
+// to log in as) -- it must never apply once the target has already been
+// claimed by an admin. As written, ANY unauthenticated POST with
+// action=execute_stream (attacker supplies db_host/db_user/db_pass/
+// db_name/db_prefix/admin_user/admin_pass directly in the request body)
+// reached perform_install() in mode install_clean on a live production
+// instance -- full unauthenticated database wipe-and-reinstall plus
+// attacker-chosen super-admin creation, against whatever DB the
+// attacker's own POST body named.
+//
+// The first fix here (b6b5ca6) replaced `$detection['exists']` for API
+// calls too, which is WRONG in a different way: `$detection` is based on
+// the `settings` table existing, and that table is created roughly 77
+// tables into a ~110-table fresh install -- well before the `users` step
+// creates the actual admin account. execute_step's real client-side flow
+// (runStep() in this same file's JS) is ONE SEPARATE HTTP REQUEST PER
+// STEP, so gating every request on `settings` existing broke a genuine
+// first-time install partway through its own single run. Gated instead
+// on install_admin_exists() (does an admin account actually exist yet in
+// the target this specific request names), combined with a per-session
+// flag minted the first time a request is let through unauthenticated --
+// so a fresh install's LATER steps (version/config, which run AFTER
+// users creates the admin) stay authorized for the rest of that same
+// browser session, while a genuinely separate, later unauthenticated
+// attempt against the now-claimed database is still blocked.
+if ($isInstallerApiCall) {
+    if (!empty($_SESSION['install_unlocked'])) {
+        $apiAuthRequired = false;
+    } else {
+        $apiCfg = array(
+            'host' => trim((string) ($_POST['db_host'] ?? '')),
+            'user' => trim((string) ($_POST['db_user'] ?? '')),
+            'pass' => (string) ($_POST['db_pass'] ?? ''),
+            'db' => trim((string) ($_POST['db_name'] ?? '')),
+            'prefix' => trim((string) ($_POST['db_prefix'] ?? '')),
+        );
+        $apiAuthRequired = install_admin_exists($apiCfg);
+        if (!$apiAuthRequired) {
+            $_SESSION['install_unlocked'] = true;
+        }
+    }
+} else {
+    $apiAuthRequired = false;
+}
+
+if (($detection['exists'] && !$isInstallerApiCall) || $apiAuthRequired) {
     $isAdmin = isset($_SESSION['level']) && ((int)$_SESSION['level'] === 0 || (int)$_SESSION['level'] === 1);
     if (!$isAdmin) {
         if ($isInstallerApiCall) {
             // API calls expect JSON/plain-text, not an HTML redirect page.
+            // execute_step's own responses use an `ok` key (see runStep()'s
+            // client-side handling below) -- reusing a different key here
+            // silently breaks that check and sends the client into a
+            // runaway retry loop with an ever-incrementing step number
+            // instead of stopping cleanly on the error.
             http_response_code(401);
             if ($action === 'execute_stream') {
                 header('Content-Type: text/plain; charset=UTF-8');
                 echo "ERROR: Administrator login required.\nDONE:0\n";
             } else {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => 'Administrator login required.']);
+                echo json_encode(['ok' => false, 'done' => true, 'messages' => ['Administrator login required.']]);
             }
             exit();
         }
@@ -739,6 +811,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     emit_line('Starting installer...');
     list($ok, $logs) = perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $installerVersion, 'emit_line');
+    unset($_SESSION['install_unlocked']); // run finished (success or failure); close the exemption window
     emit_line('DONE:' . ($ok ? '1' : '0'));
     exit();
 }
@@ -874,9 +947,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     $mysqli->close();
+    $stepDone = ($step + 1) >= count($steps);
+    if ($stepDone) {
+        unset($_SESSION['install_unlocked']); // last step; close the exemption window
+    }
     echo json_encode(array(
         'ok' => $ok,
-        'done' => ($step + 1) >= count($steps),
+        'done' => $stepDone,
         'step' => $step,
         'next_step' => $step + 1,
         'total_steps' => count($steps),
@@ -908,6 +985,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     list($ok, $logs) = perform_install($cfg, $mode, $adminUser, $adminPass, $adminName, $installerVersion);
+    unset($_SESSION['install_unlocked']); // run finished (success or failure); close the exemption window
     echo json_encode(array('ok' => $ok, 'logs' => $logs));
     exit();
 }
