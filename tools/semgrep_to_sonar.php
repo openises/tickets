@@ -17,6 +17,20 @@
  * issue-lifecycle (Won't Fix / False Positive) to track review state there
  * too if they choose to.
  *
+ * Schema per SonarQube's own docs (docs.sonarsource.com, "Generic
+ * formatted reports" -- verified live 2026-09, after the version below
+ * this comment was committed on the strength of a WARNING message alone
+ * and never actually re-run against the server, which is exactly how it
+ * shipped with two more schema violations: an ISSUE object may carry ONLY
+ * `ruleId`, `effortMinutes`, `primaryLocation`, and `secondaryLocations`
+ * -- no `type`, `severity`, `impacts`, or `engineId` at the issue level.
+ * All of that lives on the RULE object instead (`type`/`severity` are
+ * valid there, but optional once `impacts` is provided, which this file
+ * always does). Lesson: a schema change that only warns instead of
+ * failing on the OLD shape will still hard-fail on a WRONG NEW shape --
+ * re-run the scan for real after any format change, don't trust the
+ * warning text to mean the replacement is correct.
+ *
  * Usage: php tools/semgrep_to_sonar.php <semgrep-report.json> <output.json>
  */
 
@@ -31,22 +45,11 @@ if ($semgrepReport === null) {
     exit(2);
 }
 
-// Current, non-deprecated generic issue import format: rule metadata is
-// declared once in a top-level "rules" array (keyed by a bare id, no
-// engineId prefix) and each issue references it by that same bare id --
-// the older format (each issue repeating engineId+ruleId inline with no
-// "rules" array) still works today but SonarQube warns it will be removed.
 $seenRuleIds = [];
 $rules = [];
 $issues = [];
 foreach ($semgrepReport['results'] ?? [] as $r) {
     $path = preg_replace('#^/src/#', '', $r['path']);
-    $severity = strtoupper($r['extra']['severity'] ?? 'ERROR');
-    $sonarSeverity = match ($severity) {
-        'ERROR' => 'CRITICAL',
-        'WARNING' => 'MAJOR',
-        default => 'MINOR',
-    };
     $ruleId = $r['check_id'] ?? 'unknown';
     // Semgrep's check_id is often config-path-qualified (e.g.
     // "semgrep.ticketscad-tainted-sql-query-string") -- keep only the
@@ -67,9 +70,7 @@ foreach ($semgrepReport['results'] ?? [] as $r) {
 
     $issues[] = [
         'ruleId' => $bareRuleId,
-        'engineId' => 'semgrep-ticketscad',
-        'severity' => $sonarSeverity,
-        'type' => 'VULNERABILITY',
+        'effortMinutes' => 30,
         'primaryLocation' => [
             'message' => $r['extra']['message'] ?? 'SQL injection risk (Semgrep taint analysis)',
             'filePath' => $path,
@@ -78,7 +79,6 @@ foreach ($semgrepReport['results'] ?? [] as $r) {
                 'endLine' => max(1, (int) ($r['end']['line'] ?? $r['start']['line'] ?? 1)),
             ],
         ],
-        'effortMinutes' => 30,
     ];
 }
 
