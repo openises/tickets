@@ -2,6 +2,24 @@
 ini_set('memory_limit', '5120M');
 set_time_limit ( 0 );
 error_reporting(E_ALL);
+@session_start();
+require_once './incs/functions.inc.php';        // brings in is_administrator(), and (transitively) mysql.inc.php / db.inc.php below
+
+// GHSA-class finding (2026-09-04 follow-up sweep): this is the "Backup and
+// Restore" tool linked from config.php's admin-only Database Functions
+// panel, but the file itself never checked who was calling it -- anyone
+// could POST arbitrary ticketshost/ticketsuser/ticketspassword/ticketsdb
+// credentials, have this file connect to ANY MySQL server, DROP its
+// tables, and execute the full contents of any *.sql file it could reach
+// under backups/ as raw SQL against that connection -- the same
+// "arbitrary SQL execution" shape as import_mdb.php's GHSA fix, just
+// reachable from a config.php link instead of a bare $_GET. Same
+// remediation: require the admin gate the rest of config.php's Database
+// Functions panel implicitly (but never actually) assumed.
+if (!is_administrator()) {
+    print "-NOT AUTHORIZED";
+    exit;
+    }
 require_once './incs/mysql.inc.php';
 require_once './incs/db.inc.php';        // 3/14/26 - Use db_query() for local DB operations
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
@@ -682,7 +700,22 @@ if(empty($_GET)) {
         $existingDataCount = 0;
         $ext_conn->select_db($_POST['ticketsdb']);
         for($i = 0; $i < $tableCount; $i++) {
-            $result = $ext_conn->query("SELECT 1 FROM `" . $ext_conn->real_escape_string($tables[$i]) . "` LIMIT 1"); // NOSONAR - table names from information_schema, escaped with real_escape_string, admin-only tool
+            // GHSA-class finding (2026-09-04 follow-up sweep): table names
+            // came from the ATTACKER-SPECIFIED external database's own
+            // information_schema (ticketshost/ticketsuser/ticketspassword
+            // are all raw $_POST values a few lines up), so
+            // real_escape_string() alone was not sufficient here -- it
+            // protects quoted VALUES, not this backtick IDENTIFIER
+            // position, and a MySQL identifier may legally contain a
+            // backtick (escaped by doubling) that real_escape_string() does
+            // not touch. Every table name this tool has any legitimate
+            // reason to touch is a plain [A-Za-z0-9_] name; skip anything
+            // else rather than trust escaping to make an identifier
+            // position safe.
+            if (!preg_match('/^[A-Za-z0-9_]+$/', $tables[$i])) {
+                continue;
+                }
+            $result = $ext_conn->query("SELECT 1 FROM `" . $tables[$i] . "` LIMIT 1");
             if($result && $result->num_rows > 0) {
                 $existingDataCount++;
                 }
@@ -822,7 +855,14 @@ if(empty($_GET)) {
             $ext_conn = new mysqli($_POST['ticketshost'], $_POST['ticketsuser'], $_POST['ticketspassword'], $_POST['ticketsdb']);
             if(!$ext_conn->connect_error) {
                 for($i = 0; $i < $tableCount; $i++) {
-                    $result = $ext_conn->query("DROP TABLE `" . $ext_conn->real_escape_string($tables[$i]) . "`"); // NOSONAR - table names from information_schema, escaped with real_escape_string, admin-only tool
+                    // GHSA-class finding (2026-09-04 follow-up sweep): see
+                    // the identical table-name allowlist a few hundred
+                    // lines up (the "check" mode's SELECT loop) -- same
+                    // identifier position, same fix.
+                    if (!preg_match('/^[A-Za-z0-9_]+$/', $tables[$i])) {
+                        continue;
+                        }
+                    $result = $ext_conn->query("DROP TABLE `" . $tables[$i] . "`");
                     if($result) {
                         $output = $_POST['ticketsdb'] . " Database " . $tables[$i] . " Table dropped successfully<BR />";
 ?>
@@ -846,8 +886,16 @@ if(empty($_GET)) {
                 $user = $_POST['ticketsuser'];
                 $pass = $_POST['ticketspassword'];
                 $db = $_POST['ticketsdb'];
-                $dbms_schema = $dir . "/" . $_POST['db_schema'];
-                if (!file_exists($dbms_schema) || !is_readable($dbms_schema)) {
+                // GHSA-class finding (2026-09-04 follow-up sweep): db_schema
+                // went straight from $_POST into a path with zero
+                // containment -- basename() + realpath()-prefix
+                // containment, the same fix as import_mdb.php's GHSA
+                // advisory, since the resulting file's ENTIRE content is
+                // executed as raw SQL a few lines down.
+                $backupsRealDir = realpath($dir);
+                $requestedSchema = (array_key_exists('db_schema', $_POST)) ? basename($_POST['db_schema']) : '';
+                $dbms_schema = ($backupsRealDir !== false && $requestedSchema !== '') ? realpath($backupsRealDir . DIRECTORY_SEPARATOR . $requestedSchema) : false;
+                if ($dbms_schema === false || strpos($dbms_schema, $backupsRealDir . DIRECTORY_SEPARATOR) !== 0 || !is_readable($dbms_schema)) {
                     die('problem: cannot read schema file');
                 }
                 $sql_query = file_get_contents($dbms_schema);
@@ -910,8 +958,13 @@ if(empty($_GET)) {
             $user = $_POST['ticketsuser'];
             $pass = $_POST['ticketspassword'];
             $db = $_POST['ticketsdb'];
-            $dbms_schema = $dir . "/" . $_POST['db_schema'];
-            if (!file_exists($dbms_schema) || !is_readable($dbms_schema)) {
+            // GHSA-class finding (2026-09-04 follow-up sweep): same
+            // path-containment fix as the "existing data" branch above --
+            // see that comment.
+            $backupsRealDir = realpath($dir);
+            $requestedSchema = (array_key_exists('db_schema', $_POST)) ? basename($_POST['db_schema']) : '';
+            $dbms_schema = ($backupsRealDir !== false && $requestedSchema !== '') ? realpath($backupsRealDir . DIRECTORY_SEPARATOR . $requestedSchema) : false;
+            if ($dbms_schema === false || strpos($dbms_schema, $backupsRealDir . DIRECTORY_SEPARATOR) !== 0 || !is_readable($dbms_schema)) {
                 die('problem: cannot read schema file');
             }
             $sql_query = file_get_contents($dbms_schema);

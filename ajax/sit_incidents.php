@@ -109,6 +109,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 
     //    Set regions applicable for user
 
+    $where2Params = [];
     if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
         $where2 = " AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
         } else {
@@ -117,7 +118,9 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
             $where2 = "AND (";
             foreach($al_groups as $grp) {
                 $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+                // Same class as board.php's viewed_groups fix -- see that file
+                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -126,7 +129,9 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
             $where2 = "AND (";
             foreach($curr_viewed as $grp) {
                 $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+                // Same class as board.php's viewed_groups fix -- see that file
+                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -218,6 +223,8 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
             $where $restrict_ticket
             GROUP BY tick_id ORDER BY `status` DESC, {$sort_by_severity}
             LIMIT 1000 OFFSET {$my_offset}";        // 2/2/09, 10/28/09, 2/21/10
+        // Same class as board.php's viewed_groups fix -- see that file
+        $sitIncidentsParams = array_merge($sitIncidentsParams, $where2Params);
         }
     $result = db_query($query, $sitIncidentsParams);
     $the_offset = (isset($_GET['frm_offset'])) ? (integer) $_GET['frm_offset'] : 0 ;

@@ -1,0 +1,64 @@
+# Reviewed Semgrep SQL-injection taint-tracking false positives.
+# See tools/semgrep_gate.php's docblock before adding an entry --
+# this file records ACCEPTED FALSE POSITIVES / already-mitigated
+# by-design findings (e.g. import_mdb.php/db_loader.php's raw SQL
+# dump execution, gated by is_administrator() + path containment,
+# not by query parameterization -- that's the accepted design for
+# a database-restore tool), never a live, unfixed vulnerability.
+# Regenerate with: php tools/semgrep_gate.php --update-baseline
+ajax/capabilities_list.php:61
+ajax/clothing_list.php:62
+ajax/equipment_list.php:62
+ajax/full_screen_facilities.php:126
+ajax/fullsit_incidents.php:228
+ajax/list_all_messages.php:77
+ajax/list_messages.php:82
+ajax/list_sent_messages.php:76
+ajax/list_waste_messages.php:82
+ajax/memberlist.php:125
+ajax/sidebar_list_messages.php:106
+ajax/sit_facilities.php:181
+ajax/sit_incidents.php:229
+ajax/training_list.php:62
+ajax/vehicle_list.php:64
+areas_sc.php:69
+board.php:915
+db_loader.php:913
+db_loader.php:981
+delete_module.php:110
+fac_routes.php:821
+fac_routes_nm.php:730
+import_mdb.php:235
+incs/full_scr.inc.php:1409
+incs/full_scr.inc.php:1872
+incs/full_scr.inc.php:1923
+incs/full_scr.inc.php:1975
+incs/functions_major_nm.inc.php:1158
+incs/functions_major_nm.inc.php:1246
+incs/functions_major_nm.inc.php:886
+install.php:806
+mdb_search.php:154
+mdb_search.php:205
+mdb_search.php:253
+mdb_search.php:303
+mdb_search.php:353
+mdb_search.php:398
+rm/ajax/infolist.php:72
+rm/ajax/messagelist.php:77
+rm/ajax/messagelist2.php:73
+rm/ajax/update_mileage.php:25
+search.php:217
+tables.php:1047
+tables.php:1051
+tables.php:1070
+tables.php:1214
+tables.php:1246
+tables.php:1270
+tables.php:1285
+tables.php:212
+tables.php:779
+tables.php:924
+tables.php:950
+tables.php:973
+ticketsmdb_import.php:177
+ticketsmdb_import.php:183

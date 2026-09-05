@@ -109,6 +109,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
 
     //    Set regions applicable for user
 
+    $where2Params = [];
     if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
         $where2 = " AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
         } else {
@@ -117,7 +118,9 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
             $where2 = "AND (";
             foreach($al_groups as $grp) {
                 $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+                // Same class as board.php's viewed_groups fix -- see that file
+                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -126,7 +129,9 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
             $where2 = "AND (";
             foreach($curr_viewed as $grp) {
                 $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+                // Same class as board.php's viewed_groups fix -- see that file
+                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -186,6 +191,7 @@ function incident_list($sort_by_field='',$sort_value='', $sortby="tick_id", $sor
         $fullsitIncidentsParams[] = '%' . $sort_value . '%';
         }
     else {                    // 2/2/09, 8/12/09, updated 4/18/11 to support regional operation
+        $fullsitIncidentsParams = $where2Params;    // where2's ? placeholders are embedded in $where below
         $query = "SELECT *,problemstart AS problemstart,
             `problemend` AS `problemend`,
             `booked_date` AS `booked_date`,

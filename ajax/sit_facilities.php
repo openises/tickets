@@ -130,6 +130,7 @@ if(array_key_exists('viewed_groups', $_SESSION)) {
     $curr_viewed= explode(",",$_SESSION['viewed_groups']);
     }
 
+$where2Params = [];
 if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
     $where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
     } else {
@@ -138,7 +139,9 @@ if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates
         $where2 = "WHERE (";    //    6/10/11
         foreach($al_groups as $grp) {    //    6/10/11
             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+            // Same class as board.php's viewed_groups fix -- see that file
+            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -147,7 +150,9 @@ if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates
         $where2 = "WHERE (";    //    6/10/11
         foreach($curr_viewed as $grp) {    //    6/10/11
             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+            // Same class as board.php's viewed_groups fix -- see that file
+            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -173,7 +178,7 @@ $query_fac = "SELECT *,`$GLOBALS[mysql_prefix]facilities`.`updated` AS `updated`
     {$where2}
     GROUP BY fac_id ORDER BY {$fac_order_str} ";                                            // 3/15/11, 6/10/11
 
-$result_fac = db_query($query_fac);
+$result_fac = db_query($query_fac, $where2Params);
 $facs_ct = db_affected_rows();            // 1/4/10
 if ($facs_ct==0){
     } else {

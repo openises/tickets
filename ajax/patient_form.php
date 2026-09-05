@@ -78,6 +78,7 @@ if ($get_action == 'edit') {        //get and show action to update
         } else {
         $curr_viewed = $al_groups;
         }
+    $where2Params = [];
     if(!isset($curr_viewed)) {
         if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
             $where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
@@ -86,7 +87,9 @@ if ($get_action == 'edit') {        //get and show action to update
             $where2 = "WHERE (";    //    6/10/11
             foreach($al_groups as $grp) {    //    6/10/11
                 $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+                // Same class as board.php's viewed_groups fix -- see that file
+                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -100,7 +103,9 @@ if ($get_action == 'edit') {        //get and show action to update
             $where2 = "WHERE (";    //    6/10/11
             foreach($curr_viewed as $grp) {    //    6/10/11
                 $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+                // Same class as board.php's viewed_groups fix -- see that file
+                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -176,7 +181,7 @@ if ($get_action == 'edit') {        //get and show action to update
         $query_fac = "SELECT *, `$GLOBALS[mysql_prefix]facilities`.`id` AS `fac_id` FROM `$GLOBALS[mysql_prefix]facilities`
             LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]allocates`.`resource_id` )
             $where2 GROUP BY `$GLOBALS[mysql_prefix]facilities`.`id` ORDER BY `name` ASC";
-        $result_fac = db_query($query_fac);
+        $result_fac = db_query($query_fac, $where2Params);
         $pulldown = '<option value = 0 selected>Select</option>\n';     // 3/18/10
             while ($row_fac = $result_fac->fetch_assoc()) {
                 $sel = ($row_fac['fac_id'] == $row['facility_id']) ? "SELECTED" : "";
@@ -264,6 +269,7 @@ if ($get_action == 'edit') {        //get and show action to update
 
     $regs_string = "<FONT SIZE='-1'>Showing " . get_text("Regions") . ":&nbsp;&nbsp;" . $curr_names . "</FONT>";    //    5/4/11
 
+    $where2Params = [];
     if(!isset($curr_viewed)) {
         if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
             $where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
@@ -272,7 +278,9 @@ if ($get_action == 'edit') {        //get and show action to update
             $where2 = "WHERE (";    //    6/10/11
             foreach($al_groups as $grp) {    //    6/10/11
                 $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+                // Same class as board.php's viewed_groups fix -- see that file
+                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -286,7 +294,9 @@ if ($get_action == 'edit') {        //get and show action to update
             $where2 = "WHERE (";    //    6/10/11
             foreach($curr_viewed as $grp) {    //    6/10/11
                 $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+                // Same class as board.php's viewed_groups fix -- see that file
+                $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -297,7 +307,7 @@ if ($get_action == 'edit') {        //get and show action to update
     $query_fc = "SELECT * FROM `$GLOBALS[mysql_prefix]facilities`
         LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]allocates`.`resource_id` )
         $where2 GROUP BY `$GLOBALS[mysql_prefix]facilities`.`id` ORDER BY `name` ASC";
-    $result_fc = db_query($query_fc);
+    $result_fc = db_query($query_fc, $where2Params);
     $pulldown = '<option value = 0 selected>Select</option>\n';     // 3/18/10
         while ($row_fc = $result_fc->fetch_assoc()) {
             $pulldown .= "<option value=\"{$row_fc['id']}\">" . shorten($row_fc['name'], 20) . "</option>\n";

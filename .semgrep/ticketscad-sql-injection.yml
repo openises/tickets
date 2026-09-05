@@ -1,0 +1,68 @@
+rules:
+  - id: ticketscad-tainted-sql-query-string
+    mode: taint
+    pattern-sources:
+      - pattern: $_GET[...]
+      - pattern: $_POST[...]
+      - pattern: $_REQUEST[...]
+      - pattern: $_COOKIE[...]
+    pattern-sanitizers:
+      - pattern: intval(...)
+      - pattern: (int)$X
+      - pattern: (integer)$X
+      - pattern: floatval(...)
+      - pattern: (float)$X
+      - pattern: sanitize_int(...)
+      - pattern: sanitize_coordinate(...)
+      # Allowlist-narrowing idioms: once a value has been checked against a
+      # literal array of known-safe strings (a real schema column/table name,
+      # or a fixed set like AND/OR), it is no longer attacker-controlled --
+      # this is the correct fix shape for an IDENTIFIER or SQL-keyword
+      # position, where a bound ? placeholder isn't possible.
+      - pattern: "in_array($X, $ARR, true) ? $X : $DEFAULT"
+      - pattern: "(isset($X) && in_array($X, $ARR, true)) ? $X : $DEFAULT"
+      - pattern: |
+          if (!in_array($X, $ARR, true)) {
+            $X = $DEFAULT;
+          }
+      - pattern: |
+          if (in_array($X, $ARR, true)) {
+            $Y = $X;
+            ...
+          } else {
+            ...
+          }
+      - pattern: "strtoupper($X) === $LITERAL"
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: db_query($SQL, ...)
+              - pattern: db_fetch_all($SQL, ...)
+              - pattern: db_fetch_one($SQL, ...)
+              - pattern: db_fetch_value($SQL, ...)
+              - pattern: check_for_rows($SQL, ...)
+          - focus-metavariable: $SQL
+      - patterns:
+          - pattern-either:
+              - pattern: mysqli_query($CONN, $SQL)
+              - pattern: $CONN->query($SQL)
+              - pattern: mysql_query($SQL)
+          - focus-metavariable: $SQL
+    message: >-
+      Tainted request input ($_GET/$_POST/$_REQUEST/$_COOKIE) flows into a SQL
+      query string without going through db_query()'s bound ? placeholder +
+      params-array pattern. Fix by either (a) binding the value as a
+      parameter -- db_query($sql, [$value]) with a ? in $sql -- for a VALUE
+      position, or (b) checking the value against a literal allowlist of
+      known-safe strings (a real schema column/table name, or a fixed set
+      like ['AND','OR']) before concatenating it, for an IDENTIFIER or
+      SQL-keyword position. db_escape()/real_escape_string-style escaping is
+      NOT sufficient for identifier or keyword positions -- it only protects
+      quoted string values.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-89: Improper Neutralization of Special Elements used in an SQL Command"
+      references:
+        - https://github.com/openises/tickets/security/advisories/GHSA-ghqm-2wf7-8vww

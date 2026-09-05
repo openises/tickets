@@ -112,6 +112,8 @@ if (empty($_POST)) {
             if(intval($responder) != 0) {
                 $al_groups = $_SESSION['user_groups'];
 
+                // Same class as board.php's viewed_groups fix -- see that file.
+                $where2Params = [];
                 if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
                     $where2 = "";
                     } else {
@@ -124,7 +126,8 @@ if (empty($_POST)) {
                         $where2 = "AND (";
                         foreach($al_groups as $grp) {
                             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                            $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                            $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                            $where2Params[] = sanitize_int($grp);
                             $where2 .= $where3;
                             $x++;
                             }
@@ -133,7 +136,8 @@ if (empty($_POST)) {
                         $where2 = "AND (";
                         foreach($curr_viewed as $grp) {
                             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                            $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                            $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                            $where2Params[] = sanitize_int($grp);
                             $where2 .= $where3;
                             $x++;
                             }
@@ -145,7 +149,7 @@ if (empty($_POST)) {
                         LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` ON `{$GLOBALS['mysql_prefix']}ticket`.`id`=`{$GLOBALS['mysql_prefix']}allocates`.`resource_id`
                         WHERE (`status` = {$GLOBALS['STATUS_OPEN']} OR `status` = {$GLOBALS['STATUS_SCHEDULED']}) {$where2}
                         GROUP BY `tick_id` ORDER BY `severity` DESC, `problemstart` ASC "; // highest severity, oldest open
-                $result = db_query($query);
+                $result = db_query($query, $where2Params);
                 if ($result->num_rows >= 1) {            // if a single, do it
                     $row = $result ? $result->fetch_assoc() : null;
                     $inc_ctr = $result->num_rows;

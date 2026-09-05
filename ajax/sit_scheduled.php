@@ -24,6 +24,7 @@ if(array_key_exists('viewed_groups', $_SESSION)) {        //    6/10/11
 
 //    Set regions applicable for user
 
+$where2Params = [];
 if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
     $where2 = " AND `$GLOBALS[mysql_prefix]allocates`.`type` = 1";
     } else {
@@ -32,7 +33,9 @@ if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates
         $where2 = "AND (";
         foreach($al_groups as $grp) {
             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+            // Same class as board.php's viewed_groups fix -- see that file
+            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -41,7 +44,9 @@ if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates
         $where2 = "AND (";
         foreach($curr_viewed as $grp) {
             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+            // Same class as board.php's viewed_groups fix -- see that file
+            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -71,7 +76,7 @@ $query = "SELECT *,problemstart AS problemstart,
         ON `$GLOBALS[mysql_prefix]ticket`.id=`$GLOBALS[mysql_prefix]allocates`.`resource_id`
     $where
     GROUP BY tick_id";
-$result = db_query($query);
+$result = db_query($query, $where2Params);
 $num_rows = $result->num_rows;
 
 if($num_rows == 0) {

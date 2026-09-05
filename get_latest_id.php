@@ -47,6 +47,8 @@ $the_chat_id = ($row)? $row['id'] : "0";
 
                 // most recent ticket other than written by 'me'
 
+// Same class as board.php's viewed_groups fix -- see that file.
+$where2Params = [];
 if(!isset($curr_viewed)) {
     if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
         $where2 = "AND `a`.`type` = 1";
@@ -55,7 +57,8 @@ if(!isset($curr_viewed)) {
         $where2 = "AND (";
         foreach($al_groups as $grp) {
             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -69,7 +72,8 @@ if(!isset($curr_viewed)) {
         $where2 = "AND (";
         foreach($curr_viewed as $grp) {
             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -81,13 +85,15 @@ if(!isset($curr_viewed)) {
     $query = "SELECT *, `t`.`id` AS `the_ticket_id` FROM `{$GLOBALS['mysql_prefix']}ticket` `t`
              LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON `t`.`id` = `a`.`resource_id`
             WHERE `t`.`_by` <> {$me} AND `t`.`status` = {$GLOBALS['STATUS_OPEN']} $where2 ORDER BY `t`.`id` DESC LIMIT 1";        // broadcasts
-    $result = db_query($query);
+    $result = db_query($query, $where2Params);
     $row = ($result->num_rows>0)? stripslashes_deep($result->fetch_assoc()): false;
 
     $the_tick_id = ($row)? $row['the_ticket_id'] : "0";        // 2/21/12
 
                             // position updates?
 
+// Same class as board.php's viewed_groups fix -- see that file.
+$where2Params = [];
 if(!isset($curr_viewed)) {
     if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
         $where2 = "AND `a`.`type` = 2";
@@ -96,7 +102,8 @@ if(!isset($curr_viewed)) {
         $where2 = "AND (";
         foreach($al_groups as $grp) {
             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -110,7 +117,8 @@ if(!isset($curr_viewed)) {
         $where2 = " AND (";
         foreach($curr_viewed as $grp) {
             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -121,12 +129,14 @@ if(!isset($curr_viewed)) {
 $query = "SELECT *, `r`.`id` AS `the_responder_id` FROM `{$GLOBALS['mysql_prefix']}responder` `r`
         LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON `r`.`id` = `a`.`resource_id`
         WHERE  `callsign` > '' AND (`aprs` = 1 OR  `instam` = 1 OR  `locatea` = 1 OR  `gtrack` = 1 OR  `glat` = 1 ) $where2 ORDER BY `r`.`updated` DESC LIMIT 1";
-$result = db_query($query);
+$result = db_query($query, $where2Params);
 $row = ($result->num_rows>0)? stripslashes_deep($result->fetch_assoc()): false;
 
 if ($row ) {    //    Latest unit Status update written by current user.
     $_SESSION['unit_flag_1'] = $row['the_responder_id'];
     } else {                // latest unit status updates written by others
+    // Same class as board.php's viewed_groups fix -- see that file.
+    $where2Params = [];
     if(!isset($curr_viewed)) {
         if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.
             $where2 = "AND `a`.`type` = 2";
@@ -135,7 +145,8 @@ if ($row ) {    //    Latest unit Status update written by current user.
             $where2 = " AND (";
             foreach($al_groups as $grp) {
                 $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`a`.`group` = '{$grp}'";
+                $where2 .= "`a`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -149,7 +160,8 @@ if ($row ) {    //    Latest unit Status update written by current user.
             $where2 = " AND (";
             foreach($curr_viewed as $grp) {
                 $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`a`.`group` = '{$grp}'";
+                $where2 .= "`a`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -160,7 +172,7 @@ if ($row ) {    //    Latest unit Status update written by current user.
     $query = "SELECT *, `r`.`id` AS `the_responder_id` FROM `{$GLOBALS['mysql_prefix']}responder` `r`
     LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON `r`.`id` = `a`.`resource_id`
     WHERE `r`.`user_id` != {$me} $where2 ORDER BY `r`.`updated` DESC LIMIT 1";
-    $result = db_query($query);
+    $result = db_query($query, $where2Params);
     $row =  ($result->num_rows>0)? stripslashes_deep($result->fetch_assoc()): false;
     }
 
@@ -169,6 +181,8 @@ if ($row) {
     }
 
                         //    9/10/13 Most recent status updates
+// Same class as board.php's viewed_groups fix -- see that file.
+$where2Params = [];
 if(!isset($curr_viewed)) {
     if(count($al_groups) == 0) {
         $where2 = " AND `a`.`type` = 2";
@@ -177,7 +191,8 @@ if(!isset($curr_viewed)) {
         $where2 = " AND (";
         foreach($al_groups as $grp) {
             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -191,7 +206,8 @@ if(!isset($curr_viewed)) {
         $where2 = " AND (";
         foreach($curr_viewed as $grp) {
             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -202,7 +218,7 @@ if(!isset($curr_viewed)) {
 $query = "SELECT *, `r`.`id` AS `the_responder_id` FROM `{$GLOBALS['mysql_prefix']}responder` `r`
 LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON `r`.`id` = `a`.`resource_id`
 WHERE `r`.`user_id` != {$me} $where2 ORDER BY `r`.`status_updated` DESC LIMIT 1";        // get most recent
-$result = db_query($query);
+$result = db_query($query, $where2Params);
 $row2 =  ($result->num_rows>0)? stripslashes_deep($result->fetch_assoc()): false;
 
 if ($row2) {        //    9/10/13
@@ -211,6 +227,8 @@ if ($row2) {        //    9/10/13
     $status_updated_time = $row2['un_status_id'];
     }
 
+// Same class as board.php's viewed_groups fix -- see that file.
+$where2Params = [];
 if(!isset($curr_viewed)) {
     if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
         $where2 = " AND `a`.`type` = 1";
@@ -219,7 +237,8 @@ if(!isset($curr_viewed)) {
         $where2 = " AND (";
         foreach($al_groups as $grp) {
             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -233,7 +252,8 @@ if(!isset($curr_viewed)) {
         $where2 = " AND (";
         foreach($curr_viewed as $grp) {
             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -245,7 +265,7 @@ $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` `as`
         LEFT JOIN `{$GLOBALS['mysql_prefix']}ticket` `t` ON `as`.`ticket_id` = `t`.`id`
         LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON `t`.`id` = `a`.`resource_id`
         WHERE `as`.`user_id` != {$me} $where2 ORDER BY `as`.`as_of` DESC LIMIT 1";        // get most recent
-$result = db_query($query);
+$result = db_query($query, $where2Params);
 $assign_row = ($result->num_rows>0)? stripslashes_deep($result->fetch_assoc()): false;
 
 $query = "SELECT `updated` FROM `{$GLOBALS['mysql_prefix']}action` WHERE `updated` = ( SELECT MAX(`updated`) FROM `{$GLOBALS['mysql_prefix']}action` ) LIMIT 1";

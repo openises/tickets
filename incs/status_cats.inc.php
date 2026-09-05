@@ -280,9 +280,10 @@ function get_sess_boundaries() {
         }
 
     if(array_key_exists('viewed_groups', $_SESSION)) {    //    6/10/11
+        // Same class as board.php's viewed_groups fix -- see that file.
         foreach(explode(",",$_SESSION['viewed_groups']) as $val_vg) {
-            $query3 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= '$val_vg';";
-            $result3 = db_query($query3);    //    6/10/11
+            $query3 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}region` WHERE `id`= ?;";
+            $result3 = db_query($query3, [sanitize_int($val_vg)]);    //    6/10/11
             while ($row3 = stripslashes_deep($result3->fetch_assoc()))     {
                 if($row3['boundary'] != 0) {
                     if(test_boundary($row3['boundary'])) {
@@ -295,6 +296,8 @@ function get_sess_boundaries() {
             $all_boundaries = $a_all_boundaries;
         }
 
+    // Same class as board.php's viewed_groups fix -- see that file.
+    $where2Params = [];
     if(!isset($curr_viewed)) {
         if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    6/24/13
             $where2 = "WHERE `a`.`type` = 2";
@@ -303,7 +306,8 @@ function get_sess_boundaries() {
             $where2 = "WHERE (";    //    4/18/11
             foreach($al_groups as $grp) {    //    4/18/11
                 $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`a`.`group` = '{$grp}'";
+                $where2 .= "`a`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -317,7 +321,8 @@ function get_sess_boundaries() {
             $where2 = "WHERE (";    //
             foreach($curr_viewed as $grp) {
                 $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`a`.`group` = '{$grp}'";
+                $where2 .= "`a`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -329,7 +334,7 @@ function get_sess_boundaries() {
                 LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON ( `l`.`id` = `r`.`ring_fence`)
                 LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )
                 {$where2} AND `use_with_u_rf`= 1 AND `line_status` = 0 GROUP BY `l`.`id`";
-    $result = db_query($query);
+    $result = db_query($query, $where2Params);
     while($row = stripslashes_deep($result->fetch_assoc())) {
         $all_boundaries[] = $row['ring_fence'];
         }    //    End while

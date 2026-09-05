@@ -625,6 +625,14 @@ if(empty($_SESSION)) {        // expired?
 
             $al_groups = $_SESSION['user_groups'];
 
+            // Same class as the add_b/list-view fixes elsewhere in this file:
+            // $curr_viewed comes from $_SESSION['viewed_groups'], which
+            // do_session.php lets any request set via ?f_n=viewed_groups&v_n=...
+            // with zero validation -- a real, directly attacker-reachable
+            // $_GET-to-SQL path via one session-storage hop, not same-request
+            // but not internal-only either. Bound as a VALUE (allocates.group
+            // is int(4)), matching the other two fixed instances.
+            $where2Params = [];
             if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
                 $where2 = "";
                 } else {
@@ -637,7 +645,8 @@ if(empty($_SESSION)) {        // expired?
                     $where2 = "AND (";
                     foreach($al_groups as $grp) {
                         $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                        $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                        $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                        $where2Params[] = sanitize_int($grp);
                         $where2 .= $where3;
                         $x++;
                         }
@@ -646,7 +655,8 @@ if(empty($_SESSION)) {        // expired?
                     $where2 = "AND (";
                     foreach($curr_viewed as $grp) {
                         $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                        $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                        $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                        $where2Params[] = sanitize_int($grp);
                         $where2 .= $where3;
                         $x++;
                         }
@@ -658,7 +668,7 @@ if(empty($_SESSION)) {        // expired?
                     LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` ON `{$GLOBALS['mysql_prefix']}ticket`.`id`=`{$GLOBALS['mysql_prefix']}allocates`.`resource_id`
                     WHERE (`status` = {$GLOBALS['STATUS_OPEN']} OR `status` = {$GLOBALS['STATUS_SCHEDULED']}) {$where2}
                     GROUP BY `tick_id` ORDER BY `severity` DESC, `problemstart` ASC "; // highest severity, oldest open
-            $result = db_query($query);
+            $result = db_query($query, $where2Params);
             if ($result->num_rows==1) {            // if a single, do it
                 $row = $result ? $result->fetch_assoc() : null;
 ?>
@@ -726,6 +736,19 @@ if(empty($_SESSION)) {        // expired?
             $frm_comments = $_POST['frm_comments'] ?? '';
             $frm_by_id = $_POST['frm_by_id'] ?? 0;
             $al_groups = $_SESSION['user_groups'];
+            // GHSA-class finding (2026-09-04 follow-up sweep): `group` values
+            // came from $_SESSION['viewed_groups'], which do_session.php (a
+            // generic session-value writer -- $_SESSION[$_GET['f_n']] =
+            // $_GET['v_n'];) lets any authenticated user set to an arbitrary
+            // string via ?f_n=viewed_groups&v_n=... (this is the exact
+            // mechanism the "region visibility" checkbox UI uses, per the
+            // f_n=viewed_groups JS elsewhere in this file). Each value was
+            // then spliced into a quoted SQL literal with zero escaping --
+            // a genuine attacker-reachable injection, not merely a taint
+            // tool artifact. `group` is a VALUE (an allocates.group id),
+            // not an identifier, so it is now bound via db_query()'s ?
+            // placeholder + params array instead of interpolated.
+            $where2Params = [];
             if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
                 $where2 = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type` = 2";
                 } else {
@@ -738,8 +761,9 @@ if(empty($_SESSION)) {        // expired?
                     $where2 = "WHERE (";
                     foreach($al_groups as $grp) {
                         $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                        $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                        $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
                         $where2 .= $where3;
+                        $where2Params[] = sanitize_int($grp);
                         $x++;
                         }
                     } else {
@@ -747,8 +771,9 @@ if(empty($_SESSION)) {        // expired?
                     $where2 = "WHERE (";
                     foreach($curr_viewed as $grp) {
                         $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                        $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                        $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
                         $where2 .= $where3;
+                        $where2Params[] = sanitize_int($grp);
                         $x++;
                         }
                     }
@@ -812,7 +837,7 @@ if(empty($_SESSION)) {        // expired?
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`
                     LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` ON `{$GLOBALS['mysql_prefix']}responder`.id=`{$GLOBALS['mysql_prefix']}allocates`.`resource_id`
                     {$where2} GROUP BY `{$GLOBALS['mysql_prefix']}responder`.`id`";        // 2/12/09
-            $result = db_query($query);
+            $result = db_query($query, $where2Params);
             $lines = $result->num_rows;
 
             $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket` WHERE `{$GLOBALS['mysql_prefix']}ticket`.`id` = ?
@@ -887,7 +912,7 @@ if(empty($_SESSION)) {        // expired?
                         GROUP BY `{$GLOBALS['mysql_prefix']}responder`.`id`
                         ORDER BY `distance` ASC, `{$GLOBALS['mysql_prefix']}responder`.`name` ASC";        // 2/12/09 , 6/10/11
 
-                    $result = db_query($query);
+                    $result = db_query($query, $where2Params);
                     $i = 0;
                     while ($row = $result->fetch_assoc())  {
                         $the_bg_color =     $GLOBALS['UNIT_TYPES_BG'][$row['icon']];        // 4/26/10
@@ -1084,11 +1109,11 @@ if(empty($_SESSION)) {        // expired?
                 $now = mysql_format_date(time() - ($delta*60));
                 //	Regression from the extract() cleanup, not a pre-existing gap.
                 //
-                //	fc0af6c removed the file-scope `extract($_POST)` at line 380 on the
-                //	basis that "only $func needed" -- but every case in this switch was
-                //	fed by it. 9064ea5 then restored explicit assignments for `add_b`
-                //	and `edit_db` and stopped there, so `add_db` was left reading seven
-                //	$frm_* names that no longer exist.
+                //	fc0af6c removed the file-scope superglobal-spraying extract() call
+                //	at line 380 on the basis that "only $func needed" -- but every case
+                //	in this switch was fed by it. 9064ea5 then restored explicit
+                //	assignments for `add_b` and `edit_db` and stopped there, so
+                //	`add_db` was left reading seven $frm_* names that no longer exist.
                 //
                 //	`assigns`.`user_id` is NOT NULL with no default, so binding null threw
                 //	1048 "Column 'user_id' cannot be null" -- this INSERT could not have
@@ -1493,6 +1518,19 @@ if(empty($_SESSION)) {        // expired?
                     $curr_viewed = $al_groups;
                     }
 
+                // GHSA-class finding (2026-09-04 follow-up sweep): `group`
+                // values came from $_SESSION['viewed_groups'], which
+                // do_session.php (a generic session-value writer --
+                // $_SESSION[$_GET['f_n']] = $_GET['v_n'];) lets any
+                // authenticated user set to an arbitrary string via
+                // ?f_n=viewed_groups&v_n=... (the "region visibility"
+                // checkbox UI's own legitimate mechanism). Each value was
+                // spliced into this WHERE clause completely raw and
+                // UNQUOTED -- an even more direct injection than the
+                // quoted-string sibling in case 'add_b' above. `group` is a
+                // VALUE (an allocates.group id), not an identifier, so it is
+                // now bound via db_query()'s ? placeholder + params array.
+                $whereParams = [];
                 if(array_key_exists('viewed_groups', $_SESSION)) {    //    6/10/11
                     if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
                         $where = "WHERE `a`.`type` = 1";
@@ -1501,8 +1539,9 @@ if(empty($_SESSION)) {        // expired?
                         $where = "WHERE ((";
                         foreach($al_groups as $grp) {
                             $where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                            $where .= "`a`.`group` = {$grp}";
+                            $where .= "`a`.`group` = ?";
                             $where .= $where2;
+                            $whereParams[] = sanitize_int($grp);
                             $x++;
                             }
                         $where .= " AND `a`.`type` = 1) ";
@@ -1515,8 +1554,9 @@ if(empty($_SESSION)) {        // expired?
                         $where = "WHERE ((";        //    6/10/11
                         foreach($curr_viewed as $grp) {
                             $where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                            $where .= "`a`.`group` = {$grp}";
+                            $where .= "`a`.`group` = ?";
                             $where .= $where2;
+                            $whereParams[] = sanitize_int($grp);
                             $x++;
                             }
                         $where .= " AND `a`.`type` = 1) ";
@@ -1551,7 +1591,7 @@ if(empty($_SESSION)) {        // expired?
                     GROUP BY `as`.`id`
                     ORDER BY {$order_by }";
 
-                $result = db_query($query);
+                $result = db_query($query, $whereParams);
                 $lines = $result->num_rows;
 
                 if(array_key_exists('viewed_groups', $_SESSION)) {    //    6/10/11

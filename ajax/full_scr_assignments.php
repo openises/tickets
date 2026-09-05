@@ -20,6 +20,7 @@ $al_groups = $_SESSION['user_groups'];
 if(array_key_exists('viewed_groups', $_SESSION)) {    //    6/10/11
     $curr_viewed= explode(",",$_SESSION['viewed_groups']);
     }
+$where2Params = [];
 if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
     $where2 = " AND `a`.`type` = 2";
     } else {
@@ -28,7 +29,9 @@ if(empty($al_groups)) {    //    catch for errors - no entries in allocates for 
         $where2 = "AND (";    //    6/10/11
         foreach($al_groups as $grp) {    //    6/10/11
             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            // Same class as board.php's viewed_groups fix -- see that file
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -37,7 +40,9 @@ if(empty($al_groups)) {    //    catch for errors - no entries in allocates for 
         $where2 = "AND (";    //    6/10/11
         foreach($curr_viewed as $grp) {    //    6/10/11
             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            // Same class as board.php's viewed_groups fix -- see that file
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -69,7 +74,7 @@ $query = "SELECT *,UNIX_TIMESTAMP(as_of) AS as_of,
         WHERE (`clear` IS NULL OR DATE_FORMAT(`clear`,'%y') = '00') {$where2}
     GROUP BY `unit_id` ORDER BY `severity` DESC, `tick_pstart` ASC";
 
-$result = db_query($query) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
+$result = db_query($query, $where2Params) or do_error($query, 'mysql query failed', '', basename( __FILE__), __LINE__);
 $curr_calls =  $result->num_rows;
 
 $guest = is_guest();

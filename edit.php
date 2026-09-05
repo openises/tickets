@@ -1405,6 +1405,8 @@ function set_size() {
                             $curr_viewed= explode(",",$_SESSION['viewed_groups']);
                             }
 
+                        // Same class as board.php's viewed_groups fix -- see that file.
+                        $where2Params = [];
                         if(!isset($curr_viewed)) {
                             if (empty($al_groups))  { // Catch for errors - no entries in allocates for the user.    //    6/24/13
                                     $where2 = "WHERE `a`.`type` = 3";
@@ -1413,7 +1415,8 @@ function set_size() {
                                     $where2 = "WHERE (";    //    6/10/11
                                     foreach($al_groups as $grp) {    //    6/10/11
                                         $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                                        $where2 .= "`a`.`group` = '{$grp}'";
+                                        $where2 .= "`a`.`group` = ?";
+                                        $where2Params[] = sanitize_int($grp);
                                         $where2 .= $where3;
                                         $x++;
                                         }
@@ -1427,7 +1430,8 @@ function set_size() {
                                 $where2 = "WHERE (";    //    6/10/11
                                 foreach($curr_viewed as $grp) {    //    6/10/11
                                     $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                                    $where2 .= "`a`.`group` = '{$grp}'";
+                                    $where2 .= "`a`.`group` = ?";
+                                    $where2Params[] = sanitize_int($grp);
                                     $where2 .= $where3;
                                     $x++;
                                     }
@@ -1440,7 +1444,7 @@ function set_size() {
                             $query_fc = "SELECT *, `f`.`id` AS `fac_id` FROM `{$GLOBALS['mysql_prefix']}facilities` `f`
                             LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `f`.`id` = `a`.`resource_id` )
                             $where2 GROUP BY `fac_id` ORDER BY `name` ASC";
-                            $result_fc = db_query($query_fc);
+                            $result_fc = db_query($query_fc, $where2Params);
                             $facSel .= "<SELECT id='sel_facility' NAME='frm_facility_id' " . $dis . " onChange='document.edit.frm_fac_chng.value = 1; do_fac_to_loc(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim());'>";
                             $facSel .= "<OPTION VALUE=0>Not using facility</OPTION>";
                             $facSel .= "<SCRIPT>fac_lat[" . 0 . "] = " . get_variable('def_lat') . ";</SCRIPT>";
@@ -1457,7 +1461,7 @@ function set_size() {
                             $query_fc = "SELECT *, `f`.`id` AS `fac_id` FROM `{$GLOBALS['mysql_prefix']}facilities` `f`
                             LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `f`.`id` = `a`.`resource_id` )
                             $where2 GROUP BY `fac_id` ORDER BY `name` ASC";
-                            $result_fc = db_query($query_fc);
+                            $result_fc = db_query($query_fc, $where2Params);
                             $facSel .= "<SELECT NAME='frm_facility_id' " . $dis . " onChange='document.edit.frm_fac_chng.value = 1; do_fac_to_loc(this.options[selectedIndex].text.trim(), this.options[selectedIndex].value.trim());'>";
                             $facSel .= '<OPTION>Incident at Facility?</OPTION>';
                             while ($row_fc = $result_fc->fetch_assoc()) {
@@ -1475,7 +1479,7 @@ function set_size() {
                             $query_rfc = "SELECT *, `f`.`id` AS `fac_id` FROM `{$GLOBALS['mysql_prefix']}facilities` `f`
                             LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `f`.`id` = a.resource_id )
                             $where2 GROUP BY `fac_id` ORDER BY `name` ASC";
-                            $result_rfc = db_query($query_rfc);
+                            $result_rfc = db_query($query_rfc, $where2Params);
                             $recfacSel .= "<SELECT id='sel_recfacility' NAME='frm_rec_facility_id' " . $dis . " onChange = 'document.edit.frm_fac_chng.value = parseInt(document.edit.frm_fac_chng.value)+ 2;'>";
                             $recfacSel .= "<OPTION VALUE=0>No receiving facility</OPTION>";
                             while ($row_rfc = $result_rfc->fetch_assoc()) {
@@ -1488,7 +1492,7 @@ function set_size() {
                             $query_rfc = "SELECT *, `f`.`id` AS `fac_id` FROM `{$GLOBALS['mysql_prefix']}facilities` `f`
                             LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `f`.`id` = a.resource_id )
                             $where2 GROUP BY `fac_id` ORDER BY `name` ASC";
-                            $result_rfc = db_query($query_rfc);
+                            $result_rfc = db_query($query_rfc, $where2Params);
                             $recfacSel .= "<SELECT id='sel_recfacility' NAME='frm_rec_facility_id' " . $dis . " onChange = 'document.edit.frm_fac_chng.value = parseInt(document.edit.frm_fac_chng.value)+ 2;'>";
                             $recfacSel .= '<option value="0">Receiving Facility?</option>';
                             while ($row_rfc = $result_rfc->fetch_assoc()) {

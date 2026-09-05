@@ -158,6 +158,7 @@ $al_groups = (array_key_exists('user_groups', $_SESSION) && is_array($_SESSION['
 if(array_key_exists('viewed_groups', $_SESSION)) {
     $curr_viewed= explode(",",$_SESSION['viewed_groups']);
     }
+$where2Params = [];
 if(count($al_groups) == 0) {
     $where2 = "WHERE `a`.`type` = 2";
     } else {
@@ -166,7 +167,9 @@ if(count($al_groups) == 0) {
         $where2 = "WHERE (";
         foreach($al_groups as $grp) {
             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            // Same class as board.php's viewed_groups fix -- see that file
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -175,7 +178,9 @@ if(count($al_groups) == 0) {
         $where2 = "WHERE (";
         foreach($curr_viewed as $grp) {
             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`a`.`group` = '{$grp}'";
+            // Same class as board.php's viewed_groups fix -- see that file
+            $where2 .= "`a`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -194,7 +199,7 @@ $query1 = "SELECT *, r.updated AS `r_updated`,
     LEFT JOIN `$GLOBALS[mysql_prefix]allocates` `a` ON ( `r`.`id` = a.resource_id )
     {$where2} ORDER BY `unit_id` DESC LIMIT 1";
 
-$result1 = db_query($query1);
+$result1 = db_query($query1, $where2Params);
 $row1 = $result1 ? stripslashes_deep($result1->fetch_assoc()) : null;
 $latest_id = ($result1->num_rows >0) ? $row1['unit_id'] : 0;        // 12/4/2021
 
@@ -217,7 +222,7 @@ $query = "SELECT *, r.updated AS `r_updated`,
     LEFT JOIN `$GLOBALS[mysql_prefix]un_status` `s` ON ( `r`.`un_status_id` = s.id )
     {$where2}  GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC ";
 
-$result = db_query($query);
+$result = db_query($query, $where2Params);
 $units_ct = $result->num_rows;            // 1/4/10
 if ($units_ct != 0){
     $checked = array ("", "", "", "");

@@ -115,6 +115,7 @@ if(array_key_exists('viewed_groups', $_SESSION)) {    //    6/10/11
     $curr_viewed= explode(",",$_SESSION['viewed_groups']);
     }
 
+$where2Params = [];
 if(!isset($curr_viewed)) {
     if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    6/24/13
         $where2 = "WHERE `$GLOBALS[mysql_prefix]allocates`.`type` = 3";
@@ -123,7 +124,9 @@ if(!isset($curr_viewed)) {
         $where2 = "WHERE (";    //    6/10/11
         foreach($al_groups as $grp) {    //    6/10/11
             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+            // Same class as board.php's viewed_groups fix -- see that file
+            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -137,7 +140,9 @@ if(!isset($curr_viewed)) {
         $where2 = "WHERE (";    //    6/10/11
         foreach($curr_viewed as $grp) {    //    6/10/11
             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = '{$grp}'";
+            // Same class as board.php's viewed_groups fix -- see that file
+            $where2 .= "`$GLOBALS[mysql_prefix]allocates`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -149,7 +154,7 @@ if(!isset($curr_viewed)) {
 $query_fc = "SELECT *, `$GLOBALS[mysql_prefix]facilities`.`id` AS `fac_id` FROM `$GLOBALS[mysql_prefix]facilities`
     LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]allocates`.`resource_id` )
     $where2 GROUP BY `$GLOBALS[mysql_prefix]facilities`.`id` ORDER BY `name` ASC";
-$result_fc = db_query($query_fc);
+$result_fc = db_query($query_fc, $where2Params);
 $pulldown = '<option value=0 selected>Incident at Facility</option>\n';    // 3/18/10
     while ($row_fc = $result_fc->fetch_assoc()) {
         $pulldown .= "<option value=\"{$row_fc['fac_id']}\">" . shorten($row_fc['name'], 30) . "</option>\n";
@@ -159,7 +164,7 @@ $pulldown = '<option value=0 selected>Incident at Facility</option>\n';    // 3/
 $query_rfc = "SELECT *, `$GLOBALS[mysql_prefix]facilities`.`id` AS `fac_id` FROM `$GLOBALS[mysql_prefix]facilities`
     LEFT JOIN `$GLOBALS[mysql_prefix]allocates` ON ( `$GLOBALS[mysql_prefix]facilities`.`id` = `$GLOBALS[mysql_prefix]allocates`.`resource_id` )
     $where2 GROUP BY `$GLOBALS[mysql_prefix]facilities`.`id` ORDER BY `name` ASC";
-$result_rfc = db_query($query_rfc);
+$result_rfc = db_query($query_rfc, $where2Params);
 $pulldown2 = '<option value = 0 selected>Receiving facility</option>\n';     // 3/18/10
     while ($row_rfc = $result_rfc->fetch_assoc()) {
         $pulldown2 .= "<option value=\"{$row_rfc['fac_id']}\">" . shorten($row_rfc['name'], 30) . "</option>\n";

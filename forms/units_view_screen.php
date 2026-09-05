@@ -458,6 +458,7 @@ if (isset($rowtr)) {                                                            
 
             $al_groups = $_SESSION['user_groups'];
 
+            $where2Params = [];
             if(!isset($curr_viewed)) {        //    7/2/13    revised WHERE to AND - Where clause was repeated
             if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
                 $where2 = "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";
@@ -466,7 +467,9 @@ if (isset($rowtr)) {                                                            
                 $where2 = "AND (";    //    6/10/11
                 foreach($al_groups as $grp) {    //    6/10/11
                     $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                    $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                    // Same class as board.php's viewed_groups fix -- see that file
+                    $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                    $where2Params[] = sanitize_int($grp);
                     $where2 .= $where3;
                     $x++;
                     }
@@ -480,7 +483,9 @@ if (isset($rowtr)) {                                                            
                 $where2 = "AND (";    //    6/10/11
                 foreach($curr_viewed as $grp) {    //    6/10/11
                     $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                    $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                    // Same class as board.php's viewed_groups fix -- see that file
+                    $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                    $where2Params[] = sanitize_int($grp);
                     $where2 .= $where3;
                     $x++;
                     }
@@ -492,7 +497,7 @@ if (isset($rowtr)) {                                                            
                     LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` ON `{$GLOBALS['mysql_prefix']}ticket`.id=`{$GLOBALS['mysql_prefix']}allocates`.`resource_id`
             WHERE `status` IN ({$GLOBALS['STATUS_OPEN']}, {$GLOBALS['STATUS_SCHEDULED']}) {$instr} {$where2}
             GROUP BY `{$GLOBALS['mysql_prefix']}ticket`.`id`";    //    6/10/11
-            $result_t = db_query($query_t);            $i=0;
+            $result_t = db_query($query_t, $where2Params);            $i=0;
             while ($row_t = stripslashes_deep($result_t->fetch_array()))     {
 //            dump($row_t);
                 switch($row_t['severity'])        {                                //color tickets by severity

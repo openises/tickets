@@ -505,6 +505,8 @@ if ($get_action == 'add') {
 <?php
 //                        generate dropdown menu of responders
 
+            // Same class as board.php's viewed_groups fix -- see that file.
+            $whereParams = [];
             if(!isset($curr_viewed)) {
                 if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
                     $where = "WHERE `a`.`type` = 2";
@@ -513,7 +515,8 @@ if ($get_action == 'add') {
                     $where = "WHERE (";    //    6/10/11
                     foreach($al_groups as $grp) {    //    6/10/11
                         $where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                        $where .= "`a`.`group` = '{$grp}'";
+                        $where .= "`a`.`group` = ?";
+                        $whereParams[] = sanitize_int($grp);
                         $where .= $where2;
                         $x++;
                         }
@@ -527,7 +530,8 @@ if ($get_action == 'add') {
                     $where = "WHERE (";
                     foreach($curr_viewed as $grp) {
                         $where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                        $where .= "`a`.`group` = '{$grp}'";
+                        $where .= "`a`.`group` = ?";
+                        $whereParams[] = sanitize_int($grp);
                         $where .= $where2;
                         $x++;
                         }
@@ -546,7 +550,7 @@ if ($get_action == 'add') {
                 LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON ( `r`.`un_status_id` = s.id )
                 $where GROUP BY unit_id ORDER BY `nr_assigned` DESC, `handle` ASC, `r`.`name` ASC";
 
-            $result = db_query($query);
+            $result = db_query($query, $whereParams);
             $max = 24;
 
             $height =  ($result->num_rows>$max) ? ($max * 22 ) : ($result->num_rows + 1) * 22;

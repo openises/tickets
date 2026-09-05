@@ -671,6 +671,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
         $curr_viewed= explode(",",$_SESSION['viewed_groups']);
         }
 
+    // Same class as board.php's viewed_groups fix -- see that file.
+    $where2Params = [];
     if(!isset($curr_viewed)) {
         if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
             $where2 = "WHERE `a`.`type` = 2";
@@ -679,7 +681,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
             $where2 = "WHERE (";    //    6/10/11
             foreach($al_groups as $grp) {    //    6/10/11
                 $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`a`.`group` = '{$grp}'";
+                $where2 .= "`a`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -693,7 +696,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
             $where2 = "WHERE (";    //    6/10/11
             foreach($curr_viewed as $grp) {    //    6/10/11
                 $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`a`.`group` = '{$grp}'";
+                $where2 .= "`a`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -715,7 +719,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
         LEFT JOIN `{$GLOBALS['mysql_prefix']}unit_types` `t` ON ( `r`.`type` = t.id )
         LEFT JOIN `{$GLOBALS['mysql_prefix']}un_status` `s` ON ( `r`.`un_status_id` = s.id )
         {$where2}  GROUP BY unit_id ORDER BY `nr_assigned` DESC,  `handle` ASC, `r`.`name` ASC ";                                            // 2/1/10, 3/15/10, 6/10/11
-    $result = db_query($query) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+    $result = db_query($query, $where2Params) or do_error($query, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
     $num_units = $result->num_rows;
     $aprs = false;
     $instam = false;
@@ -1844,6 +1848,8 @@ if(get_num_groups()) {
             $curr_viewed= explode(",",$_SESSION['viewed_groups']);
             }
 
+        // Same class as board.php's viewed_groups fix -- see that file.
+        $where2Params = [];
         if(!isset($curr_viewed)) {    //    7/2/13    revised WHERE to AND - Where clause was repeated
             if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
                 $where2 = "AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";
@@ -1852,7 +1858,8 @@ if(get_num_groups()) {
                 $where2 = "AND (";    //    6/10/11
                 foreach($al_groups as $grp) {    //    6/10/11
                     $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                    $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                    $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                    $where2Params[] = sanitize_int($grp);
                     $where2 .= $where3;
                     $x++;
                     }
@@ -1866,7 +1873,8 @@ if(get_num_groups()) {
                 $where2 = "AND (";    //    6/10/11
                 foreach($curr_viewed as $grp) {    //    6/10/11
                     $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                    $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                    $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                    $where2Params[] = sanitize_int($grp);
                     $where2 .= $where3;
                     $x++;
                     }
@@ -1878,7 +1886,7 @@ if(get_num_groups()) {
                     LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` ON `{$GLOBALS['mysql_prefix']}ticket`.id=`{$GLOBALS['mysql_prefix']}allocates`.`resource_id`
             WHERE `status` IN ({$GLOBALS['STATUS_OPEN']}, {$GLOBALS['STATUS_SCHEDULED']}) {$instr} {$where2}
             GROUP BY `{$GLOBALS['mysql_prefix']}ticket`.`id`";    //    6/10/11
-        $result_t = db_query($query_t) or do_error($query_t, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
+        $result_t = db_query($query_t, $where2Params) or do_error($query_t, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);
         $i=0;
         while ($row_t = stripslashes_deep($result_t->fetch_array()))     {
             switch($row_t['severity'])        {                                //color tickets by severity

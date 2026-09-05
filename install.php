@@ -629,9 +629,34 @@ session_start();
 $action = isset($_POST['action']) ? (string)$_POST['action'] : '';
 $installerApiActions = array('execute_step', 'execute_stream', 'execute');
 $isInstallerApiCall = ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, $installerApiActions, true));
-if ($detection['exists'] && !$isInstallerApiCall) {
+// Found during the 2026-09 SQL-injection sweep: this used to be
+// `if ($detection['exists'] && !$isInstallerApiCall)` -- which EXEMPTED
+// exactly the three actions that actually write to the database
+// (execute_step/execute_stream/execute) from the admin-login check below,
+// on an ALREADY-INSTALLED system. The `!$isInstallerApiCall` exemption was
+// only ever meant to apply to a FRESH install (no admin account exists yet
+// to log in as) -- it must never apply once `$detection['exists']` is true.
+// As written, ANY unauthenticated POST with action=execute_stream (attacker
+// supplies db_host/db_user/db_pass/db_name/db_prefix/admin_user/admin_pass
+// directly in the request body) reached perform_install() in mode
+// install_clean on a live production instance -- full unauthenticated
+// database wipe-and-reinstall plus attacker-chosen super-admin creation,
+// against whatever DB the attacker's own POST body names.
+if ($detection['exists']) {
     $isAdmin = isset($_SESSION['level']) && ((int)$_SESSION['level'] === 0 || (int)$_SESSION['level'] === 1);
     if (!$isAdmin) {
+        if ($isInstallerApiCall) {
+            // API calls expect JSON/plain-text, not an HTML redirect page.
+            http_response_code(401);
+            if ($action === 'execute_stream') {
+                header('Content-Type: text/plain; charset=UTF-8');
+                echo "ERROR: Administrator login required.\nDONE:0\n";
+            } else {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Administrator login required.']);
+            }
+            exit();
+        }
         // Show a styled login-required message instead of redirecting to an include file
         require_once __DIR__ . '/incs/versions.inc.php';
         $iv = htmlspecialchars($installerVersion, ENT_QUOTES, 'UTF-8');

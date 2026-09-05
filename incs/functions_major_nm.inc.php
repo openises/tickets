@@ -769,6 +769,8 @@ function cs_handleResult(req) {                    // the 'called-back' function
 if(array_key_exists('viewed_groups', $_SESSION)) {        //    5/4/11
     $curr_viewed= explode(",",$_SESSION['viewed_groups']);
     }
+// Same class as board.php's viewed_groups fix -- see that file.
+$where2Params = [];
 if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
     $where2 = " AND `{$GLOBALS['mysql_prefix']}allocates`.`type` = 1";
     } else {
@@ -777,7 +779,8 @@ if(empty($al_groups)) {    //    catch for errors - no entries in allocates for 
         $where2 = "AND (";
         foreach($al_groups as $grp) {
             $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+            $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -786,7 +789,8 @@ if(empty($al_groups)) {    //    catch for errors - no entries in allocates for 
         $where2 = "AND (";
         foreach($curr_viewed as $grp) {
             $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-            $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+            $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+            $where2Params[] = sanitize_int($grp);
             $where2 .= $where3;
             $x++;
             }
@@ -878,7 +882,8 @@ if(empty($al_groups)) {    //    catch for errors - no entries in allocates for 
              GROUP BY tick_id ORDER BY `status` DESC, `booked_date` ASC, `severity` DESC,`{$p}ticket`.`id` ASC
             LIMIT 1000 OFFSET {$safe_my_offset}";        // 2/2/09, 10/28/09, 2/21/10
 //            print $query;
-        $result = db_query($query);
+        // $where embeds $where2's ? placeholders -- see the viewed_groups fix above.
+        $result = db_query($query, $where2Params);
         }
     $the_offset = (isset($_GET['frm_offset'])) ? sanitize_int($_GET['frm_offset'], 0) : 0 ;
     $sb_indx = 0;                // note zero base!
@@ -1111,6 +1116,8 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
     if(array_key_exists('viewed_groups', $_SESSION)) {
         $curr_viewed= explode(",",$_SESSION['viewed_groups']);
         }
+    // Same class as board.php's viewed_groups fix -- see that file.
+    $where2Params = [];
     if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
         $where2 = "WHERE `a`.`type` = 2";
         } else {
@@ -1119,7 +1126,8 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
             $where2 = "WHERE (";    //    4/18/11
             foreach($al_groups as $grp) {    //    4/18/11
                 $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`a`.`group` = '{$grp}'";
+                $where2 .= "`a`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -1128,7 +1136,8 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
             $where2 = "WHERE (";    //    4/18/11
             foreach($curr_viewed as $grp) {    //    4/18/11
                 $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`a`.`group` = '{$grp}'";
+                $where2 .= "`a`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -1146,7 +1155,7 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
         LEFT JOIN `{$p}un_status` `s` ON ( `r`.`un_status_id` = s.id )
         {$where2}  GROUP BY unit_id ORDER BY {$order_str}";                                            // 2/1/10, 3/8/10, 6/11/10
 
-    $result = db_query($query);
+    $result = db_query($query, $where2Params);
     $units_ct = $result ? $result->num_rows : 0;            // 1/4/10
     if ($units_ct==0){
         print "\n\t\tside_bar_html += \"<TR CLASS='odd'><TH></TH><TH ALIGN='center' COLSPAN=99><I><B>No units!</I></B></TH></TR>\"\n";
@@ -1332,6 +1341,8 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
     if(array_key_exists('viewed_groups', $_SESSION)) {
         $curr_viewed= explode(",",$_SESSION['viewed_groups']);
         }
+    // Same class as board.php's viewed_groups fix -- see that file.
+    $where2Params = [];
     if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
         $where2 = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type` = 3";
         } else {
@@ -1340,7 +1351,8 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
             $where2 = "WHERE (";    //    5/4/11
             foreach($al_groups as $grp) {    //    5/4/11
                 $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -1349,7 +1361,8 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
             $where2 = "WHERE (";    //    5/4/11
             foreach($curr_viewed as $grp) {    //    5/4/11
                 $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                $where2 .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -1370,7 +1383,7 @@ $temp  = (string) ( round((microtime(true) - $time), 3));
         LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_status` ON `{$GLOBALS['mysql_prefix']}facilities`.status_id = `{$GLOBALS['mysql_prefix']}fac_status`.id
         {$where2}
         GROUP BY fac_id ORDER BY {$fac_order_str}";
-    $result_fac = db_query($query_fac);
+    $result_fac = db_query($query_fac, $where2Params);
     $mail_str = (may_email())? "do_fac_mail_win();": "";        // 7/2/10
     $temp = max(320, intval($_SESSION['scr_width']* 0.4));
     $facs_ct = $result_fac->num_rows;            // 1/4/10

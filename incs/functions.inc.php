@@ -4048,7 +4048,7 @@ function get_status_sel($unit_in, $status_val_in, $tbl_in) {                    
     return $outstr;
     }
 
-function curr_regs() {    //    10/18/11    Gets currently allocated or viewed regions
+function curr_regs(&$curr_regs_params = array()) {    //    10/18/11    Gets currently allocated or viewed regions
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocates` WHERE `type`= 4 AND `resource_id` = ?;";    //    10/18/11
     $result = db_query($query, [$_SESSION['user_id']]);
     $al_groups = array();
@@ -4060,6 +4060,8 @@ function curr_regs() {    //    10/18/11    Gets currently allocated or viewed r
         $curr_viewed= explode(",",$_SESSION['viewed_groups']);
         }
 
+    // Same class as board.php's viewed_groups fix -- see that file.
+    $curr_regs_params = array();
     if(!isset($curr_viewed)) {
         if(empty($al_groups)) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
             $where = "WHERE `{$GLOBALS['mysql_prefix']}allocates`.`type` = 3";
@@ -4068,7 +4070,8 @@ function curr_regs() {    //    10/18/11    Gets currently allocated or viewed r
             $where = "WHERE (";
             foreach($al_groups as $grp) {
                 $where2 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                $where .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                $curr_regs_params[] = sanitize_int($grp);
                 $where .= $where2;
                 $x++;
                 }
@@ -4082,7 +4085,8 @@ function curr_regs() {    //    10/18/11    Gets currently allocated or viewed r
             $where = "WHERE (";    //    6/10/11
             foreach($curr_viewed as $grp) {
                 $where2 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = '{$grp}'";
+                $where .= "`{$GLOBALS['mysql_prefix']}allocates`.`group` = ?";
+                $curr_regs_params[] = sanitize_int($grp);
                 $where .= $where2;
                 $x++;
                 }
@@ -4093,7 +4097,8 @@ function curr_regs() {    //    10/18/11    Gets currently allocated or viewed r
     }
 
 function get_recfac_sel($unit_in, $tickid, $assign_id) {                    // 10/18/11 - Gets select menu for receiving facility control on mobile page
-    $where = curr_regs();
+    $curr_regs_params = array();    // Same class as board.php's viewed_groups fix -- see that file.
+    $where = curr_regs($curr_regs_params);
     $query01 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}assigns` WHERE `{$GLOBALS['mysql_prefix']}assigns`.`id` = ? LIMIT 1";
     $result01 = db_query($query01, [$assign_id]);
     while ($row01 = stripslashes_deep($result01->fetch_assoc())) {
@@ -4104,7 +4109,7 @@ function get_recfac_sel($unit_in, $tickid, $assign_id) {                    // 1
             FROM `{$GLOBALS['mysql_prefix']}facilities`
             LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` ON ( `{$GLOBALS['mysql_prefix']}facilities`.`id` = `{$GLOBALS['mysql_prefix']}allocates`.`resource_id` )
             $where GROUP BY `{$GLOBALS['mysql_prefix']}facilities`.`id` ORDER BY `name` ASC";
-    $result02 = db_query($query02);
+    $result02 = db_query($query02, $curr_regs_params);
 
     $guest = is_guest();
     $dis = ($guest)? " DISABLED": "";

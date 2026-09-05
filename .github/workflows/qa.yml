@@ -1,0 +1,61 @@
+name: QA
+
+# Runs on every push/PR to main. Three gates:
+#   1. PHP syntax check across the whole tree
+#   2. The existing PHPUnit suite (tests/Unit)
+#   3. The Semgrep SQL-injection taint-analysis gate (.semgrep/) -- this is
+#      the gate that actually catches the vulnerability class found and
+#      fixed in commits f71a987 and d22ec7f (2026-09-04/05). It fails the
+#      build on any NEW finding not already in tools/semgrep_baseline.txt
+#      (a reviewed-and-accepted-false-positive list -- see that file's and
+#      tools/semgrep_gate.php's own docblocks before adding an entry).
+#
+# This workflow does NOT run the SonarQube scan -- the self-hosted SonarQube
+# instance is on Eric's private LAN (10.32.161.205) and unreachable from
+# GitHub-hosted runners. That scan (including importing these same Semgrep
+# findings via tools/semgrep_to_sonar.php + sonar.externalIssuesReportPaths)
+# is run manually/periodically from a LAN-connected session per
+# ~/.claude/sonarqube-playbook.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax check (php -l on every .php file)
+        run: |
+          set -e
+          ERRORS=0
+          while IFS= read -r -d '' f; do
+            php -l "$f" > /dev/null || { echo "SYNTAX ERROR: $f"; ERRORS=$((ERRORS+1)); }
+          done < <(find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -print0)
+          echo "Checked with $ERRORS syntax errors."
+          [ "$ERRORS" -eq 0 ]
+
+  phpunit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit
+
+  sql-injection-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+      - name: Run Semgrep SQL-injection taint gate
+        run: php tools/semgrep_gate.php

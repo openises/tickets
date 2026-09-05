@@ -547,6 +547,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
         $curr_viewed= explode(",",$_SESSION['viewed_groups']);
         }
 
+    // Same class as board.php's viewed_groups fix -- see that file.
+    $where2Params = [];
     if(!isset($curr_viewed)) {
         if(count($al_groups) == 0) {    //    catch for errors - no entries in allocates for the user.    //    5/30/13
             $where2 = "WHERE `a`.`type` = 3";
@@ -555,7 +557,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
             $where2 = "WHERE (";    //    6/10/11
             foreach($al_groups as $grp) {    //    6/10/11
                 $where3 = (count($al_groups) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`a`.`group` = '{$grp}'";
+                $where2 .= "`a`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -569,7 +572,8 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
             $where2 = "WHERE (";    //    6/10/11
             foreach($curr_viewed as $grp) {    //    6/10/11
                 $where3 = (count($curr_viewed) > ($x+1)) ? " OR " : ")";
-                $where2 .= "`a`.`group` = '{$grp}'";
+                $where2 .= "`a`.`group` = ?";
+                $where2Params[] = sanitize_int($grp);
                 $where2 .= $where3;
                 $x++;
                 }
@@ -592,7 +596,7 @@ print (((my_is_int($dzf)) && ($dzf==2)) || ((my_is_int($dzf)) && ($dzf==3)))? "t
         LEFT JOIN `{$GLOBALS['mysql_prefix']}fac_status` `s` ON `f`.status_id = `s`.id
         {$where2}  GROUP BY `f`.id ORDER BY `f`.type ASC";
 
-    $result = db_query($query);
+    $result = db_query($query, $where2Params);
     $num_facilities = $result->num_rows;
     $i=0;                // counter
 // =============================================================================
