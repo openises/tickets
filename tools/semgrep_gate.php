@@ -21,6 +21,18 @@
  * the flagged value is checked against a real allowlist before use.
  *
  * Usage: php tools/semgrep_gate.php [--update-baseline]
+ *
+ * IMPORTANT if regenerating the baseline from a Windows checkout: git's
+ * autocrlf converts tracked files to CRLF in a Windows working tree, but
+ * GitHub Actions' Linux runners check out pure LF. Semgrep's line-based
+ * taint tracker can genuinely report DIFFERENT line numbers for the exact
+ * same logical content depending on which encoding it scans (confirmed:
+ * a CRLF Windows working-tree scan and CI's LF checkout disagreed on 4
+ * findings in tables.php for identical code). Regenerate the baseline
+ * from a line-ending-normalized extraction of the exact commit, e.g.:
+ *   git -c core.autocrlf=false archive <commit> | tar -x -C <clean-dir>
+ * -- never from a plain Windows working-tree copy -- or the baseline will
+ * silently fail to match what CI actually sees.
  */
 
 $root = dirname(__DIR__);

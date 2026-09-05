@@ -51,6 +51,10 @@ search.php:217
 tables.php:1047
 tables.php:1051
 tables.php:1070
+tables.php:1214
+tables.php:1246
+tables.php:1270
+tables.php:1285
 tables.php:212
 tables.php:779
 tables.php:924
