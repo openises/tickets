@@ -459,6 +459,9 @@ class EndpointAuthRuntimeTest extends TestCase
 
     public function testTheAdminPasswordResetToolIsOffUntilTheAdministratorSwitchesItOnAndOnlyOnce(): void
     {
+        if (!extension_loaded('pdo_mysql')) {
+            $this->markTestSkipped('SKIP: the reset tool connects with PDO and pdo_mysql is not loaded');
+        }
         $tool = 'tools/reset-admin-password.php';
         $enable = self::$dir . '/tools/reset-admin-password.enable';
         $this->assertSame(404, $this->http('GET', $tool, [], false)['status']);
