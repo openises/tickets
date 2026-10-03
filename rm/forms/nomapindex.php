@@ -1,4 +1,9 @@
 <?php
+require_once __DIR__ . '/../../incs/functions.inc.php';
+// Same rule as rm/index.php, which includes this file: with forced login on (the default) nobody gets it without a session.
+if (intval(get_variable('responder_mobile_forcelogin')) == 1) {
+    require_login_or_401();
+    }
 $day_night = "Day";
 ?>
 <!DOCTYPE html>

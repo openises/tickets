@@ -70,10 +70,14 @@ if(file_exists("./incs/modules.inc.php")) {
     }
 $poll_cycle_time = 5000;    // 5 seconds to ms - 4/13/18
 $resps_arr = array();
-$query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`";
-$result_resps = db_query($query);
-while ($row_resps = stripslashes_deep($result_resps->fetch_assoc()))     {
-    $resps_arr[$row_resps['id']] = $row_resps['icon_str'];
+// This frame is also shown above the login form. Operational data (unit ids and icons) is only embedded once a session exists.
+$top_has_session = (!empty($_SESSION) && !empty($_SESSION['user_id']));
+if ($top_has_session) {
+    $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}responder`";
+    $result_resps = db_query($query);
+    while ($row_resps = stripslashes_deep($result_resps->fetch_assoc()))     {
+        $resps_arr[$row_resps['id']] = $row_resps['icon_str'];
+        }
     }
 
 $sounds = array();
@@ -1549,7 +1553,7 @@ function get_daynight() {
     <h3></h3></DIV>
 <!-- <button onclick = "show_has_message('asasasasas ERERERERER ')">Test</button> -->
 <?php                            // 7/2/2013
-    if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) ) {
+    if ( ( intval ( get_variable ('broadcast')==1 ) ) &&  ( intval ( get_variable ('internet')==1 ) ) && $top_has_session ) {        // socket2me embeds every user name: never for a visitor
         require_once './incs/socket2me.inc.php';        // 5/24/2013
         }
 ?>

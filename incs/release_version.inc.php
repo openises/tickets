@@ -132,6 +132,7 @@ function getLatestGitHubRelease(
 }
 
 if (
+    PHP_SAPI === 'cli' &&        // this self-test prints and calls GitHub: never when the file is requested over HTTP
     isset($_SERVER['SCRIPT_FILENAME']) &&
     realpath($_SERVER['SCRIPT_FILENAME']) === __FILE__
 ) {
