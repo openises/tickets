@@ -10,6 +10,7 @@
  * 3/14/2026 - New file
  */
 require_once './incs/functions.inc.php';
+require_login_or_401();
 
 $report      = isset($_GET['report'])       ? sanitize_string($_GET['report'])       : '';
 $func        = isset($_GET['func'])         ? sanitize_string($_GET['func'])         : '';
@@ -20,57 +21,15 @@ $organisation = isset($_GET['organisation']) ? sanitize_string($_GET['organisati
 $startdate   = isset($_GET['startdate'])    ? sanitize_string($_GET['startdate'])    : '';
 $enddate     = isset($_GET['enddate'])      ? sanitize_string($_GET['enddate'])      : '';
 $title       = isset($_GET['title'])        ? sanitize_string($_GET['title'])        : '';
-$httpuser    = get_variable('httpuser');
-$httppwd     = get_variable('httppwd');
 
-// ---- Build URL to fetch the HTML report ----
+// ---- Get the HTML report ----
+// ajax/reports.php runs inside this request (see download_report.php for why it is no longer fetched over HTTP).
 
-function curPageURL() {
-    $pageURL = 'http';
-    if (array_key_exists("HTTPS", $_SERVER) && $_SERVER["HTTPS"] == "on") { $pageURL .= "s"; }
-    $pageURL .= "://";
-    $uri = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-    if ($_SERVER["SERVER_PORT"] != "80") {
-        $pageURL .= $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"] . $uri;
-    } else {
-        $pageURL .= $_SERVER["SERVER_NAME"] . $uri;
-    }
-    return $pageURL;
-}
-
-$serverpath = curPageURL();
-$randomnumber = rand(0, 9999999);
-$url = $serverpath . "/ajax/reports.php?"
-    . "report=" . urlencode($report)
-    . "&func=" . urlencode($func)
-    . "&date=" . urlencode($date)
-    . "&tick_sel=" . urlencode($ticksel)
-    . "&resp_sel=" . urlencode($respsel)
-    . "&organisation=" . urlencode($organisation)
-    . "&startdate=" . urlencode($startdate)
-    . "&enddate=" . urlencode($enddate)
-    . "&dohtml=true&version=$randomnumber";
-
-// ---- Fetch HTML ----
-
-$thePage = '';
-if (function_exists("curl_init")) {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
-    if (($httpuser != "") && ($httppwd != "")) {
-        curl_setopt($ch, CURLOPT_USERPWD, $httpuser . ":" . $httppwd);
-    }
-    $thePage = curl_exec($ch);
-    curl_close($ch);
-} else {
-    if ($fp = fopen($url, "r")) {
-        while (!feof($fp)) { $thePage .= fgets($fp, 4096); }
-        fclose($fp);
-    }
-}
-
+$report_inline_get = array(
+    'report' => $report, 'func' => $func, 'date' => $date,
+    'tick_sel' => $ticksel, 'resp_sel' => $respsel, 'organisation' => $organisation,
+    'startdate' => $startdate, 'enddate' => $enddate, 'dohtml' => 'true');
+require './incs/report_inline.inc.php';        // leaves the report HTML in $thePage
 if (empty($thePage)) {
     http_response_code(500);
     header('Content-Type: text/plain');

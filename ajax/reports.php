@@ -2,6 +2,7 @@
 @session_start();
 session_write_close();
 require_once '../incs/functions.inc.php';        //7/28/10
+require_login_or_401();
 require_once '../incs/log_codes.inc.php';                 // 3/25/10
 $func = (array_key_exists('func', $_GET)) ? sanitize_string($_GET['func']) : "";
 $report = (array_key_exists('report', $_GET)) ? sanitize_string($_GET['report']) : "";
@@ -2467,4 +2468,6 @@ if($dohtml) {
     print json_encode($output);
     }
 
-exit();
+if (!defined('TICKETS_REPORT_IN_PROCESS')) {        // the download scripts run this file inside their own request
+    exit();
+    }

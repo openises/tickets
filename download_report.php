@@ -1,7 +1,7 @@
 <?php
 require_once './incs/functions.inc.php';
+require_login_or_401();
 include_once './incs/html_to_doc.inc.php';
-$randomnumber = random_int(0, 9999999);
 $currDate = date('m,d,Y');
 // Replaced extract — explicit variable assignments (Phase 2 cleanup)
 $report       = sanitize_string($_GET['report'] ?? '');
@@ -14,45 +14,15 @@ $startdate    = sanitize_string($_GET['startdate'] ?? '');
 $enddate      = sanitize_string($_GET['enddate'] ?? '');
 $title        = sanitize_string($_GET['title'] ?? '');
 $mode         = sanitize_string($_GET['mode'] ?? '');
-$httpuser = get_variable('httpuser');
-$httppwd = get_variable('httppwd');
 
-function curPageURL() {
-    $pageURL = 'http';
-    if (array_key_exists("HTTPS", $_SERVER) && $_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
-    $pageURL .= "://";
-    $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-    if ($_SERVER["SERVER_PORT"] != "80") {
-        $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$uri;
-        } else {
-        $pageURL .= $_SERVER["SERVER_NAME"].$uri;
-        }
-    return $pageURL;
-    }
-
-$serverpath = curPageURL();
-$url = $serverpath . "/ajax/reports.php?report=" . urlencode($report) . "&func=" . urlencode($func) . "&date=" . urlencode($date) . "&tick_sel=" . urlencode($ticksel) . "&resp_sel=" . urlencode($respsel) . "&organisation=" . urlencode($organisation) . "&startdate=" . urlencode($startdate) . "&enddate=" . urlencode($enddate) . "&dohtml=true&version=$randomnumber";
-$thePage = '';
-if (function_exists("curl_init")) {
-    $ch = curl_init();
-    $timeout = 20;
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-    if(($httpuser!="") && ($httppwd!="")) {
-        $security = $httpuser .":" . $httppwd;
-        curl_setopt($ch, CURLOPT_USERPWD, $security);
-        }
-    $thePage = curl_exec($ch);
-    $thePage = preg_replace("#(<\s*a\s+[^>]*href\s*=\s*[\"'])(?!http)([^\"'>]+)  ([\"'>]+)#",'$1'.$url.'$2$3', $thePage);
-    curl_close($ch);
-    } else {                // no CURL
-    if ($fp = fopen($url, "r")) {
-        while (!feof($fp) && (safe_strlen($thePage)<9000)) $thePage .= fgets($fp, 128);
-        fclose($fp);
-        }
-    }
-
+// The report HTML comes from ajax/reports.php, run inside this request. It used to be fetched over HTTP from
+// the server to itself without cookies, which only worked because ajax/reports.php asked for no login at all.
+// In-process there is no second request: the session that passed the gate above is what authorizes the data.
+$report_inline_get = array(
+    'report' => $report, 'func' => $func, 'date' => $date,
+    'tick_sel' => $ticksel, 'resp_sel' => $respsel, 'organisation' => $organisation,
+    'startdate' => $startdate, 'enddate' => $enddate, 'dohtml' => 'true');
+require './incs/report_inline.inc.php';        // leaves the report HTML in $thePage
 //$htmltodoc= new HTML_TO_DOC();
 
 //$htmltodoc->createDoc($thePage,"test");
