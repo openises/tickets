@@ -208,6 +208,7 @@ require_once 'istest.inc.php';
 require_once 'mysql.inc.php';
 require_once __DIR__ . '/db.inc.php';          // Secure database abstraction layer
 require_once __DIR__ . '/security.inc.php';    // Security helpers (XSS, CSRF, etc.)
+require_once __DIR__ . '/inc_num.inc.php';     // Incident numbering scheme helpers (GH #18)
 set_security_headers();                         // 3/14/26 - Deploy security headers globally
 require_once "phpcoord.php";                // UTM converter
 require_once "usng.inc.php";                // USNG converter 9/12/08
@@ -1629,27 +1630,25 @@ function get_variable($which){
     }
 
 /**
- * Read the incident-numbering scheme from settings as a usable array.
+ * Read the incident-numbering scheme from settings as a usable array - never false.
  *
- * Stored base64-encoded since 3/2/11; pre-2011 installs hold the plain
- * serialized array, which is what the brace test sniffs for. A value that is
- * missing, empty or otherwise not a six-element array unserializes to false,
- * and every caller writes its copy straight back after incrementing - so a
- * single bad read replaces the scheme with serialize(false) permanently.
- * Fall back to the shipped default, keeping whatever keys survived.
+ * Stored base64-encoded since 3/2/11; pre-2011 installs hold the plain serialized array. The
+ * parsing is in inc_num_parse() (incs/inc_num.inc.php), which falls back to the default scheme
+ * (no serial numbers) for a value that is empty or unusable and keeps whatever keys of a short
+ * or sparse array survived.
  *
+ * $status says what was found: 'ok' (a real scheme), 'empty' (never configured) or 'corrupt'
+ * (something is stored but it is not a scheme). A caller that writes the scheme back must pass
+ * $status to inc_num_advance(), which refuses to persist a fallback: writing the default over a
+ * bad read is how one bad value used to replace the operator's scheme for good (GH #18).
+ *
+ * @param string|null $status Out parameter: 'ok', 'empty' or 'corrupt'.
  * @return array 0 style, 1 label, 2 separator, 3 number, 4 prepend nature, 5 year
  */
-function get_inc_num_ary() {
-    $raw = (string) get_variable('_inc_num');
-    $ary = (strpos($raw, "{") > 0)? @unserialize($raw) : @unserialize(base64_decode($raw));
-    $default = array("0", "", "", "", "0", date("y"));        // no serial number, current year
-    if (!is_array($ary)) {
-        error_log("Tickets CAD: _inc_num is not a valid numbering array - falling back to default");
-        return $default;
-        }
-    foreach ($default as $k => $v) {                        // tolerate a short or sparse array
-        if (!array_key_exists($k, $ary)) {$ary[$k] = $v;}
+function get_inc_num_ary(&$status = null) {
+    $ary = inc_num_parse(get_variable('_inc_num'), $status);
+    if ($status == 'corrupt') {                // 'empty' is the normal unconfigured state and not worth a log line
+        error_log("Tickets CAD: the _inc_num setting is not a valid incident numbering scheme - serial numbers are off for this request and the stored value is left as it is. Re-save it under Configuration > Incident Numbers.");
         }
     return $ary;
     }

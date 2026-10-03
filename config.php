@@ -3633,7 +3633,8 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
 
             $top_notice = "Incident number update applied";
         } else {                // do edit
-        $in_ary = unserialize(base64_decode(get_variable('_inc_num')));    //    3/15/11
+        $in_status = '';
+        $in_ary = get_inc_num_ary($in_status);    //    3/15/11 - never false, 'corrupt' when the stored value is unreadable
         $do_nature_n = ((int)$in_ary[4] == 0) ? "CHECKED" : "";
         $do_nature_y = ((int)$in_ary[4] == 1) ? "CHECKED" : "";
         $style_checked = array("", "", "", "", "", "");        // one for each style type
@@ -3720,6 +3721,11 @@ $_echo .= "\n\n-- end  end  end  end  end  end  end  end  end  end  end  end  en
                                 STYLE='font-size:75%; font-weight:normal; font-style:italic'>(mouseover styles for hints)</span><BR/><BR/>
                         </TH>
                     </TR>
+<?php if ($in_status == 'corrupt') { ?>
+                    <TR VALIGN="middle" CLASS='odd'>
+                        <TD COLSPAN=2 ALIGN='center' STYLE='color: red; font-weight: bold;'>The stored numbering scheme could not be read, so the default (no numbers) is shown.<BR />Choose a style and save to repair it.<BR /><BR /></TD>
+                    </TR>
+<?php } ?>
                     <TR VALIGN="middle" CLASS='odd'>
                         <TD>&nbsp;</TD>
                     </TR>

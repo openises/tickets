@@ -192,7 +192,8 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
             $now = mysql_format_date(time() - (intval(get_variable('delta_mins'))*60)); // 6/20/10
             if(empty($post_frm_owner)) {$post_frm_owner=0;}
 
-            $inc_num_ary = get_inc_num_ary();        // 11/13/10, hardened
+            $inc_num_status = '';
+            $inc_num_ary = get_inc_num_ary($inc_num_status);        // 11/13/10, hardened - $inc_num_status says whether it was really stored
              $name_rev = $_POST['frm_scope'];
             if ($inc_num_ary[0] == 0 ) {                                            // no auto numbering scheme
                 switch (get_variable('serial_no_ap')) {                                // incident name revise -1/22/09
@@ -306,19 +307,12 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
                 do_log($GLOBALS['LOG_CALL_REC_FAC_SET'], $id, 0 ,0 ,0 ,$rec_facility_id);    // 6/20/10 - 7/11/10
                 }
 
-            $the_year = date("y");
-            if ((((int) $inc_num_ary[0]) == 3) && (!($inc_num_ary[5] == $the_year))) {                // year style and change?
-                $inc_num_ary[3] = 1;                                                                // roll over and start at 1
-                $inc_num_ary[5] = $the_year;
+            $inc_num_next = inc_num_advance($inc_num_ary, $inc_num_status);        // step the counter - 10/11/2013
+            if ($inc_num_next[1]) {                // write back only a real stored scheme whose counter moved, never a fallback (GH #18)
+                $out_str = inc_num_encode($inc_num_next[0]);                        // base64 like add.php; this used to store the plain form
+                $query = "UPDATE`{$GLOBALS['mysql_prefix']}settings` SET `value` = ? WHERE `name` = '_inc_num'";
+                $result = db_query($query, [$out_str]);
                 }
-            else {
-                if (((int) $inc_num_ary[0])>0) {        // step to next no. if scheme in use
-                    $inc_num_ary[3]++;                // do the deed for next use
-                    }
-                }            // end if/else - 10/11/2013
-            $out_str = serialize ($inc_num_ary);
-            $query = "UPDATE`{$GLOBALS['mysql_prefix']}settings` SET `value` = ? WHERE `name` = '_inc_num'";
-            $result = db_query($query, [$out_str]);
             return $name_rev;
             }                // end function updt ticket()
 

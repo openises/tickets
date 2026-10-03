@@ -1,5 +1,6 @@
 <?php
 error_reporting(E_ALL);        // 3/5/12
+require_once __DIR__ . '/inc_num.inc.php';        // incident numbering helpers - reset_db() must seed a real scheme (GH #18)
 
 /*
 6/9/08  revised to add 'super' priv's level
@@ -184,7 +185,7 @@ function reset_db($user=0,$ticket=0,$responders=0,$facilities=0,$settings=0,$mes
         do_insert_settings('disp_stat','D/R/O/FE/FA/Clear');        //    10/23/12
         do_insert_settings('oper_can_edit','0');        //    10/23/12
         do_insert_settings('group_or_dispatch','0');                // 12/16/10
-        do_insert_settings('_inc_num','');                //    10/23/12
+        do_insert_settings('_inc_num', inc_num_encode(inc_num_default()));                //    10/23/12 - was '', which no reader could parse
         do_insert_settings('_cloud','0');                //    10/23/12
         do_insert_settings('aprs_fi_key','');                //    10/23/12
         do_insert_settings('followmee_key','');                //    10/23/12

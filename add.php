@@ -272,7 +272,8 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
             if(empty($post_frm_owner)) {$post_frm_owner=0;}
 
             //$inc_num_ary = unserialize (get_variable('_inc_num'));                                            // 11/13/10
-            $inc_num_ary = get_inc_num_ary();        // 3/2/11, hardened
+            $inc_num_status = '';
+            $inc_num_ary = get_inc_num_ary($inc_num_status);        // 3/2/11, hardened - $inc_num_status says whether it was really stored
 
             // Show serial and format
             switch ((int) $inc_num_ary[0]) {
@@ -319,20 +320,12 @@ $get_add = ((empty($_GET) || ((!empty($_GET)) && (empty ($_GET['add'])))) ) ? ""
 
             // increment the serial if used
 
-            $the_year = date("y");
-            if ((((int) $inc_num_ary[0]) == 3) && (!($inc_num_ary[5] == $the_year))) {                // year style and change?
-                $inc_num_ary[3] = 1;                                                                // roll over and start at 1
-                $inc_num_ary[5] = $the_year;
-                } else {
-                if (((int) $inc_num_ary[0])>0) {        // step to next no. if scheme in use
-                    $inc_num_ary[3]++;                // do the deed for next use
-                    }
-                }            // end if/else - 10/11/2013
-
-            $out_str = base64_encode(serialize ($inc_num_ary));                        // 3/2/11
-
-            $query = "UPDATE`{$GLOBALS['mysql_prefix']}settings` SET `value` = ? WHERE `name` = '_inc_num'";
-            $result = db_query($query, [$out_str]);
+            $inc_num_next = inc_num_advance($inc_num_ary, $inc_num_status);        // step the counter - 10/11/2013
+            if ($inc_num_next[1]) {                // write back only a real stored scheme whose counter moved, never a fallback (GH #18)
+                $out_str = inc_num_encode($inc_num_next[0]);                        // 3/2/11
+                $query = "UPDATE`{$GLOBALS['mysql_prefix']}settings` SET `value` = ? WHERE `name` = '_inc_num'";
+                $result = db_query($query, [$out_str]);
+                }
 
             // end of serial increment
 
