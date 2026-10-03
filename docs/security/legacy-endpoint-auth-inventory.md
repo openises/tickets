@@ -447,7 +447,7 @@ The **Before** column is the state in 3.44.6: `open` = no authentication at all,
 | `incs/install_schema.inc.php` | INCLUDE | n/a | Library include: defines functions/constants; produces no output of its own when requested directly. |
 | `incs/istest.inc.php` | INCLUDE | n/a | Library include: defines functions/constants; produces no output of its own when requested directly. |
 | `incs/jpg-config.inc.php` | INCLUDE | n/a | Library include: defines functions/constants; produces no output of its own when requested directly. |
-| `incs/jpgraph.php` | INCLUDE | n/a | Library include: defines functions/constants; produces no output of its own when requested directly. |
+| `incs/jpgraph.php` | INCLUDE | n/a | Library include: defines classes and constants. A request for the file itself ends at a guard at the top of the file, with no output. If a page loads it on PHP 8 its start-up version check reports one error (the library predates PHP 8); that report is bounded to one plain line by the re-entrancy guard in `incs/jpgraph_errhandler.inc.php`. Before either, it recursed until the process ran out of memory. Covered by `JpGraphErrorHandlerTest`. |
 | `incs/jpgraph_bar.php` | INCLUDE | n/a | Library include: defines functions/constants; produces no output of its own when requested directly. |
 | `incs/jpgraph_errhandler.inc.php` | INCLUDE | n/a | Library include: defines functions/constants; produces no output of its own when requested directly. |
 | `incs/jpgraph_error.php` | INCLUDE | n/a | Library include: defines functions/constants; produces no output of its own when requested directly. |
@@ -701,6 +701,7 @@ The **Before** column is the state in 3.44.6: `open` = no authentication at all,
 | `tests/Unit/EndpointAuthTest.php` | INCLUDE | n/a | Test-suite file; defines classes only. |
 | `tests/Unit/IncNumSchemeTest.php` | INCLUDE | n/a | Test-suite file; defines classes only. |
 | `tests/Unit/InstallerSafetyTest.php` | INCLUDE | n/a | Test-suite file; defines classes only. |
+| `tests/Unit/JpGraphErrorHandlerTest.php` | INCLUDE | n/a | Test-suite file; defines classes only. |
 | `tests/Unit/NullFetchGuardTest.php` | INCLUDE | n/a | Test-suite file; defines classes only. |
 | `tests/Unit/NullSafeHelpersTest.php` | INCLUDE | n/a | Test-suite file; defines classes only. |
 | `tests/Unit/Php8CompatRegressionTest.php` | INCLUDE | n/a | Test-suite file; defines classes only. |

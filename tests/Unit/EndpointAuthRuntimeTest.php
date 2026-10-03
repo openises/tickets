@@ -138,6 +138,10 @@ class EndpointAuthRuntimeTest extends TestCase
         fclose($sock);
         @mkdir(self::$dir . '/_sessions');
         $args = [PHP_BINARY, '-d', 'mysqli.default_port=' . (int) (getenv('TICKETS_TEST_DB_PORT') ?: 3306), '-d', 'display_errors=0',
+            // php-cli defaults to NO memory limit; every web SAPI has one (128M is the php.ini default). Without a
+            // cap here, one runaway request can take the whole runner down with it (that is what ended the first
+            // GitHub run of this test), so the test server gets a limit like the real thing.
+            '-d', 'memory_limit=512M',
             '-d', 'log_errors=1', '-d', 'error_log=' . self::$dir . '/php-error.log', '-d', 'session.save_path=' . self::$dir . '/_sessions',
             '-S', "127.0.0.1:$port", '-t', self::$dir];
         $descriptors = [0 => ['file', (DIRECTORY_SEPARATOR === '\\' ? 'NUL' : '/dev/null'), 'r'], 1 => ['file', self::$dir . '/server.log', 'a'], 2 => ['file', self::$dir . '/server.log', 'a']];
@@ -255,6 +259,13 @@ class EndpointAuthRuntimeTest extends TestCase
         $http_response_header = [];
         $out = @file_get_contents(self::$base . '/' . ltrim($path, '/'), false, $ctx);
         $status = 0;
+        if ($out === false && empty($http_response_header) && is_resource(self::$proc) && !proc_get_status(self::$proc)['running']) {
+            // Nothing answered because the test web server is gone. Say so and show why, instead of letting every
+            // later request come back as "HTTP 0" and fail a dozen unrelated assertions.
+            $log = @file_get_contents(self::$dir . '/server.log');
+            throw new \RuntimeException('the test web server exited while serving ' . $method . ' ' . $path . "\n--- server.log (tail) ---\n"
+                . substr((string) $log, -1500) . "\n--- php-error.log (tail) ---\n" . substr((string) @file_get_contents(self::$dir . '/php-error.log'), -1500));
+        }
         $setcookie = false;
         foreach ($http_response_header ?? [] as $h) {
             if (preg_match('#^HTTP/\S+\s+(\d+)#', $h, $m)) {

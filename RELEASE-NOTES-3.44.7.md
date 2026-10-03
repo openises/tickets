@@ -42,6 +42,11 @@ v3.44.6, so **every earlier release still has them**:
   account. The exemption now applies only to a brand-new install with no administrator yet.
 - **`db_loader.php` (Backup and Restore) had no login check** and let a request choose the database connection and
   run any backup file as SQL. It now needs an administrator, checks names against an allow-list and confines the file.
+- **A request for the charting library file `incs/jpgraph.php` could use up all of a server's memory on PHP 8.** The library
+  predates PHP 8, reports an error on start-up there, and its error-reporting code failed in the same way while drawing the
+  error, again and again, until PHP ran out of memory. Hosts with a normal 128M limit only saw an error page; a host with
+  no limit could be taken down by one anonymous request. A request for that file now answers with nothing, and an error
+  raised while an error is being reported is reported once and stops.
 - **`do_session.php` wrote any value the request named into the session**, including the user's level and id, and
   was the root of a chain of injections through `viewed_groups`. It now accepts only the keys the application
   itself sets, and the files that built queries from `viewed_groups` now bind it.
@@ -205,7 +210,8 @@ was never in a tagged release; v3.44.6 is unaffected.
 | `portal/ajax/insert_ticket.php`, `portal/ajax/insert_ticket_tentative.php` | Read the scheme through `get_inc_num_ary()` |
 | `config.php`, `incs/config.inc.php` | Incident Numbers page reads through the helper and warns when unreadable; Reset settings seeds a valid scheme |
 | `incs/status_cats.inc.php` | `get_sess_boundaries()` passes `$where2Params` to all four queries |
-| `tests/Unit/Php8CompatRegressionTest.php`, `IncNumSchemeTest.php`, `SqlPlaceholderBindingTest.php` | New regression tests (no database) |
+| `incs/jpgraph.php`, `incs/jpgraph_errhandler.inc.php` | A request for `jpgraph.php` itself answers with nothing; an error raised while the chart error picture is being drawn is reported once, as one line, and stops (it used to start another picture, without end, until the server ran out of memory) |
+| `tests/Unit/Php8CompatRegressionTest.php`, `IncNumSchemeTest.php`, `SqlPlaceholderBindingTest.php`, `JpGraphErrorHandlerTest.php` | New regression tests (no database) |
 
 ## Upgrade path
 

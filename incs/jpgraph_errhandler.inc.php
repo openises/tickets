@@ -159,6 +159,17 @@ class JpGraphErrObject {
 class JpGraphErrObjectImg extends JpGraphErrObject {
 
     function Raise($aMsg,$aHalt=true) {
+    // Re-entrancy guard (v3.44.7). Drawing the error picture can itself raise an error: on PHP 8 this library's
+    // old-style constructors (function RGB(), function Image() ...) no longer run, so the colour table is never
+    // built and Image::SetColor() raises "Unknown color" -- which drew another error picture, which raised again,
+    // without end, until PHP ran out of memory. A request for incs/jpgraph.php was enough to start it, because its
+    // own start-up version check reports an error on PHP 8. An error raised while one is being reported is now
+    // reported once, as one plain line, and the request stops.
+    static $raising = false;
+    if( $raising ) {
+        die($this->iTitle.' - a chart could not be drawn.');
+    }
+    $raising = true;
     $img_iconerror =
         'iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAMAAAC7IEhfAAAAaV'.
         'BMVEX//////2Xy8mLl5V/Z2VvMzFi/v1WyslKlpU+ZmUyMjEh/'.
@@ -260,6 +271,7 @@ class JpGraphErrObjectImg extends JpGraphErrObject {
         $img->Headers();
         $img->Stream();
     }
+    $raising = false;
     if( $aHalt )
         die();
     }

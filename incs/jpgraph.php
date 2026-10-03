@@ -8,6 +8,14 @@
 // Copyright (c) Aditus Consulting. All rights reserved.
 //========================================================================
 
+// A library has no business answering a web request of its own (v3.44.7). Requested directly it ran its start-up
+// checks, which report an error on PHP 8, so a visitor could set the error-picture recursion going (see
+// jpgraph_errhandler.inc.php). A request for this very file now ends here, with nothing.
+if( isset($_SERVER['SCRIPT_FILENAME']) &&
+    strcasecmp(str_replace('\\','/',(string)realpath($_SERVER['SCRIPT_FILENAME'])), str_replace('\\','/',__FILE__)) === 0 ) {
+    exit;
+}
+
 require_once 'jpg-config.inc.php';
 require_once 'jpgraph_gradient.php';
 require_once 'jpgraph_errhandler.inc.php';
