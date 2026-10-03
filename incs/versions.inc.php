@@ -28,8 +28,16 @@
  *           its booked date (add_nm.php read $frm_do_scheduled from nowhere),
  *           and malformed/broken notification links ("HTTP//:8081?id=10").
  *           Code-only, no schema change. Contributed by Ron Jones (PR #15).
+ * 10/3/2026: v3.44.7 — SECURITY. Every page and data script now requires a login (a 540-file
+ *           inventory with tests that fail on a new unprotected file), maintenance scripts are
+ *           command-line only, and the 2026-09-04 fixes (nine SQL injection holes reported by
+ *           jakobfir, an unauthenticated reinstall/database wipe through install.php, db_loader.php
+ *           and import_mdb.php running SQL for anonymous callers, do_session.php writing any session
+ *           key) ship in a tagged release for the first time. Also fixes the Incident, Summary and
+ *           Station reports that hung on PHP 7+ and a bad _inc_num setting destroying incident
+ *           numbering (Ron Jones, PRs #17 and #19). No schema change.
  */
-define('TICKETS_CURRENT_VERSION', 'v3.44.6');
+define('TICKETS_CURRENT_VERSION', 'v3.44.7');
 $tickets_current_version = TICKETS_CURRENT_VERSION;
 
 if (!function_exists('tickets_get_versions')) {

@@ -1,16 +1,50 @@
-# TicketsCAD v3.44.7 Release Notes (DRAFT)
+# TicketsCAD v3.44.7 Release Notes
 
-**Release Date:** not yet released
-**Priority:** High — **security**: until now almost every script the pages call behind the scenes answered requests from people who were not logged in (see "Security" below); three reports crash whenever the period contains data; one bad setting can permanently destroy the incident numbering scheme. No schema changes.
+**Release Date:** 2026-10-03
+**Priority:** Critical - **security**. Every earlier v3 release, including v3.44.6, is affected. Update today; if you cannot, read "If you cannot update today" below.
 
-> **Draft status.** This file covers the endpoint-authentication change and the report and
-> incident-numbering fixes (GH #16 / PR #17 and GH #18 / PR #19, both contributed by Ron Jones,
-> `rjonesbsink`).
-> It does not describe the other commits on `main` since v3.44.6 (the September 2026
-> security fixes), and `TICKETS_CURRENT_VERSION` in `incs/versions.inc.php` has **not**
-> been bumped. Merge this text into the final notes when the release is cut.
+> **Who this is for.** Everyone who runs Tickets v3, on any release up to and including v3.44.6.
+> The first two sections below are security fixes; the rest are bug fixes. The security fixes in
+> "Security fixes made in September, released here for the first time" were committed on 2026-09-04
+> but never shipped in a tagged release until now.
 
 ---
+
+## If you cannot update today
+
+Until you have updated, do one of these (both is better):
+
+1. **Put the whole install behind your web server's own login** (HTTP basic authentication) or allow only
+   your own network to reach it. This closes every issue below at once, whatever your version.
+2. **Delete these files** from the install if they exist: `tools/reset-admin-password.php`, `tools/diagnose.php`,
+   `class_init.php`, `reset_regions.php`, `cleanse_regions.php`, `reset_responder_status.php`, `quick_start.php`,
+   `loader.php`, `import_mdb.php`, `db_loader.php`, `docker-autoinstall.php`. Also block `install.php` at the web
+   server once the install is finished (you only need it to upgrade).
+
+Then update, and **change every administrator password** if the install has ever been reachable from the internet.
+
+## Security fixes made in September, released here for the first time
+
+These were fixed in the source on 2026-09-04 (nine of them reported privately by `jakobfir`, who also guessed
+correctly that there were more of the same shapes; the rest came from the sweep that followed) and were not in
+v3.44.6, so **every earlier release still has them**:
+
+- **Nine SQL injection holes** (one critical, four high, four medium) in `areas_sc.php`, `ajax/statistics.php`,
+  `ajax/reports.php`, `rm/ajax/alertlist.php`, `rm/ajax/messagelist.php`, `ajax/sit_incidents.php`,
+  `ajax/sidebar_list_messages.php`, `hints_config.php` and `mdb_search.php`. Most could be reached without logging in.
+  A value now reaches a query only as a bound parameter, or after an allow-list for a column or table name.
+- **A full sweep for the same shapes** found eight more places (the same bugs in sibling files, a second injection
+  in `ajax/reports.php`, and `routes_nm.php` / `incs/routes_inc.php` taking a bare SQL keyword from the request).
+- **`import_mdb.php` ran an SQL file named by the request, with no login.** It now needs an administrator and is
+  confined to one directory.
+- **`install.php` on an installed system:** the administrator check was skipped for the three actions that write
+  to the database, so an anonymous request could wipe and re-create the database with an attacker's administrator
+  account. The exemption now applies only to a brand-new install with no administrator yet.
+- **`db_loader.php` (Backup and Restore) had no login check** and let a request choose the database connection and
+  run any backup file as SQL. It now needs an administrator, checks names against an allow-list and confines the file.
+- **`do_session.php` wrote any value the request named into the session**, including the user's level and id, and
+  was the root of a chain of injections through `viewed_groups`. It now accepts only the keys the application
+  itself sets, and the files that built queries from `viewed_groups` now bind it.
 
 ## Security: scripts that did not ask who was calling
 
@@ -152,6 +186,7 @@ was never in a tagged release; v3.44.6 is unaffected.
 
 | File | Change |
 |---|---|
+| `incs/versions.inc.php` | `TICKETS_CURRENT_VERSION` bumped `v3.44.6` to `v3.44.7` |
 | `incs/login.inc.php` | New `require_login_or_401()` (the gate for data endpoints) |
 | ~465 PHP files (every endpoint that had no gate) | One line after the `functions.inc.php` include: `do_login(basename(__FILE__));` for pages, `require_login_or_401();` for data endpoints; fragments under `forms/` and `tables/` have it as their first statement |
 | `download_report.php`, `download_report_csv.php`, `ajax/reports.php`, `incs/report_inline.inc.php` (new) | Reports run inside the download request instead of an HTTP self-fetch |
@@ -175,7 +210,9 @@ was never in a tagged release; v3.44.6 is unaffected.
 ## Upgrade path
 
 No schema changes and no new settings. Update the files as usual (`git pull`, or
-`docker compose pull && docker compose up -d`). Nothing needs to be run.
+`docker compose pull && docker compose up -d`). The version constant moved to `v3.44.7`, so the next
+administrator login is sent to `install.php` once to record the new version (no schema work); then you are
+back in the application. If you block `install.php` at the web server, allow it for that one visit.
 
 ## Verification
 
@@ -202,5 +239,5 @@ No schema changes and no new settings. Update the files as usual (`git pull`, or
 
 ## Recommendation
 
-**Recommended for everyone on PHP 7 or later.** Issue 1 is a hard failure of three reports; issue 2
+**Recommended for everyone, on every PHP version.** Issue 1 is a hard failure of three reports; issue 2
 is silent, permanent data loss triggered by a routine setting value.
