@@ -1,4 +1,8 @@
 <?php
+if (PHP_SAPI !== 'cli') {        // command line only: this script is never served over HTTP
+    http_response_code(404);
+    exit();
+    }
 /**
  * SQL Injection Audit Scanner for Tickets CAD Legacy Codebase
  * Scans all PHP files for potential SQL injection vulnerabilities.

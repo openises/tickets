@@ -1,4 +1,8 @@
 <?php
+if (PHP_SAPI !== 'cli') {        // command line only: this script is never served over HTTP
+    http_response_code(404);
+    exit();
+    }
 //$dir = "./tickets_2013_apr_02_work";    //getcwd
 $dir = getcwd();    //getcwd
 $findex = array();

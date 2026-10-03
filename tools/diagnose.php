@@ -1,9 +1,16 @@
 <?php
+if (PHP_SAPI !== 'cli' && !is_file(__DIR__ . '/diagnose.enable')) {        // web use only while the administrator has created tools/diagnose.enable
+    http_response_code(404);
+    exit();
+    }
 /**
  * TicketsCAD Diagnostic Tool
  *
  * Checks PHP version compatibility, database connectivity, table existence,
- * and common configuration issues. Run this in a browser to diagnose problems.
+ * and common configuration issues. Run this in a browser to diagnose problems -- after you
+ * create an empty file named diagnose.enable next to it in tickets/tools/ (without that file the
+ * page answers 404 to web requests; it has no login and reports server details). From the
+ * command line it always runs: php tools/diagnose.php
  *
  * SECURITY: Delete this file after diagnosing the issue!
  */

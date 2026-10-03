@@ -1,8 +1,15 @@
 <?php
+if (PHP_SAPI !== 'cli' && !is_file(__DIR__ . '/reset-admin-password.enable')) {        // web use only while the administrator has created tools/reset-admin-password.enable
+    http_response_code(404);
+    exit();
+    }
 /**
  * Emergency Admin Password Reset
  *
- * Usage: Place this file in your tickets/tools/ directory and run it in your browser:
+ * Usage: from a browser, FIRST create an empty file named reset-admin-password.enable in the
+ *   tickets/tools/ directory (proof that you control the server). Without it this page answers
+ *   404 to every web request, because it has no login: you use it precisely when you cannot
+ *   log in. A successful reset deletes the .enable file again.
  *   http://your-server/tickets/tools/reset-admin-password.php
  *
  * Or via PHP CLI:
@@ -32,7 +39,7 @@ require_once $configFile;
 
 // Connect to database
 try {
-    $dsn = "mysql:host={$mysql_host};dbname={$mysql_db};charset=utf8mb4";
+    $dsn = "mysql:host={$mysql_host};" . (isset($mysql_port) ? "port={$mysql_port};" : '') . "dbname={$mysql_db};charset=utf8mb4";    // $mysql_port is optional (non-default port)
     $pdo = new PDO($dsn, $mysql_user, $mysql_passwd, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
@@ -73,6 +80,8 @@ if (!$isCli && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'],
         if ($stmt->rowCount() > 0) {
             $message = "Password updated successfully for user ID $userId! You can now log in.";
             $success = true;
+            // The web switch is single-use: remove tools/reset-admin-password.enable so the page is off again.
+            if (!$isCli) { @unlink(__DIR__ . '/reset-admin-password.enable'); }
         } else {
             $message = "No rows updated. Check that user ID $userId exists.";
         }
