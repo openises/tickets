@@ -343,7 +343,7 @@ function get_sess_boundaries() {
                 LEFT JOIN `{$GLOBALS['mysql_prefix']}responder` `r` ON ( `l`.`id` = `r`.`excl_zone`)
                 LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )
                 {$where2} AND `use_with_u_ex`= 1 AND `line_status` = 0 GROUP BY `l`.`id`";
-    $result = db_query($query);
+    $result = db_query($query, $where2Params);
     while($row = stripslashes_deep($result->fetch_assoc())) {
         $all_boundaries[] = $row['excl_zone'];
         }    //    End while
@@ -352,7 +352,7 @@ function get_sess_boundaries() {
                 LEFT JOIN `{$GLOBALS['mysql_prefix']}facilities` `f` ON ( `l`.`id` = `f`.`boundary`)
                 LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `f`.`id` = `a`.`resource_id` )
                 {$where2} AND `use_with_f`= 1 AND `line_status` = 0 GROUP BY `l`.`id`";
-    $result = db_query($query);
+    $result = db_query($query, $where2Params);
     while($row = stripslashes_deep($result->fetch_assoc())) {
         $all_boundaries[] = $row['boundary'];
         }    //    End while
@@ -361,7 +361,7 @@ function get_sess_boundaries() {
                 LEFT JOIN `{$GLOBALS['mysql_prefix']}region` `r` ON ( `l`.`id` = `r`.`boundary`)
                 LEFT JOIN `{$GLOBALS['mysql_prefix']}allocates` `a` ON ( `r`.`id` = `a`.`resource_id` )
                 {$where2} AND `use_with_r` = 1 AND `line_status` = 0 GROUP BY `l`.`id`";
-    $result = db_query($query);
+    $result = db_query($query, $where2Params);
     while($row = stripslashes_deep($result->fetch_assoc())) {
         $all_boundaries[] = $row['boundary'];
         }    //    End while
