@@ -323,7 +323,7 @@ sudo setsebool -P httpd_can_network_connect_db 1
   mv install.php install.php.disabled
   ```
 - [ ] Verify the uploads directory is writable
-- [ ] Check `tools/diagnose.php` for any configuration issues
+- [ ] Check for configuration issues with `php tools/diagnose.php` (from a browser it answers 404 until you create an empty `tools/diagnose.enable` file; see "Who can reach what" in Part 8)
 
 ### Upgrading from Previous Versions
 
@@ -366,11 +366,16 @@ docker compose pull && docker compose up -d
 
 1. **Passwords work automatically.** The login system recognizes all 6 legacy password formats: bcrypt, MD5 (case-sensitive and case-insensitive), MySQL `PASSWORD()`, SHA1, and plain text. Existing passwords are silently upgraded to bcrypt on the next successful login. No password resets are required.
 
-2. **If login fails after upgrade,** use the emergency password reset tool:
+2. **If login fails after upgrade,** use the emergency password reset tool. Preferably from the command line:
+   ```bash
+   php tools/reset-admin-password.php
+   ```
+   If you only have a browser, first create an empty file named `reset-admin-password.enable` in the `tools/` directory
+   on the server (without it the page answers 404 to everyone, because it has no login), then open
    ```
    http://your-server/tickets/tools/reset-admin-password.php
    ```
-   Delete this file after use -- it allows anyone to reset the admin password.
+   A successful reset deletes the `.enable` file again. Delete the tool itself when you no longer need it.
 
 3. **PHP compatibility.** Version 3.44.2 includes a compatibility layer (`incs/compat.inc.php`) that polyfills functions removed in newer PHP versions. It supports PHP 7.0 through 8.4.
 
@@ -728,6 +733,38 @@ TicketsCAD v3.44.2 sets the following security headers automatically:
 - `Cache-Control: no-store` -- Prevents caching of sensitive pages
 
 The Docker image also sets these headers at the Apache level via `ServerTokens Prod` and `ServerSignature Off`.
+
+### Who Can Reach What (3.44.7)
+
+Until 3.44.6 only the *pages* asked for a login; most of the scripts behind them did not, so anyone who knew a
+URL could read or change data without an account. From 3.44.7 every PHP file is either behind the login or on a short
+written list; the list is `docs/security/legacy-endpoint-auth-inventory.md`, and `tests/Unit/EndpointAuthTest.php`
+fails if a file is added that is on neither.
+
+- **A visitor without a login gets nothing from the application's scripts.** Pages show the login form; the scripts
+  behind them answer `HTTP 401` with the single line `Authentication required.`
+- **"Logged in" means** a session that names a user whose `expires` time (see `session_timeout` in Part 5) is still in
+  the future. Any account qualifies; access levels still decide what each screen offers. The stock `guest` account is a
+  real login: change its password or disable it if your site does not use it.
+- **Screens that poll keep you logged in.** The Situation screen, full-screen displays and the mobile page ask the server
+  for updates every few seconds; each answered request pushes your `expires` forward once less than half of
+  `session_timeout` is left. A tab you never touch again therefore stays logged in only as long as it keeps polling.
+- **Still public on purpose:** the login screen and its stylesheet, the "request login details" form
+  (`contact.php`) and its confirmation link, the road-conditions RSS feed (`rss/road_conditions.php`) and its viewer,
+  `tracker.php` (GPS devices cannot log in; it accepts a position for any device name, so do not expose it to the
+  internet unless you need it), the installer (which has its own administrator check) and
+  `socketserver/server.php` (starts the websocket relay).
+- **Command line only:** everything in `tools/` and `tests/`, `docker-autoinstall.php` and a few leftover scratch
+  scripts answer 404 to a web request.
+- **The two emergency tools** (`tools/reset-admin-password.php`, `tools/diagnose.php`) can still be opened in a browser
+  when you cannot log in: create an empty file named `reset-admin-password.enable` / `diagnose.enable` in `tools/`
+  first; remove it when you are done (the reset tool removes its own after a successful reset).
+- **Administrators only:** `class_init.php`, `reset_regions.php`, `cleanse_regions.php`, `reset_responder_status.php`,
+  `quick_start.php` and `loader.php` -- bulk operations on the whole database that used to run for anyone.
+- **If something of yours called a script without logging in** (a cron `curl`, a dashboard that reads `external.php`,
+  a wall display whose browser never logged in) it now gets 401 or the login form. Give it a normal login. The XML
+  interface (`external.php`, `rss/external_XML.php`, `rss/external_RSS.php`) returns every unit, facility and (for the
+  second) every incident row, so it was never safe to leave open.
 
 **HTTPS is strongly recommended for production.** Use a reverse proxy (nginx with Let's Encrypt) as described in the Linux installation section. Session cookies are automatically marked `Secure` when HTTPS is detected, and `SameSite=Lax` is set to prevent CSRF via cross-site form POST.
 

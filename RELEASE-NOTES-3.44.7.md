@@ -1,19 +1,84 @@
 # TicketsCAD v3.44.7 Release Notes (DRAFT)
 
 **Release Date:** not yet released
-**Priority:** High — three reports crash whenever the period contains data, and one bad setting can permanently destroy the incident numbering scheme. No schema changes.
+**Priority:** High — **security**: until now almost every script the pages call behind the scenes answered requests from people who were not logged in (see "Security" below); three reports crash whenever the period contains data; one bad setting can permanently destroy the incident numbering scheme. No schema changes.
 
-> **Draft status.** This file covers only the report and incident-numbering fixes
-> (GH #16 / PR #17 and GH #18 / PR #19, both contributed by Ron Jones, `rjonesbsink`).
+> **Draft status.** This file covers the endpoint-authentication change and the report and
+> incident-numbering fixes (GH #16 / PR #17 and GH #18 / PR #19, both contributed by Ron Jones,
+> `rjonesbsink`).
 > It does not describe the other commits on `main` since v3.44.6 (the September 2026
 > security fixes), and `TICKETS_CURRENT_VERSION` in `incs/versions.inc.php` has **not**
 > been bumped. Merge this text into the final notes when the release is cut.
 
 ---
 
+## Security: scripts that did not ask who was calling
+
+**What was wrong.** TicketsCAD protects its *pages* with a login check (`do_login()`), but the
+scripts those pages call in the background -- the AJAX lists and popups, the report downloads, the
+status and assignment updaters -- mostly did not check anything. A request with no session at all
+was answered. In the tree as released in 3.44.6, **about 480 of the 697 PHP files answered a request that carried no session**
+(452 data and page scripts with no check at all, 31 command-line tools, and 14 more whose check ran late or covered only
+part of the script). Examples, each reproduced against a clean install by requesting it with no cookie:
+
+- `ajax/reports.php` returned incident contact names, phone numbers, addresses, descriptions and
+  action logs. It went unnoticed because `download_report.php` fetched it from the server to
+  itself *without* cookies, which only worked while it asked for no login.
+- `external.php` and `rss/external_XML.php` returned every unit and facility with all their contact
+  columns (the second one also every incident row, closed ones too).
+- State-changing scripts ran for anyone: `assign_del.php` (deleted an assignment),
+  `as_up_un_status.php` (changed a unit's status), `chat_wr.php`, `do_send.php` (handed any recipient and
+  text to the mail routine), `reset_regions.php` and `class_init.php` (dropped and rebuilt tables).
+- `tools/reset-admin-password.php` listed every administrator and let a visitor set any password.
+- `docker-autoinstall.php` (creates the schema and an `admin`/`admin` account) was an ordinary web-reachable
+  file even though only the Docker entrypoint ever needs it; `top.php` embedded every user name for visitors when
+  broadcast messaging was on.
+
+**What changed.** Every PHP file now falls into exactly one class, and a test fails if a new file does not:
+
+| Class | Behaviour |
+|---|---|
+| **Pages** | Call `do_login()` first: a visitor gets the login form. |
+| **Data endpoints** (AJAX lists, fragments, images, downloads, status updaters) | Call the new `require_login_or_401()` first: a visitor gets `HTTP 401` and the one line `Authentication required.` No data is read, nothing is written, no session is created. |
+| **Deliberately public** (16 files) | The login pages and their stylesheet, the "request login details" form and its confirmation link, the road-conditions RSS feed and its viewer, the GPS-device ingest `tracker.php`, the installer (own gate), and the script that starts the websocket relay. Each has its reason written down. |
+| **Command line only** (29 files) | `tools/*`, the test scripts, `docker-autoinstall.php` and a few dead scratch scripts: a web request gets 404. |
+| **Support tools** (2 files) | `tools/reset-admin-password.php` and `tools/diagnose.php` stay usable from a browser, because the guide tells you to run them when you cannot log in -- but only while you have created an empty file next to them (`reset-admin-password.enable` / `diagnose.enable`). The reset tool deletes its file again after a successful reset. |
+
+"Logged in" means the session names a user **and** that user's `expires` time is still in the future,
+exactly the test `do_login()` always applied to pages. Any account passes (guest, unit, portal
+requester, operator, administrator); there is still no per-record access control. A page or screen
+that polls these scripts (the Situation screen, full-screen displays, the mobile page) keeps its login
+alive: a successful request pushes `expires` forward once less than half of `session_timeout` is left.
+Without that, an unattended wall display would have stopped updating after an hour.
+
+Six bulk tools now also require an administrator, because "any logged-in user" included the stock
+`guest` account: `class_init.php`, `reset_regions.php`, `cleanse_regions.php`, `reset_responder_status.php`,
+`quick_start.php`, and `loader.php`.
+
+`download_report.php` and `download_report_csv.php` no longer fetch the report over HTTP from the server to itself;
+they run `ajax/reports.php` inside their own request, so the logged-in caller's session authorizes the data (and no
+self-request can hang on a single-threaded server or leak the web-server login). `top.php`, the frame above the login
+form, no longer embeds the user-name and unit tables for visitors.
+
+**What this might break -- check these.**
+
+- **Anything of yours that called one of these scripts without logging in** (a cron `curl`, a wall display on a
+  kiosk browser that never logged in, a dashboard that reads `external.php`, a monitoring probe of `ajax/...`) now gets
+  401 or the login form. Give it a login (a normal session cookie works), or tell us which script it needs and why.
+  The GPS-device script `tracker.php`, the road-conditions feed and the login pages are unchanged.
+- **A browser tab left open past `session_timeout` without ever being used** used to keep refreshing from the server
+  anonymously; it now stops, like any other expired login. Using the application (or the tab polling, which now
+  counts) keeps it alive.
+- If you used the emergency tools from a browser, create the `.enable` file first (see the table above and
+  *Part 8* of the Installation and Administration Guide).
+
+**Not fixed here, deliberately.** `tracker.php` accepts a position for any device name without a secret (devices cannot
+hold a session). The websocket relay trusts a user id the client sends. See
+`docs/security/legacy-endpoint-auth-inventory.md` -- it lists every PHP file with its class, whether it was open in 3.44.6,
+and the reasoning, and it is the list the test checks.
 ## Summary
 
-Bug fixes only. Every item was reproduced against a scratch database on PHP 8.2 (and the
+Bug fixes (the section above is the one behaviour change). Every item was reproduced against a scratch database on PHP 8.2 (and the
 report matrix re-run on PHP 7.4 and 8.0) before being fixed.
 
 ### 1. Incident Report, Incident Summary and Station Log hang (GH #16)
@@ -87,6 +152,15 @@ was never in a tagged release; v3.44.6 is unaffected.
 
 | File | Change |
 |---|---|
+| `incs/login.inc.php` | New `require_login_or_401()` (the gate for data endpoints) |
+| ~465 PHP files (every endpoint that had no gate) | One line after the `functions.inc.php` include: `do_login(basename(__FILE__));` for pages, `require_login_or_401();` for data endpoints; fragments under `forms/` and `tables/` have it as their first statement |
+| `download_report.php`, `download_report_csv.php`, `ajax/reports.php`, `incs/report_inline.inc.php` (new) | Reports run inside the download request instead of an HTTP self-fetch |
+| `top.php` | No unit table or user names for visitors |
+| `tools/*.php`, `tests/test_*.php`, `docker-autoinstall.php`, ten scratch scripts | First statement ends a web request with 404; `tools/diagnose.php` and `tools/reset-admin-password.php` open to the web only with a `.enable` file |
+| `class_init.php`, `reset_regions.php`, `cleanse_regions.php`, `reset_responder_status.php`, `quick_start.php`, `loader.php` | Administrators only |
+| `ajax/delfile.php`, `ajax/gettiles.php`, `landb.php`, `mmarkup.php`, `tables.php`, `log.php`, `edit_nm.php`, `routes.php`, `routes_nm.php`, `tile_proxy.php` | Existing login check moved ahead of the first output or query |
+| `tools/semgrep_baseline.txt` | Line numbers renumbered for the files above (no entry added) |
+| `docs/security/legacy-endpoint-auth-inventory.md`, `tests/Unit/EndpointAuthTest.php`, `EndpointAuthScanner.php`, `EndpointAuthRuntimeTest.php` | The inventory of all PHP files and the tests that enforce it |
 | `ajax/reports.php` | Dropped the four `MYSQL_ASSOC` arguments; `$_Get['tick_sel']` replaced by the sanitized `$tick_sel`; Dispatch report uses `$tick_sel` / `$resp_sel`; `parsedate()` casts only its `%` operands |
 | `ajax/basic_statistics.php`, `ajax/statistics.php`, `stats_scr.php` | `parsedate()` casts only its `%` operands |
 | `incs/functions.inc.php`, `incs/functions_nm.inc.php`, `ajax/mobile_main.php`, `log.php` | `global $types` where `log_codes.inc.php` is loaded inside a function |
@@ -105,6 +179,12 @@ No schema changes and no new settings. Update the files as usual (`git pull`, or
 
 ## Verification
 
+- Security: open `https://your-site/ajax/check_memory.php` in a private window (not logged in). Before: server
+  memory and disk figures. Now: `Authentication required.` (HTTP 401). Log in, reload it in the normal window: the
+  figures. `https://your-site/ajax/reports.php?report=l&tick_sel=1` must also answer 401 when logged out.
+- Reports > any report > Download (Word, Excel, CSV) still delivers a file when logged in.
+- The login screen still shows its styling, the Contact form still opens from it, and the Situation screen keeps
+  updating for as long as you leave it open.
 - Reports > Incident Report, pick the current year (any period that has incidents): the table
   renders instead of the spinner running forever. Repeat for Incident Summary and Station Log.
 - Open an incident's log (or the After-action report): the **Code** column shows
