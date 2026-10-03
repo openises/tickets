@@ -2,7 +2,8 @@ name: QA
 
 # Runs on every push/PR to main. Three gates:
 #   1. PHP syntax check across the whole tree
-#   2. The existing PHPUnit suite (tests/Unit)
+#   2. The existing PHPUnit suite (tests/Unit), plus the endpoint-authentication
+#      runtime tests against a real server and MariaDB (job endpoint-auth-runtime)
 #   3. The Semgrep SQL-injection taint-analysis gate (.semgrep/) -- this is
 #      the gate that actually catches the vulnerability class found and
 #      fixed in commits f71a987 and d22ec7f (2026-09-04/05). It fails the
@@ -49,6 +50,39 @@ jobs:
         run: composer install --no-progress --prefer-dist
       - name: Run PHPUnit
         run: vendor/bin/phpunit
+
+  endpoint-auth-runtime:
+    # The runtime half of the endpoint-authentication tests (tests/Unit/EndpointAuthRuntimeTest.php): a real
+    # `php -S` server and a real MariaDB. It creates and drops its own scratch database. Without these
+    # variables the same tests are skipped inside the plain `phpunit` job above (which has no database).
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: ci-root-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mysqli, pdo_mysql, gd, mbstring, curl
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+      - name: Every endpoint refuses a visitor and admits a logged-in user
+        env:
+          TICKETS_TEST_DB_HOST: 127.0.0.1
+          TICKETS_TEST_DB_PORT: "3306"
+          TICKETS_TEST_DB_USER: root
+          TICKETS_TEST_DB_PASS: ci-root-password
+        run: vendor/bin/phpunit tests/Unit/EndpointAuthRuntimeTest.php
 
   sql-injection-gate:
     runs-on: ubuntu-latest
