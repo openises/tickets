@@ -32,8 +32,8 @@ class Php8CompatRegressionTest extends TestCase
     /** @var string Absolute path of the repository root. */
     private string $baseDir;
 
-    /** @var array<string, array> relative path => token list, filled once per test run. */
-    private static array $tokenCache = [];
+    /** @var array|null Result of the one-pass whole-tree scan (small: only hits), filled once per run. */
+    private static ?array $scanResult = null;
 
     /** @var string[]|null Relative paths of every scanned PHP file. */
     private static ?array $fileList = null;
@@ -80,14 +80,87 @@ class Php8CompatRegressionTest extends TestCase
         return $files;
     }
 
-    /** @return array Token list for a repo file (cached). */
+    /** @return array Token list for a repo file. Not cached: holding every file's tokens costs hundreds of MB. */
     private function tokens(string $rel): array
     {
-        if (!isset(self::$tokenCache[$rel])) {
-            $code = file_get_contents($this->baseDir . '/' . $rel);
-            self::$tokenCache[$rel] = $code === false ? [] : token_get_all($code);
+        $code = file_get_contents($this->baseDir . '/' . $rel);
+        return $code === false ? [] : token_get_all($code);
+    }
+
+    /**
+     * One tokenizer pass over the whole tree that gathers everything the tree-wide tests need, so
+     * each file is tokenized once per run and only the (small) findings are kept.
+     *
+     * @return array{mysql: string[], super: string[], calls: array, declared: array<string, bool>, logcodes: array, logcodeFns: int}
+     */
+    private function scan(): array
+    {
+        if (self::$scanResult !== null) {
+            return self::$scanResult;
         }
-        return self::$tokenCache[$rel];
+        $removed = '/^(mysql_[a-z_]+|each|create_function|split|spliti|ereg|eregi|ereg_replace|eregi_replace|'
+            . 'get_magic_quotes_gpc|get_magic_quotes_runtime|set_magic_quotes_runtime|money_format|'
+            . 'session_register|session_unregister|session_is_registered|call_user_method|call_user_method_array|'
+            . 'is_real|restore_include_path|mcrypt_[a-z_]+|mssql_[a-z_]+|sql_regcase|hebrevc|convert_cyr_string|'
+            . 'ezmlm_hash|fgetss|gzgetss|image2wbmp|jpeg2wbmp|png2wbmp|read_exif_data|libxml_disable_entity_loader|'
+            . 'socket_set_blocking|socket_set_timeout|strptime|wddx_[a-z_]+)$/i';
+        $proper = ['$_GET', '$_POST', '$_SESSION', '$_SERVER', '$_REQUEST', '$_COOKIE', '$_FILES', '$_ENV'];
+        $r = ['mysql' => [], 'super' => [], 'calls' => [], 'declared' => [], 'logcodes' => [], 'logcodeFns' => 0];
+
+        foreach ($this->sourceFiles() as $rel) {
+            $code = file_get_contents($this->baseDir . '/' . $rel);
+            if ($code === false) {
+                continue;
+            }
+            $t = token_get_all($code);
+            foreach ($t as $i => $tok) {
+                if (!is_array($tok)) {
+                    continue;
+                }
+                if ($tok[0] === T_FUNCTION) {                                   // declared function names (polyfills count)
+                    $nx = self::significant($t, $i, 1);
+                    if ($nx === '&') {
+                        $k = $i + 1;
+                        while ($t[$k] !== '&') {
+                            $k++;
+                        }
+                        $nx = self::significant($t, $k, 1);
+                    }
+                    if (is_array($nx) && $nx[0] === T_STRING) {
+                        $r['declared'][strtolower($nx[1])] = true;
+                    }
+                } elseif ($tok[0] === T_VARIABLE) {                             // $_Get and friends
+                    if (preg_match('/^\$_(get|post|session|server|request|cookie|files|env)$/i', $tok[1])
+                        && !in_array($tok[1], $proper, true)) {
+                        $r['super'][] = "$rel:{$tok[2]} {$tok[1]}";
+                    }
+                } elseif ($tok[0] === T_STRING) {
+                    $prev = self::significant($t, $i, -1);
+                    $prevId = is_array($prev) ? $prev[0] : $prev;
+                    $member = in_array($prevId, [T_OBJECT_OPERATOR, T_DOUBLE_COLON], true);
+                    if (!$member && preg_match('/^MYSQL_(ASSOC|NUM|BOTH|CLIENT_[A-Z_]+)$/', $tok[1])) {
+                        $r['mysql'][] = "$rel:{$tok[2]} {$tok[1]}";
+                    }
+                    if (preg_match($removed, $tok[1]) && self::significant($t, $i, 1) === '('
+                        && !in_array($prevId, [T_OBJECT_OPERATOR, T_DOUBLE_COLON, T_FUNCTION, T_NEW], true)) {
+                        $r['calls'][] = [strtolower($tok[1]), "$rel:{$tok[2]} {$tok[1]}()"];
+                    }
+                }
+            }
+            if (strpos($code, 'log_codes.inc.php') !== false) {                 // functions that load the log codes
+                foreach (self::functions($t) as $f) {
+                    if (self::bodyIncludes($f['body'], 'log_codes.inc.php')) {
+                        $r['logcodeFns']++;
+                        if (!in_array('$types', self::globalsDeclared($f['body']), true)) {
+                            $r['logcodes'][] = "$rel:{$f['line']} {$f['name']}()";
+                        }
+                    }
+                }
+            }
+            unset($t, $code);
+        }
+        self::$scanResult = $r;
+        return $r;
     }
 
     /** Next/previous token that is not whitespace or a comment, or null. */
@@ -213,22 +286,7 @@ class Php8CompatRegressionTest extends TestCase
      */
     public function testNoRemovedMysqlExtensionConstants(): void
     {
-        $hits = [];
-        foreach ($this->sourceFiles() as $rel) {
-            $t = $this->tokens($rel);
-            foreach ($t as $i => $tok) {
-                if (!is_array($tok) || $tok[0] !== T_STRING
-                    || !preg_match('/^MYSQL_(ASSOC|NUM|BOTH|CLIENT_[A-Z_]+)$/', $tok[1])) {
-                    continue;
-                }
-                $prev = self::significant($t, $i, -1);
-                $prevId = is_array($prev) ? $prev[0] : $prev;
-                if ($prevId === T_OBJECT_OPERATOR || $prevId === T_DOUBLE_COLON) {
-                    continue;                               // a class constant, not the global one
-                }
-                $hits[] = "$rel:{$tok[2]} {$tok[1]}";
-            }
-        }
+        $hits = $this->scan()['mysql'];
         $this->assertSame([], $hits, "ext/mysql constants are undefined on PHP 7+ (fatal):\n" . implode("\n", $hits));
     }
 
@@ -240,17 +298,7 @@ class Php8CompatRegressionTest extends TestCase
      */
     public function testNoMiscasedSuperglobals(): void
     {
-        $proper = ['$_GET', '$_POST', '$_SESSION', '$_SERVER', '$_REQUEST', '$_COOKIE', '$_FILES', '$_ENV'];
-        $hits = [];
-        foreach ($this->sourceFiles() as $rel) {
-            foreach ($this->tokens($rel) as $tok) {
-                if (is_array($tok) && $tok[0] === T_VARIABLE
-                    && preg_match('/^\$_(get|post|session|server|request|cookie|files|env)$/i', $tok[1])
-                    && !in_array($tok[1], $proper, true)) {
-                    $hits[] = "$rel:{$tok[2]} {$tok[1]}";
-                }
-            }
-        }
+        $hits = $this->scan()['super'];
         $this->assertSame([], $hits, "Mis-cased superglobals are always undefined:\n" . implode("\n", $hits));
     }
 
@@ -262,34 +310,11 @@ class Php8CompatRegressionTest extends TestCase
      */
     public function testNoCallsToRemovedPhpFunctions(): void
     {
-        $removed = '/^(mysql_[a-z_]+|each|create_function|split|spliti|ereg|eregi|ereg_replace|eregi_replace|'
-            . 'get_magic_quotes_gpc|get_magic_quotes_runtime|set_magic_quotes_runtime|money_format|'
-            . 'session_register|session_unregister|session_is_registered|call_user_method|call_user_method_array|'
-            . 'is_real|restore_include_path|mcrypt_[a-z_]+|mssql_[a-z_]+|sql_regcase|hebrevc|convert_cyr_string|'
-            . 'ezmlm_hash|fgetss|gzgetss|image2wbmp|jpeg2wbmp|png2wbmp|read_exif_data|libxml_disable_entity_loader|'
-            . 'socket_set_blocking|socket_set_timeout|strptime|wddx_[a-z_]+)$/i';
-
-        $declared = [];
-        foreach ($this->sourceFiles() as $rel) {
-            foreach (self::functions($this->tokens($rel)) as $f) {
-                $declared[strtolower($f['name'])] = true;
-            }
-        }
+        $scan = $this->scan();
         $hits = [];
-        foreach ($this->sourceFiles() as $rel) {
-            $t = $this->tokens($rel);
-            foreach ($t as $i => $tok) {
-                if (!is_array($tok) || $tok[0] !== T_STRING || !preg_match($removed, $tok[1])
-                    || isset($declared[strtolower($tok[1])])) {
-                    continue;
-                }
-                $next = self::significant($t, $i, 1);
-                $prev = self::significant($t, $i, -1);
-                $prevId = is_array($prev) ? $prev[0] : $prev;
-                if ($next !== '(' || in_array($prevId, [T_OBJECT_OPERATOR, T_DOUBLE_COLON, T_FUNCTION, T_NEW], true)) {
-                    continue;
-                }
-                $hits[] = "$rel:{$tok[2]} {$tok[1]}()";
+        foreach ($scan['calls'] as $call) {
+            if (!isset($scan['declared'][$call[0]])) {
+                $hits[] = $call[1];
             }
         }
         $this->assertSame([], $hits, "Functions removed from PHP are called:\n" . implode("\n", $hits));
@@ -305,25 +330,17 @@ class Php8CompatRegressionTest extends TestCase
      */
     public function testFunctionsIncludingLogCodesDeclareTypesGlobal(): void
     {
-        $offenders = [];
-        $seen = 0;
-        foreach ($this->sourceFiles() as $rel) {
-            foreach (self::functions($this->tokens($rel)) as $f) {
-                if (!self::bodyIncludes($f['body'], 'log_codes.inc.php')) {
-                    continue;
-                }
-                $seen++;
-                if (!in_array('$types', self::globalsDeclared($f['body']), true)) {
-                    $offenders[] = "$rel:{$f['line']} {$f['name']}()";
-                }
-            }
-        }
+        $scan = $this->scan();
         $this->assertGreaterThanOrEqual(
             4,
-            $seen,
+            $scan['logcodeFns'],
             'The scan should find show_log, show_unit_log, log_details and my_show_log; if this fails the scanner broke, not the code.'
         );
-        $this->assertSame([], $offenders, "These functions include log_codes.inc.php but do not declare global \$types:\n" . implode("\n", $offenders));
+        $this->assertSame(
+            [],
+            $scan['logcodes'],
+            "These functions include log_codes.inc.php but do not declare global \$types:\n" . implode("\n", $scan['logcodes'])
+        );
     }
 
     // --------------------------------- 5. reports use the sanitised selector, not $_GET
