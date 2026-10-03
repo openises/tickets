@@ -484,6 +484,12 @@ Options include:
 - Date-prefixed numbering (e.g., 2026-0001)
 - Custom prefix with counter
 
+If the stored value is ever unreadable (empty, truncated, or edited by hand), TicketsCAD falls back to
+"no serial numbers", writes a line to the PHP error log, and leaves the stored value alone rather than
+overwriting it. The Config > Incident Numbers panel then shows a notice and the default, and choosing a
+style and saving repairs it. Config > Database > Reset Database with "Reset settings" ticked re-seeds a
+valid default.
+
 ---
 
 ## Part 4: Setting Up Your Organization
