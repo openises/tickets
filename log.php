@@ -186,7 +186,7 @@ if (empty($_POST)) {
 <?php
     } else {                                        // not empty
     function my_show_log () {                // returns  string
-        global $evenodd ;                    // class names for alternating table row colors
+        global $evenodd, $types ;            // class names for alternating table row colors; $types from log_codes.inc.php
         require_once './incs/log_codes.inc.php';                // returns $types array - 4/19/11
 
         $query = "

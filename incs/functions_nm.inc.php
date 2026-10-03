@@ -537,7 +537,7 @@ function show_actions ($the_id, $theSort="date", $links="", $display="", $mode="
 // } { -- dummy
 
 function show_log ($theid, $show_cfs=false) {                                // 11/20/09
-    global $evenodd ;    // class names for alternating table row colors
+    global $evenodd, $types ;    // class names for alternating table row colors; $types from log_codes.inc.php
     require_once './incs/log_codes.inc.php';                                     // 9/29/10
 
     $query = "
@@ -584,7 +584,7 @@ function show_log ($theid, $show_cfs=false) {                                // 
 //    } -- dummy
 
 function show_unit_log ($theid, $show_cfs=false) {                                // 9/10/13
-    global $evenodd ;    // class names for alternating table row colors
+    global $evenodd, $types ;    // class names for alternating table row colors; $types from log_codes.inc.php
     require_once './incs/log_codes.inc.php';
 
     $query = "

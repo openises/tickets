@@ -54,15 +54,15 @@ function datediff($value1,$value2) {
     }
 
 function parsedate($diff){
-    $diff = (int) $diff;        // whole seconds - % on a float is deprecated in PHP 8.1+
+    $whole = (int) $diff;       // % wants whole seconds; the implicit float-to-int conversion is deprecated in PHP 8.1+
     $seconds = 0;
     $hours   = 0;
     $minutes = 0;
 
-    if($diff % 86400 <= 0){$days = $diff / 86400;}  // 86,400 seconds in a day
-    if($diff % 86400 > 0)
+    if($whole % 86400 <= 0){$days = $diff / 86400;}  // 86,400 seconds in a day
+    if($whole % 86400 > 0)
     {
-        $rest = ($diff % 86400);
+        $rest = ($whole % 86400);
         $days = ($diff - $rest) / 86400;
         if($rest % 3600 > 0)
         {

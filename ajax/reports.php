@@ -192,7 +192,7 @@ $htmlfooter = "</DIV></BODY></HTML>";
         global $nature, $disposition, $patient, $incident, $incidents;
         global $evenodd, $types;
         global $theWidth, $doprint;
-        global $startdate, $enddate;
+        global $startdate, $enddate, $tick_sel, $resp_sel;
 
         $ret_arr = array();
 
@@ -241,8 +241,8 @@ $htmlfooter = "</DIV></BODY></HTML>";
                     OR  `a`.`u2farr` BETWEEN '{$from_to[0]}' AND '{$from_to[1] }'
                     OR  `a`.`clear` BETWEEN '{$from_to[0]}' AND '{$from_to[1] }'";
 
-        $which_inc = ($_GET['tick_sel']==0)?     "" : " AND `ticket_id` = " . intval($_GET['tick_sel']);                // 2/7/09
-        $which_unit = ($_GET['resp_sel']==0)?     "" : " AND `responder_id` = " . intval($_GET['resp_sel']);
+        $which_inc = ($tick_sel == 0)?     "" : " AND `ticket_id` = " . intval($tick_sel);                // 2/7/09
+        $which_unit = ($resp_sel == 0)?     "" : " AND `responder_id` = " . intval($resp_sel);
 
         $query = "SELECT *,
             `dispatched` AS dispatched_i,
@@ -965,14 +965,14 @@ $htmlfooter = "</DIV></BODY></HTML>";
         }
 
     function parsedate($diff){
-        $diff = (int) $diff;        // whole seconds - % on a float is deprecated in PHP 8.1+
+        $whole = (int) $diff;       // % wants whole seconds; the implicit float-to-int conversion is deprecated in PHP 8.1+
         $seconds = 0;
         $hours   = 0;
         $minutes = 0;
 
-        if($diff % 86400 <= 0){$days = $diff / 86400;}  // 86,400 seconds in a day
-        if($diff % 86400 > 0) {
-            $rest = ($diff % 86400);
+        if($whole % 86400 <= 0){$days = $diff / 86400;}  // 86,400 seconds in a day
+        if($whole % 86400 > 0) {
+            $rest = ($whole % 86400);
             $days = ($diff - $rest) / 86400;
             if($rest % 3600 > 0) {
                 $rest1 = ($rest % 3600);

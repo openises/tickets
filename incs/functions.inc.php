@@ -1121,7 +1121,7 @@ function show_log($theid, $show_cfs=false) {                                // 1
 //    } -- dummy
 
 function show_unit_log ($theid, $show_cfs=false) {                                // 9/10/13
-    global $evenodd ;    // class names for alternating table row colors
+    global $evenodd, $types ;    // class names for alternating table row colors; $types from log_codes.inc.php
     require_once './incs/log_codes.inc.php';
 
     $query = "
