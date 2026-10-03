@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+do_login(basename(__FILE__));
+session_write_close();        // do_login() re-opens the session; this page never held its lock before
 /*
 Template
 

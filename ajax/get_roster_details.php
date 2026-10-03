@@ -3,6 +3,7 @@
 9/10/13 - New file, lists personnel for Roster user functionality
 */
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 
 if(empty($_GET)) {
     exit();

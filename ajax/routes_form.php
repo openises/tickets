@@ -2,6 +2,7 @@
 @session_start();
 session_write_close();
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 $_GET = stripslashes_deep($_GET);
 // Replaced extract — explicit variable assignments (Phase 2 cleanup)
 $sortby_distance = true;

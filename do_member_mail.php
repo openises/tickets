@@ -7,6 +7,7 @@ error_reporting (E_ALL  ^ E_DEPRECATED);
 
 @session_start();
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
 // dump($_GET);
 // dump($_POST);
 

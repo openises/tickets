@@ -10,6 +10,7 @@ $iw_width= "300px";
 @session_start();
 session_write_close();
 require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');
+do_login(basename(__FILE__));    // before anything touches the database
 
 $tablename = "{$GLOBALS['mysql_prefix']}mmarkup";
 
@@ -38,8 +39,6 @@ $query = "CREATE TABLE IF NOT EXISTS `{$tablename}` (
     ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 COMMENT='Lines and borders'" ;
 $result = db_query($query);
 
-
-do_login(basename(__FILE__));
 
 $mmarkup_id = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : 0;
 // Phase 2 security cleanup: replaced extract with explicit variable assignments

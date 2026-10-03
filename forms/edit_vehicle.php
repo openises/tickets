@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
 $all_id = (array_key_exists('all_id', $_GET)) ? sanitize_int($_GET['all_id']) : 0;
 $query_all = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `id` = ?";
 $result_all = db_query($query_all, [$all_id]);$row_all = $result_all ? $result_all->fetch_array() : null;

@@ -2,6 +2,7 @@
 @session_start();
 session_write_close();
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 require_once '../incs/messaging.inc.php';
 include '../incs/html2text.php';
 

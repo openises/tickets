@@ -4,6 +4,7 @@
 */
 error_reporting(E_ALL);
 require_once './incs/functions.inc.php';
+require_login_or_401();
 $the_number = "1234567890";
 $query  = "SELECT  * FROM `{$GLOBALS['mysql_prefix']}constituents` WHERE `phone`= ?
     OR `phone_2`= ? OR `phone_3`= ? OR `phone_4`= ?    ORDER BY `updated` ASC";

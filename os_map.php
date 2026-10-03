@@ -1,5 +1,6 @@
 <?php
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
 @session_start();
 session_write_close();
 $server_name = "http://www." . $_SERVER['SERVER_NAME'];

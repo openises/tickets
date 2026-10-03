@@ -2,6 +2,7 @@
 error_reporting(E_ALL);
 @session_start();
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));        // first: $_SESSION['fmp'] below only exists once someone is logged in
 require_once($_SESSION['fmp']);
 
 

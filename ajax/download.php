@@ -3,6 +3,7 @@ if(empty($_GET)) {
     exit();
     }
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 
 $filename = "../files/" . sanitize_string($_GET['filename']);
 $properFilename = sanitize_string($_GET['origname']);

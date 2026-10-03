@@ -7,6 +7,7 @@ error_reporting(E_ALL);
 
 @session_start();
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 
 $status = sanitize_string($_GET['status']);
 $the_id = sanitize_int($_GET['the_id']);

@@ -4,6 +4,7 @@ set_time_limit ( 0 );
 error_reporting(E_ALL);
 @session_start();
 require_once './incs/functions.inc.php';        // brings in is_administrator(), and (transitively) mysql.inc.php / db.inc.php below
+do_login(basename(__FILE__));
 
 // GHSA-class finding (2026-09-04 follow-up sweep): this is the "Backup and
 // Restore" tool linked from config.php's admin-only Database Functions

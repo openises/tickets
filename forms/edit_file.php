@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
 $file_id = sanitize_int($_GET['all_id']);
 $id = sanitize_int($_GET['mem_id']);
 

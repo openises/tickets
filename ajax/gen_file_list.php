@@ -3,6 +3,7 @@
 9/10/13 - new file, lists stored files allocated to General Tickets use
 */
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 
 if(empty($_GET)) {
     exit;

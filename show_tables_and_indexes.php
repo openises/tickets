@@ -5,6 +5,7 @@
 error_reporting(E_ALL);
 set_time_limit(90);
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
 $tables = array();
 
 ?>

@@ -5,6 +5,7 @@
 */
 error_reporting(0);
 require_once './incs/functions.inc.php';
+require_login_or_401();
 
 // Core Server functions
 

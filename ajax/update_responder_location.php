@@ -4,6 +4,7 @@ update_responder_status.php - used by fac_routes.php to change location of respo
 09/03/15 - new file
 */
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 @session_start();
 session_write_close();
 if($_GET['q'] != $_SESSION['id']) {

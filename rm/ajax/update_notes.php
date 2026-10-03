@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 @session_start();
 require_once '../../incs/functions.inc.php';
+require_login_or_401();
 function br2nl($input) {
 	return preg_replace('/<br(\s+)?\/?>/i', "\n", $input);
 	}

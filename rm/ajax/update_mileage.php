@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 @session_start();
 require_once '../../incs/functions.inc.php';
+require_login_or_401();
 $ret_arr = array();
 $type = sanitize_string($_GET['type']);
 $value = sanitize_string($_GET['value']);

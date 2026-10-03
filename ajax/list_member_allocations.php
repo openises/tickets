@@ -1,5 +1,6 @@
 <?php
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 $key = sanitize_int($_GET['key']);
 $theType = sanitize_int($_GET['type']);
 

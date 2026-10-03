@@ -1,4 +1,8 @@
 <?php
+@session_start();
+session_write_close();
+require_once 'incs/functions.inc.php';
+do_login(basename(__FILE__));    // before the page head is printed
 $zoom_tight = false;        // default is FALSE (no tight zoom); replace with a decimal zoom value to over-ride the standard default zoom setting - 3/27/10
 
 error_reporting(E_ALL);

@@ -3,6 +3,7 @@
 1/3/14 - new file, lists road condition alerts for plotting on situation screen map
 */
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 
 $ret_arr = array();
 $id = sanitize_int($_GET['id']);

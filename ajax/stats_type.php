@@ -7,6 +7,7 @@
 */
 error_reporting(0);
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 $type = (isset($type)) ? sanitize_int($type) : "";
 
 function get_stat_type_type($value) {

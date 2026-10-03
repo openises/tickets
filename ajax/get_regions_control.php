@@ -1,5 +1,6 @@
 <?php
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 require_once '../incs/functions_major.inc.php';
 @session_start();
 session_write_close();

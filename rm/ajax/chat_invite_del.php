@@ -6,6 +6,7 @@
 error_reporting(E_ALL);	
 @session_start();
 require_once '../../incs/functions.inc.php';
+require_login_or_401();
 
 if((empty($_GET)) || (!isset($_GET['responder_id'])) || ($_GET['responder_id'] == 0) || ($_GET['responder_id'] =="")) {
 	exit();

@@ -1,5 +1,6 @@
 <?php
 require_once './incs/functions.inc.php';
+require_login_or_401();
 // dump ($_SESSION);
 
 $nature = get_text("Nature");

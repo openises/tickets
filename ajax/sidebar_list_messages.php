@@ -9,6 +9,7 @@ if($_GET['q'] != $_SESSION['id']) {
     exit();
     }
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 include '../incs/html2text.php';
 $ret_arr = array();
 $i = 0;

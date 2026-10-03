@@ -3,6 +3,7 @@ error_reporting(E_ALL);
 @session_start();
 session_write_close();
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 require_once '../incs/functions_major.inc.php';
 $id = sanitize_int($_GET['id']);
 $the_width = '98%';

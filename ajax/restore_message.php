@@ -4,6 +4,7 @@ restore_message.php - restores message from wastebasket to inbox.
 10/23/12 - new file
 */
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 
 $id = (isset($_GET['id'])) ? sanitize_int($_GET['id']) : null;
 $ret_arr = array();

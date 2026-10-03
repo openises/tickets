@@ -9,6 +9,7 @@
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}        // 11/8/09
 error_reporting (E_ALL  ^ E_DEPRECATED);
 require_once 'incs/functions.inc.php';
+do_login(basename(__FILE__));    // before anything touches the database
 //    dump ($_POST);
     $tablename = "{$GLOBALS['mysql_prefix']}mmarkup";        // 7/30/11
 
@@ -42,7 +43,6 @@ require_once 'incs/functions.inc.php';
 
 @session_start();
 session_write_close();
-do_login(basename(__FILE__));
 
 $by = empty($_SESSION)? 0: $_SESSION['user_id'];
 $from = $_SERVER['REMOTE_ADDR'];

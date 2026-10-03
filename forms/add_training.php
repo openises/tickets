@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
         $id = sanitize_int($_GET['id']);
         $query    = "SELECT *, UNIX_TIMESTAMP(_on) AS `_on` FROM `{$GLOBALS['mysql_prefix']}member` `m`
             WHERE `m`.`id`=? LIMIT 1";

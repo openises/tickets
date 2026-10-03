@@ -13,6 +13,8 @@ error_reporting(E_ALL);
 @session_start();
 session_write_close();
 require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
+do_login(basename(__FILE__));
+session_write_close();        // do_login() re-opens the session; this page never held its lock before
 require_once './incs/messaging.inc.php';
 $tick_id = ((isset($_GET['ticket_id'])) && ($_GET['ticket_id'] != "")) ? sanitize_int($_GET['ticket_id']) : 0;
 if (empty($_POST)) {

@@ -7,6 +7,8 @@ set_time_limit(90);
 @session_start();
 session_write_close();
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
+session_write_close();        // do_login() re-opens the session; this page never held its lock before
 
 error_reporting(E_ALL);
 $day_night = ((array_key_exists('day_night', ($_SESSION))) && ($_SESSION['day_night']))? $_SESSION['day_night'] : 'Day';

@@ -9,6 +9,7 @@ if (empty($_SESSION)) {
     }
 
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 $ret_arr = array();
 $good_internet = ($_SESSION['good_internet']) ? $_SESSION['good_internet'] : 0;
 $gmaps = $_SESSION['internet'];

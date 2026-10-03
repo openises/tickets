@@ -15,6 +15,7 @@
 @session_start();
 session_write_close();
 require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
+do_login(basename(__FILE__));
 if($istest) {
     print "GET";
     dump ($_GET);

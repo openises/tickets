@@ -5,6 +5,7 @@
 
 @session_start();
 require_once '../../incs/functions.inc.php';
+require_login_or_401();
 
 $ticket_ids = array();
 $request_ids = array();

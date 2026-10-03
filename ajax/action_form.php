@@ -5,6 +5,7 @@
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 error_reporting (E_ALL  ^ E_DEPRECATED);
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 @session_start();
 session_write_close();
 $sess_id = $_SESSION['id'];

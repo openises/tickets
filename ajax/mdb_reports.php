@@ -3,6 +3,7 @@
 */
 error_reporting(E_ALL);
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 
 function get_fieldid($theval) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}defined_fields` WHERE `label` = ? LIMIT 1";

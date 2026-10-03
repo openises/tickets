@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../incs/functions.inc.php';
+require_login_or_401();
 /*
 9/10/13 - New file, generates position marker for mobile screen, rotates input marker by 0,90,180 or 27 degrees as appropriate
 */

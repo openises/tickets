@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
+?>
 <!--
 3/18/11 initial release - AS
 3/26/2014 - updated to include information re buildinga

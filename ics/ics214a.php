@@ -12,6 +12,8 @@ error_reporting ( E_ALL ^ E_DEPRECATED ) ;
 @session_start () ;
 session_write_close () ;
 require_once '../incs/functions.inc.php';
+do_login(basename(__FILE__));
+session_write_close();        // do_login() re-opens the session; this page never held its lock before
 if ( empty ($_SESSION) ) {
 ?>
 <body onload = 'setTimeout ( function () { this.window.close () }, 2000 ) ;' >

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/functions.inc.php';
+require_login_or_401();
 /*
 3/18/09 'aprs_poll' to 'auto_poll'
 */

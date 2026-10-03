@@ -1,5 +1,6 @@
 <?php
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 require_once '../incs/status_cats.inc.php';
 set_time_limit(90);
 @session_start();

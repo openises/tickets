@@ -6,6 +6,7 @@ list_sent_messages.php - gets sent messages from messages table for display in m
 @session_start();
 session_write_close();
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 include '../incs/html2text.php';
 $filter = "";
 

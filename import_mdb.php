@@ -3,6 +3,7 @@ ini_set('memory_limit', '5120M');
 set_time_limit ( 0 );
 @session_start();
 require_once './incs/functions.inc.php';
+require_login_or_401();
 
 // Found during a broader security sweep after GHSA-5v45-76v3-9gm5 and
 // siblings (commit f71a987): this endpoint had NO authentication at all,

@@ -1,5 +1,6 @@
 <?php
 require_once 'incs/functions.inc.php';        //7/28/10
+do_login(basename(__FILE__));
 $wavcount = 0;
 $mp3count = 0;
 $midcount = 0;

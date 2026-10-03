@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/functions.inc.php';
+require_login_or_401();
 /*
 3/19/11 initial impleentation - executes inline
 */

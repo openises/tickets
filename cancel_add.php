@@ -4,6 +4,7 @@
 */
 error_reporting(E_ALL);
 require_once './incs/functions.inc.php';
+require_login_or_401();
 //snap (basename(__FILE__), __LINE__);
 $ticket_id = sanitize_int($_POST['ticket_id']);
 if (strval(intval($ticket_id)) == $_POST['ticket_id']) {                // sanity check

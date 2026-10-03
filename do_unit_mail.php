@@ -22,6 +22,8 @@ set_time_limit(0);
 @session_start();
 session_write_close();
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
+session_write_close();        // do_login() re-opens the session; this page never held its lock before
 require_once './incs/messaging.inc.php';
 //dump($_REQUEST);
 function distance($lat1, $lon1, $lat2, $lon2, $unit) {

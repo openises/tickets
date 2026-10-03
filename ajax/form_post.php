@@ -7,6 +7,7 @@
  */
 error_reporting(E_ALL);
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 @session_start();
 session_write_close();
 $func = sanitize_string($_GET['function'] ?? '');

@@ -17,13 +17,10 @@ error_reporting(E_ALL);
 @session_start();
 session_write_close();
 
-/* Auth gate: require logged-in user */
-if (empty($_SESSION['user_id'])) {
-    print "Not Authorized";
-    exit();
-}
-
+/* Auth gate: do_login() below shows the login form to anyone without a session */
 require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
+do_login(basename(__FILE__));
+session_write_close();        // do_login() re-opens the session; this page never held its lock before
 
 if(($_SESSION['level'] === $GLOBALS['LEVEL_UNIT']) && (intval(get_variable('restrict_units')) == 1)) {
     print "Not Authorized";

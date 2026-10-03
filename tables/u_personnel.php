@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
+?>
 <SCRIPT>
 function validate_form(myform) {    // reject empty form elements
     myform.frm_date_of_birth.value = myform.frm_year_date_of_birth.value + "-" + myform.frm_month_date_of_birth.value + "-" + myform.frm_day_date_of_birth.value + " 00:00:00";

@@ -4,6 +4,7 @@ list_waste_messages.php - gets messages from messages wastebasket table for disp
 10/23/12 - new file
 */
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 require_once '../incs/html2text.php';
 $filter = "";
 

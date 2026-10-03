@@ -49,6 +49,12 @@ function build_tile_url($template, $z, $x, $y) {
     return $url;
 }
 
+// ---- Load application, then authenticate (anonymous callers get 401, not a tile) ----
+
+require_once './incs/functions.inc.php';
+require_login_or_401();
+require_once './incs/versions.inc.php';
+
 // ---- Validate inputs ----
 
 $z = isset($_GET['z']) ? intval($_GET['z']) : -1;
@@ -65,10 +71,6 @@ if ($z < 0 || $z > 20 || $x < 0 || $y < 0) {
     exit;
 }
 
-// ---- Load application ----
-
-require_once './incs/functions.inc.php';
-require_once './incs/versions.inc.php';
 
 // ---- Check that proxy mode is enabled ----
 

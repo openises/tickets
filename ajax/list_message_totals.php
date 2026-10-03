@@ -6,6 +6,7 @@ list messages totals.php - gets new message totals
 @session_start();
 session_write_close();
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 include '../incs/html2text.php';
 $ret_arr = array();
 $i = 0;

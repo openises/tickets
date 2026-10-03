@@ -16,6 +16,7 @@
 */
 
 require_once 'incs/functions.inc.php';        //7/28/10
+require_login_or_401();
 
 $phone = (empty($_POST))? "1234560000": sanitize_string($_POST['phone']);
 $vals = array("", "", "{$phone}", "", "", "", "", "", "", "", "");        // output values

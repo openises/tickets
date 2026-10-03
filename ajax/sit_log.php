@@ -82,6 +82,7 @@ if($_GET['q'] != $_SESSION['id']) {
     exit();
     }
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 require_once '../incs/log_codes.inc.php';
 function br2nl($input) {
     return preg_replace('/<br(\s+)?\/?>/i', "\n", $input);

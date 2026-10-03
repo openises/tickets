@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
 $all_id = sanitize_int($_GET['all_id']);
 
 $query_all = "SELECT * FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `id` = ?";

@@ -2,6 +2,7 @@
 
 error_reporting(E_ALL);
 require_once './incs/functions.inc.php';
+require_login_or_401();
 $units_side_bar_height = .6;
 $not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : null;
 if(file_exists("./incs/modules.inc.php")) {

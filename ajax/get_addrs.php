@@ -2,6 +2,7 @@
 if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 error_reporting (E_ALL  ^ E_DEPRECATED);
 require_once '../incs/functions.inc.php';        // resides in ./ajax -- get_addrs.php
+require_login_or_401();
 
 // snap(basename(__FILE__), __LINE__);
 

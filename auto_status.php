@@ -8,6 +8,8 @@ error_reporting(E_ALL);
 @session_start();
 session_write_close();
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
+session_write_close();        // do_login() re-opens the session; this page never held its lock before
 
 // Declare arrays for all resource ids
 $status_ids = array();

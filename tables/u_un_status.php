@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
 /*
 2/9/10 - initial release
 5/25/10 - Changed display of hide value to what exists in database

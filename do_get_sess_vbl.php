@@ -8,6 +8,7 @@ error_reporting(E_ALL);
 @session_start();
 session_write_close();
 require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
+require_login_or_401();
 $the_vbl = 'scr_width';
 dump (get_sess_vbl ($the_vbl));
 

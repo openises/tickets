@@ -4,6 +4,7 @@
 */
 error_reporting(E_ALL);
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
 
 if (trim(get_variable("locale"))==0)    {$radius = 3959; $caption = "Mi."; }
 else                                     {$radius = 6371; $caption = "Km"; }

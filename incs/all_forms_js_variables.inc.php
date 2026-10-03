@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/functions.inc.php';
+require_login_or_401();
 $not_sit = (array_key_exists('id', ($_GET)))?  $_GET['id'] : null;
 if(file_exists("./incs/modules.inc.php")) {
     require_once './incs/modules.inc.php';

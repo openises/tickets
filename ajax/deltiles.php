@@ -5,6 +5,7 @@
     // exit();
     // }
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 error_reporting(E_ALL);
 set_time_limit(0);
 $local = substr(getcwd(), 0, -5) . "/_osm/tiles/";

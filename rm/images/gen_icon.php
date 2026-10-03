@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../incs/functions.inc.php';
+require_login_or_401();
 /*
 generates numbered icon given the icon id and value string
 */

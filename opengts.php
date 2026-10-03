@@ -6,6 +6,7 @@
 error_reporting(E_ALL);
 
 require_once 'incs/functions.inc.php';        //7/28/10
+do_login(basename(__FILE__));
 if (empty($_POST)) {$_POST['_func']= "form";}
 // Phase 2 security cleanup: replaced extract with explicit variables
 $_func = $_POST['_func'] ?? 'form';

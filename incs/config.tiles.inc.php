@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/functions.inc.php';
+require_login_or_401();
 /**
  * Tile Settings Configuration Panel
  * Allows admins to choose tile mode (online/proxy/offline) and configure the tile server URL.

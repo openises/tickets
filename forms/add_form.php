@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
 if(can_edit()) {
     $scr_width = $_SESSION['scr_width'];
     $scr_height = $_SESSION['scr_height'];

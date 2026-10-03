@@ -4,6 +4,7 @@
 */
 
 require_once './incs/functions.inc.php';        //7/28/10
+require_login_or_401();
 $p1 = sanitize_string($_GET['p1']);
 $p2 = sanitize_string($_GET['p2']);
 

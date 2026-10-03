@@ -3,6 +3,7 @@
 9/10/13 - new file, lists responder locations
 */
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 
 if(empty($_GET)) {
     exit;

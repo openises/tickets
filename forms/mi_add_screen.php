@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
 error_reporting(E_ALL);                // 9/13/08
 $side_bar_height = .8;        // max height of units sidebar as decimal fraction of screen height - default is 0.6 (60%)
 $show_controls = ((isset($_SESSION['hide_controls'])) && ($_SESSION['hide_controls'] == "s")) ? "" : "none" ;    //    3/15/11

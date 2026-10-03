@@ -17,6 +17,8 @@ error_reporting ( E_ALL ^ E_DEPRECATED ) ;
 if ( ! ( array_key_exists ( 'user_id ', $_SESSION ) ) ) { $POST ['func'] = 'x'; }
 session_write_close () ;
 require_once '../incs/functions.inc.php';
+do_login(basename(__FILE__));
+session_write_close();        // do_login() re-opens the session; this page never held its lock before
 include './ics.css.php';
 $now_ts = now_ts();
 // Phase 2 security cleanup: removed extract — $func set explicitly below

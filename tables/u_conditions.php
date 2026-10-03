@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
 function read_directory($directory) {
     $the_ret = array();
     $dirhandler = opendir($directory);

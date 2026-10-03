@@ -7,6 +7,7 @@ if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}
 error_reporting (E_ALL  ^ E_DEPRECATED);
 
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
 $temp1  = get_variable('socketserver_url');
 $temp2 = get_variable('socketserver_port');
 $host = ($temp1 == "") ? "{$_SERVER['SERVER_NAME']}" : $temp1;

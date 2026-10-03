@@ -23,6 +23,7 @@ Operation:
 if ( !defined ( 'E_DEPRECATED' ) ) { define ( 'E_DEPRECATED',8192 );}        // 11/8/09
 error_reporting ( E_ALL ^ E_DEPRECATED);
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
 /**/
 $limit = 99999;
 //dump ( !mysql_table_exists ( "$GLOBALS[mysql_prefix]ics") );

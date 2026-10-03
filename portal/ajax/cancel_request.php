@@ -1,5 +1,6 @@
 <?php
 require_once '../../incs/functions.inc.php';
+require_login_or_401();
 include '../../incs/html2text.php';
 if(!isset($_GET['id'])) {
     exit();

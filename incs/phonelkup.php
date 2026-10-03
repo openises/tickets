@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/functions.inc.php';
+require_login_or_401();
 require_once "../nusoap/lib/nusoap.php";
 define("tab",  "\t");
 // Replaced extract — only $phone needed (Phase 2 cleanup)

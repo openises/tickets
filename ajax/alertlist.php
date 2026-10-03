@@ -5,6 +5,7 @@
 */
 @session_start();
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 session_write_close();
 $iw_width= "270px";                    // map infowindow with
 $use_twitter = (get_variable('twitter_consumerkey') != "" && get_variable('twitter_consumersecret') != "" && get_variable('twitter_accesstoken') != "" && get_variable('twitter_accesstokensecret') != "") ? true : false;

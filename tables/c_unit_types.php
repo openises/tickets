@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
+?>
         <FORM NAME="c" METHOD="post" ACTION="<?php print $_SERVER['PHP_SELF']; ?>" /><!-- 1/21/09 - APRS moved to responder schema  -->
         <INPUT TYPE="hidden" NAME="func"         VALUE="pc"/>
         <INPUT TYPE="hidden" NAME="tablename"     VALUE="<?php print $tablename;?>" />

@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
     $body             = "text-align: center; BACKGROUND-COLOR: #EFEFEF; MARGIN:0; FONT-WEIGHT: normal; FONT-SIZE: 1em; COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;TEXT-DECORATION: none";
     $table             = "table-layout: fixed; border-collapse: collapse; border:1px solid black; text-align: left; background-color: white; FONT-SIZE: inherit;";
     $upper             = "border-collapse: collapse; border:none;";

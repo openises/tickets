@@ -3,6 +3,7 @@
 */
 error_reporting(E_ALL);
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 
 $ret_arr = array();
 $addr = urlencode(sanitize_string($_GET['addr']));

@@ -5,6 +5,7 @@
 error_reporting(E_ALL);
 
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 // Replaced extract — explicit variable assignments (Phase 2 cleanup)
 $bl_lat = sanitize_string($_GET['bl_lat'] ?? '');
 $bl_lon = sanitize_string($_GET['bl_lon'] ?? '');

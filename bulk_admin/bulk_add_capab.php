@@ -1,5 +1,6 @@
 <?php
 require_once '../incs/functions.inc.php';
+do_login(basename(__FILE__));
 
 function get_membername($id) {
     $id = sanitize_int($id);

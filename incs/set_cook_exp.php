@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/functions.inc.php';
+require_login_or_401();
 /*
 1/11/10 initial release - updates user cookie expiration
 */

@@ -4,6 +4,7 @@ list_arch_messages.php - gets archive messages from stored csv files for display
 10/23/12 - new file
 */
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 include '../incs/html2text.php';
 $filter = "";
 

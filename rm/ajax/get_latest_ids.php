@@ -5,6 +5,7 @@
 error_reporting(E_ALL);
 @session_start();
 require_once '../../incs/functions.inc.php';
+require_login_or_401();
 
 function error_out($err_arg) {
 	do_log($GLOBALS['LOG_ERROR'], 0, 0, $err_arg);

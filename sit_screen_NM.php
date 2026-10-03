@@ -2,6 +2,7 @@
 
 error_reporting(E_ALL);
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
 $units_side_bar_height = .6;
 $board = get_variable('call_board');
 

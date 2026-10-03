@@ -1,5 +1,6 @@
 <?php
 require_once '../incs/functions.inc.php';
+do_login(basename(__FILE__));
 @session_start();
 $sess_id = session_id();
 

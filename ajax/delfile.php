@@ -1,12 +1,12 @@
 <?php
+require_once '../incs/functions.inc.php';
+
+do_login(basename(__FILE__));
 $failed = "failed";
 if(empty($_GET)) {
     print $failed;
     exit();
     }
-require_once '../incs/functions.inc.php';
-
-do_login(basename(__FILE__));
 error_reporting(E_ALL);
 set_time_limit(90);
 $filestore = substr(getcwd(), 0, -5) . "/files/";

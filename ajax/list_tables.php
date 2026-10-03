@@ -5,6 +5,7 @@
 error_reporting(E_ALL);
 set_time_limit(90);
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 $tables = array();
 
 $query = "SHOW TABLES FROM `" . $mysql_db . "`";

@@ -1,4 +1,11 @@
 <?php
+require_once __DIR__ . '/incs/functions.inc.php';
+require_login_or_401();
+if (!is_administrator()) {        // executes a whole SQL file against the database
+    http_response_code(403);
+    print "Administrators only.";
+    exit();
+    }
 ini_set('memory_limit', '5120M');
 set_time_limit ( 0 );
 /***************************************************************************

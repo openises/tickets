@@ -1,6 +1,7 @@
 <?php
 @session_start();
 require_once '../../incs/functions.inc.php';
+require_login_or_401();
 require_once '../incs/portal.inc.php';
 
 if(empty($_GET)) {

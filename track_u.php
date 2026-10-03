@@ -20,6 +20,8 @@ session_write_close();
 if (!array_key_exists ("user_id", $_SESSION)) {exit();}        //3/6/2015 - if logged out then kill this window
 
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
+session_write_close();        // do_login() re-opens the session; this page never held its lock before
 //do_login(basename(__FILE__));        // in a window
 $interval = intval(get_variable('auto_poll'));
 $refresh = ($interval>0)? "\t<META HTTP-EQUIV='REFRESH' CONTENT='" . intval($interval*60) . "'>": "";    //10/4/08

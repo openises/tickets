@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
 $nature = get_text("Nature");            // 12/03/10
 $disposition = get_text("Disposition");
 $patient = get_text("Patient");

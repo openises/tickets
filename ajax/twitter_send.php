@@ -4,6 +4,7 @@ list messages.php - gets messages from messages table for display in message win
 10/23/12 - new file
 */
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 @session_start();
 session_write_close();
 if($_GET['q'] != $_SESSION['id']) {

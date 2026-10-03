@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
 function get_types($curr_val) {
     $curr_val = intval($curr_val);
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}conditions` WHERE `id` = ?";

@@ -3,6 +3,7 @@ if ( !defined( 'E_DEPRECATED' ) ) { define( 'E_DEPRECATED',8192 );}        // 11
 error_reporting (E_ALL  ^ E_DEPRECATED);
 @session_start();
 require_once '../../incs/functions.inc.php';
+require_login_or_401();
 $ret_arr = array();
 function get_requester_details($the_id) {
     $the_ret = array();

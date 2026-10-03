@@ -2,6 +2,7 @@
 // 12/4/2021
 
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 snap ( basename (__FILE__), date("D h:i") );
 
 function ErHdlr($errno, $errstr) {            // error handler function

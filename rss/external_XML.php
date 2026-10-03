@@ -1,6 +1,7 @@
 <?php
 error_reporting(E_ALL);
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 
 $query_01 = "SELECT * FROM `{$GLOBALS['mysql_prefix']}ticket`";
 $result_01 = db_query($query_01) or do_error($query_01, 'mysql query failed', db()->error, basename( __FILE__), __LINE__);

@@ -4,6 +4,7 @@
 @session_start();
 session_write_close();
 require_once(isset($_SESSION['fip']) ? $_SESSION['fip'] : './incs/functions.inc.php');        //7/28/10
+require_login_or_401();
 
 // GHSA-5v45-76v3-9gm5: this endpoint is Regions-management admin config
 // (config.php + areas_sc.php + reset_regions.php per docs/FEATURE-GAP-ANALYSIS.md),

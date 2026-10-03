@@ -5,6 +5,12 @@
 */
 error_reporting(E_ALL);
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
+if (!is_administrator()) {
+    http_response_code(403);
+    print "Administrators only.";
+    exit();
+    }
 ?>
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
     <HTML>

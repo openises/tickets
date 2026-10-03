@@ -6,6 +6,7 @@ list messages.php - gets messages from messages table for display in message win
 @session_start();
 session_write_close();
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 include '../incs/html2text.php';
 $filter = "";
 

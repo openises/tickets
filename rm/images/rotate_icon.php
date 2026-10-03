@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../incs/functions.inc.php';
+require_login_or_401();
 /*
 generates rotated image for position marker
 7/25/13 initial release

@@ -21,6 +21,7 @@
 error_reporting(E_ALL);
 @session_start();
 require_once './incs/functions.inc.php';                //7/28/10
+require_login_or_401();
 // snap(basename(__FILE__), __LINE__);
 
 $_SESSION["osw_ntrupt_ok"] = true;                         // usage TBD

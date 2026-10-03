@@ -9,6 +9,7 @@ if (empty($_SESSION)) {
     header("Location: index.php");
     }
 require_once '../incs/functions.inc.php';
+do_login(basename(__FILE__));
 function get_user_name($the_id) {
     $query = "SELECT * FROM `{$GLOBALS['mysql_prefix']}user` `u` WHERE `id` = ? LIMIT 1";
     $result = db_query($query, [$the_id]);

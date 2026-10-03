@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../incs/functions.inc.php';
+require_login_or_401();
 $all_id = sanitize_int($_GET['all_id']);
 $query_all = "SELECT `id`, `member_id`, `skill_type`, `skill_id`, `_on`, UNIX_TIMESTAMP(start) AS `start`, UNIX_TIMESTAMP(end) AS `end` FROM `{$GLOBALS['mysql_prefix']}allocations` WHERE `id` = ?";
 $result_all = db_query($query_all, [$all_id]);$row_all = $result_all ? $result_all->fetch_array() : null;

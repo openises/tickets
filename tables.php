@@ -61,6 +61,7 @@ if (empty($_SESSION)) {                // 1/6/2013
     }
 
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));    // 9/18/08, moved ahead of the first query
 $query = "SET @@session.sql_mode= '';";        // 6/25/10
 $result = db_query($query);
 
@@ -70,7 +71,6 @@ $istest=false;
 if ($istest) {
     dump($_POST);
     }
-do_login(basename(__FILE__));    // 9/18/08
 
 // 3/14/26 - CSRF validation for POST requests that include a token
 // Forms served by this page have tokens auto-injected via JS; cross-page navigation POSTs don't

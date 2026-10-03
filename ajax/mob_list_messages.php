@@ -5,6 +5,7 @@ mobile_list_messages.
 @session_start();
 session_write_close();
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 include '../incs/html2text.php';
 $ret_arr = array();
 $userid = ((!empty($_SESSION)) && ((isset($_SESSION['user_id'])) && ($_SESSION['user_id'] != 0))) ? $_SESSION['user_id'] : 0;

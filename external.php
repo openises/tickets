@@ -6,6 +6,7 @@
 
 error_reporting(E_ALL);
 require_once 'incs/functions.inc.php';        //7/28/10
+require_login_or_401();
 
 $query_01 = "SELECT `{$GLOBALS['mysql_prefix']}ticket`.lat AS `lat`,
         `{$GLOBALS['mysql_prefix']}ticket`.lng AS `lng`,

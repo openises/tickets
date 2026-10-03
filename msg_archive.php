@@ -7,6 +7,8 @@ if (empty($_SESSION)) {
     header("Location: index.php");
     }
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));
+session_write_close();        // do_login() re-opens the session; this page never held its lock before
 require './incs/exportcsv.inc.php';
 $thefiles = array();
 if ($handle = opendir('./message_archives')) {

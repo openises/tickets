@@ -10,6 +10,7 @@ $units_side_bar_height = .6;        // max height of units sidebar as decimal fr
 @session_start();            // 1/7/10
 
 require_once './incs/functions.inc.php';
+do_login(basename(__FILE__));        // first: $_SESSION['fmp'] below only exists once someone is logged in
 require_once($_SESSION['fmp']);        //8/25/10
 $locale = get_variable('locale');
 $routesUnits = (($locale == 0) || ($locale == 1)) ? 'imperial' : 'metric';

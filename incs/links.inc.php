@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/functions.inc.php';
+require_login_or_401();
 /*    include this file immediately after the <body> tag in any script in which a links menu should be opened */
 
 /*

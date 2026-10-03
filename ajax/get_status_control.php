@@ -1,5 +1,6 @@
 <?php
 require_once '../incs/functions.inc.php';
+require_login_or_401();
 set_time_limit(90);
 @session_start();
 session_write_close();

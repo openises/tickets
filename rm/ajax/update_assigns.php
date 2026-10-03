@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 @session_start();
 require_once '../../incs/functions.inc.php';
+require_login_or_401();
 
 $vals_ary = explode("%", $_POST['frm_vals']);
 $ret_arr = array();
